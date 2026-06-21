@@ -6,10 +6,9 @@ Orchestrates model training and forecasting across all products.
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Tuple
-import streamlit as st
 
-from data.data_preprocessor import preprocess_demand_data
-from forecasting.prophet_model import train_and_forecast, compute_forecast_accuracy
+from nikiyolo.data.data_preprocessor import preprocess_demand_data
+from nikiyolo.forecasting.prophet_model import train_and_forecast, compute_forecast_accuracy
 
 
 def run_forecast_pipeline(
@@ -34,12 +33,7 @@ def run_forecast_pipeline(
     all_forecasts = []
     accuracy_metrics = {}
 
-    progress_bar = st.progress(0, text="Running demand forecasts...")
-
     for i, product_id in enumerate(all_products):
-        progress = (i + 1) / len(all_products)
-        progress_bar.progress(progress, text=f"Forecasting {product_id}...")
-
         try:
             forecast = train_and_forecast(
                 df=df,
@@ -52,9 +46,7 @@ def run_forecast_pipeline(
                 metrics = compute_forecast_accuracy(df, forecast, product_id)
                 accuracy_metrics[product_id] = metrics
         except Exception as e:
-            st.warning(f"Forecast failed for {product_id}: {e}")
-
-    progress_bar.empty()
+            print(f"[Forecast] Failed for {product_id}: {e}")
 
     if all_forecasts:
         combined = pd.concat(all_forecasts, ignore_index=True)

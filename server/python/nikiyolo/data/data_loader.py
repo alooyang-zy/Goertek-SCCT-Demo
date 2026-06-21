@@ -8,8 +8,8 @@ import streamlit as st
 import pandas as pd
 from typing import Optional, Tuple
 
-from data.data_validator import validate_demand_data, validate_inventory_data, validate_network_data
-from data.synthetic_generator import generate_demand_data, generate_inventory_data, generate_network_data
+from nikiyolo.data.data_validator import validate_demand_data, validate_inventory_data, validate_network_data
+from nikiyolo.data.synthetic_generator import generate_demand_data, generate_inventory_data, generate_network_data
 
 
 def load_csv_file(uploaded_file) -> Optional[pd.DataFrame]:
