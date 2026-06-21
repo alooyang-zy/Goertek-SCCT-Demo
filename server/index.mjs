@@ -144,6 +144,19 @@ const server = http.createServer(async (req, res) => {
     return res.end(swaggerHTML(spec));
   }
 
+  // 智能分析代理 → Python 服务
+  if (pathname.startsWith("/api/intelligence")) {
+    try {
+      const pyRes = await fetch(`http://127.0.0.1:5000${pathname}?${url.searchParams.toString()}`);
+      const data = await pyRes.text();
+      res.writeHead(pyRes.status, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+      return res.end(data);
+    } catch {
+      json(res, { success: false, error: "Python智能分析服务未启动 (端口5000)" });
+    }
+    return;
+  }
+
   // POST /api/alerts/:id/acknowledge
   const ackMatch = pathname.match(/^\/api\/alerts\/([^/]+)\/(acknowledge|resolve)$/);
   if (ackMatch && req.method === "POST") {
