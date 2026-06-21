@@ -5,8 +5,9 @@ function initPage_intelligence(container) {
   if (!container) return;
 
   // 判断是本地还是生产环境
-  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  const streamlitUrl = isLocal ? 'http://localhost:8502' : '/streamlit/';
+  const host = location.hostname;
+  const isLocal = host === 'localhost' || host === '127.0.0.1';
+  const streamlitUrl = isLocal ? 'http://localhost:8502' : 'http://114.132.63.242:8502';
 
   container.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
