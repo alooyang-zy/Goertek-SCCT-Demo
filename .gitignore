@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# SSL certs (sensitive)
+certs/
+*.crt
+*.key
+*.pem
+
+# Docker
+.docker/
+
+# Logs
+*.log

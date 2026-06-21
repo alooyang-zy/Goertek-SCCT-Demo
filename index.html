@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>歌尔供应链控制塔 — Goertek SCCT</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%233b82f6'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-size='20' fill='white' font-family='Arial' font-weight='bold'%3ESC%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.onload=null;this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon"><i class="fas fa-cubes"></i></div>
+      <div class="logo-text"><div class="brand">歌尔供应链控制塔</div><div class="sub">Goertek SCCT v10.26</div></div>
+    </div>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-page="overview"><i class="fas fa-th-large"></i><span>控制塔全局总览</span></a>
+    <a href="#" class="nav-item" data-page="progress"><i class="fas fa-diagram-project"></i><span>项目进度跟踪</span><span class="badge" style="background:#d97706">2</span></a>
+    <a href="#" class="nav-item" data-page="cycle"><i class="fas fa-clock-rotate-left"></i><span>项目周期监控</span></a>
+    <a href="#" class="nav-item" data-page="inventory"><i class="fas fa-heart-pulse"></i><span>项目库存健康</span></a>
+    <a href="#" class="nav-item" data-page="cost"><i class="fas fa-coins"></i><span>项目成本可视</span></a>
+    <a href="#" class="nav-item" data-page="material"><i class="fas fa-microchip"></i><span>物料导入状态</span><span class="badge">2</span></a>
+    <a href="#" class="nav-item" data-page="supplier"><i class="fas fa-handshake"></i><span>供方深度协同</span></a>
+    <a href="#" class="nav-item" data-page="delivery"><i class="fas fa-reply"></i><span>客户交期答复</span></a>
+    <a href="#" class="nav-item" data-page="forecast"><i class="fas fa-chart-line"></i><span>需求预测模型</span></a>
+    <a href="#" class="nav-item" data-page="supplydemand"><i class="fas fa-scale-balanced"></i><span>供需齐套分析</span><span class="badge">3</span></a>
+    <a href="#" class="nav-item" data-page="risk"><i class="fas fa-triangle-exclamation"></i><span>风险雷达预警</span><span class="badge">5</span></a>
+    <a href="#" class="nav-item" data-page="closedloop"><i class="fas fa-circle-check"></i><span>事件闭环管理</span></a>
+    <a href="#" class="nav-item" data-page="ai"><i class="fas fa-robot"></i><span>智能员工助手</span></a>
+    <a href="#" class="nav-item" data-page="settings"><i class="fas fa-gear"></i><span>系统配置管理</span></a>
+    <a href="#" class="nav-item" data-page="indicatorlist" style="display:none"><i class="fas fa-list-check"></i><span>场景指标清单</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info"><div class="avatar">供</div><div class="user-detail"><span class="name">供应链总监</span><span class="role">歌尔股份 · 控制塔</span></div></div>
+  </div>
+</aside>
+
+<main class="main-content">
+  <header class="topbar">
+    <div class="topbar-left"><h1 class="page-title" id="pageTitle">控制塔全局总览</h1><div class="breadcrumb"><span>控制塔</span> / <span id="breadcrumbCurrent">控制塔全局总览</span></div></div>
+    <div class="topbar-right">
+      <div class="project-quick-filter">
+        <select id="filterBg" onchange="onFilterChange('bg')"><option value="">全部BG</option></select>
+        <select id="filterBu" onchange="onFilterChange('bu')"><option value="">全部BU</option></select>
+        <select id="filterCustomer" onchange="onFilterChange('customer')"><option value="">全部客户</option></select>
+        <select id="filterProduct" onchange="onFilterChange('product')"><option value="">全部产品</option></select>
+        <button class="btn btn-sm btn-outline" onclick="resetGlobalFilter()" title="重置"><i class="fas fa-rotate-right"></i></button>
+      </div>
+      <button class="icon-btn" onclick="toggleFullscreen()" title="全屏"><i class="fas fa-expand"></i></button>
+    </div>
+  </header>
+
+  <div class="page-container">
+    <!-- ====== 1.全局总览 ====== -->
+    <section class="page active" id="page-overview">
+      <!-- ① 筛选条件（主维度BG/BU/客户/产品已在顶部联动，此处为补充筛选） -->
+      <div class="ov-filter-bar">
+        <div class="ov-filter-group">
+          <span class="ov-filter-label">生命周期</span>
+          <select class="ov-filter-select" id="ovFLifecycle" onchange="ovApplyFilters()">
+            <option value="">全部</option><option value="NPI">NPI</option><option value="Ramp-up">爬坡</option><option value="Mass Production">稳定量产</option><option value="EOL">EOL</option>
+          </select>
+        </div>
+        <div class="ov-filter-group">
+          <span class="ov-filter-label">工程阶段</span>
+          <select class="ov-filter-select" id="ovFStage" onchange="ovApplyFilters()">
+            <option value="">全部</option><option value="EVT">EVT</option><option value="DVT">DVT</option><option value="PVT">PVT</option><option value="MP">MP</option>
+          </select>
+        </div>
+        <div class="ov-filter-group">
+          <span class="ov-filter-label">健康状态</span>
+          <select class="ov-filter-select" id="ovFHealth" onchange="ovApplyFilters()">
+            <option value="">全部</option><option value="g">🟢 正常</option><option value="y">🟡 预警</option><option value="r">🔴 异常</option>
+          </select>
+        </div>
+        <label class="ov-filter-toggle"><input type="checkbox" id="ovFKey" onchange="ovApplyFilters()">⭐ 仅重大项目</label>
+        <div class="ov-filter-group">
+          <input class="ov-filter-search" id="ovFSearch" type="text" placeholder="🔍 搜索项目 / 客户 / 产品…" oninput="_ovDebouncedFilter()" onkeydown="if(event.key==='Enter'){event.preventDefault();ovApplyFilters();}">
+        </div>
+        <div class="ov-filter-spacer"></div>
+        <span class="ov-filter-count">筛选结果：<strong id="ovFilterCount">—</strong> 个项目</span>
+        <button class="ov-filter-reset" onclick="ovResetFilters()">↺ 重置</button>
+      </div>
+
+      <!-- ② 标签卡片（汇总KPI） -->
+      <div class="ov-summary-grid" id="ovSummaryGrid"></div>
+
+      <!-- ③ 图表第一行：BG×生命周期堆叠柱状图 + SCOR五维健康雷达 -->
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="card-header"><h3><i class="fas fa-diagram-project"></i> 各 BG 项目生命周期分布</h3><span class="ov-chart-sub" id="ovChart1Total"></span></div>
+          <div class="card-body"><div class="chart-wrap" style="height:300px"><canvas id="ovChartLifecycle"></canvas></div></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-header"><h3><i class="fas fa-chart-pie"></i> SCOR 五维健康雷达</h3><div id="ovRadarLegend" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
+          <div class="card-body"><div class="chart-wrap" style="height:300px"><canvas id="ovChartRadar"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- ④ 图表第二行：客户分布 + NPI漏斗 + 重大项目红绿灯 -->
+      <div class="chart-row ov-row-3">
+        <div class="chart-card">
+          <div class="card-header"><h3><i class="fas fa-building"></i> 客户项目数量分布</h3></div>
+          <div class="card-body"><div class="chart-wrap" style="height:280px"><canvas id="ovChartCustomer"></canvas></div></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-header"><h3><i class="fas fa-flask"></i> NPI 阶段漏斗</h3></div>
+          <div class="card-body" style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <div class="ov-funnel-wrap" id="ovFunnelWrap"></div>
+            <div style="margin-top:14px;padding:0 8px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:600;">MP 阶段分布</div>
+              <div id="ovMpStageBars" style="display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="card-header"><h3><i class="fas fa-star"></i> 重大项目健康状态</h3><span class="ov-chart-sub" id="ovKeyCountLabel">共 — 个</span></div>
+          <div class="card-body p-0" style="max-height:280px;overflow-y:auto;"><div class="ov-key-project-list" id="ovKeyProjectList"></div></div>
+        </div>
+      </div>
+
+      <!-- ⑤ 项目明细表 -->
+      <div class="ov-table-card">
+        <div class="ov-table-header">
+          <div style="font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;"><i class="fas fa-list" style="color:var(--primary-light)"></i> 项目全量数据表 <span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:4px;" id="ovTableTitleCount"></span></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="font-size:11px;color:var(--text-muted);">每页显示</span>
+            <select class="ov-page-size-select" id="ovPageSize" onchange="ovChangePageSize()">
+              <option value="15">15 条</option><option value="20">20 条</option><option value="30">30 条</option><option value="50">50 条</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="ov-proj-table">
+            <thead>
+              <tr>
+                <th onclick="ovSortTable('key')" id="ovThKey">⭐ <span class="ov-sort-icon">↕</span></th>
+                <th onclick="ovSortTable('bg')" id="ovThBg">BG <span class="ov-sort-icon">↕</span></th>
+                <th onclick="ovSortTable('bu')" id="ovThBu">BU <span class="ov-sort-icon">↕</span></th>
+                <th onclick="ovSortTable('customer')" id="ovThCustomer">客户 <span class="ov-sort-icon">↕</span></th>
+                <th onclick="ovSortTable('product')" id="ovThProduct">产品 <span class="ov-sort-icon">↕</span></th>
+                <th onclick="ovSortTable('name')" id="ovThName">项目名称 <span class="ov-sort-icon">↕</span></th>
+                <th onclick="ovSortTable('stage')" id="ovThStage">工程阶段 <span class="ov-sort-icon">↕</span></th>
+                <th onclick="ovSortTable('lifecycle')" id="ovThLifecycle">生命周期 <span class="ov-sort-icon">↕</span></th>
+                <th title="交付可靠性" style="cursor:help">① 可靠</th>
+                <th title="响应速度" style="cursor:help">② 响应</th>
+                <th title="盈利能力" style="cursor:help">③ 成本</th>
+                <th title="资产效率" style="cursor:help">④ 资产</th>
+                <th title="敏捷韧性" style="cursor:help">⑤ 韧性</th>
+                <th onclick="ovSortTable('score')" id="ovThScore">综合评分 <span class="ov-sort-icon">↕</span></th>
+                <th onclick="ovSortTable('health')" id="ovThHealth">健康状态 <span class="ov-sort-icon">↕</span></th>
+                <th style="width:36px;text-align:center;" title="点击行跳转详情">→</th>
+              </tr>
+            </thead>
+            <tbody id="ovProjTbody"></tbody>
+          </table>
+          <div id="ovTableEmpty" style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;display:none;">
+            <div style="font-size:32px;margin-bottom:8px;">🔍</div>暂无符合条件的项目数据
+          </div>
+        </div>
+        <div class="ov-table-footer">
+          <span class="ov-page-info" id="ovPageInfo">共 — 条</span>
+          <div class="ov-pagination" id="ovPagination"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 2.项目进度跟踪 ====== -->
+    <section class="page" id="page-progress">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="progressProjectSelect" onchange="renderProgressPage()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">5大阶段 · 30个核心节点 · SCOR模型加权评估</span></div>
+      <div class="sc-hero" id="prgHero"><span class="sc-hero-name" id="prgHeroName">--</span><div class="sc-hero-pills" id="prgHeroPills"></div></div>
+      <div class="prg-overview-grid" id="prgOverview"></div>
+      <div class="prg-dashboard-layout" id="prgDashboard">
+        <div class="prg-phases-col" id="prgPhasesCol"></div>
+        <div class="prg-right-sidebar">
+          <div class="prg-score-ring-card"><div class="prg-ring-wrap"><canvas id="prgScoreRing" width="120" height="120"></canvas><div class="prg-ring-center"><div class="prg-ring-score" id="prgRingScore">--</div><div class="prg-ring-label">综合评分</div></div></div><div class="prg-score-grid"><div class="prg-score-item"><div class="prg-sdi-label">正常节点</div><div class="prg-sdi-value g" id="prgRingG">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">预警节点</div><div class="prg-sdi-value y" id="prgRingY">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">异常节点</div><div class="prg-sdi-value r" id="prgRingR">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">待处理</div><div class="prg-sdi-value b" id="prgRingAlerts">--</div></div></div></div>
+          <div class="prg-alert-card"><div class="prg-alert-title">异常事项汇总 <span id="prgAlertCount" class="prg-alert-badge">0</span></div><div class="prg-alert-list" id="prgAlertList"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 3.项目周期监控 ====== -->
+    <section class="page" id="page-cycle">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="cycleProjectSelect" onchange="onCycleProjectChange()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">OTS六段周期下钻 · T1需求→T2计划→T3采购→T4制造→T5库存→T6物流</span></div>
+      <!-- OTS KPI 汇总 -->
+      <div class="kpi-grid" id="cycleKpiGrid"></div>
+      <!-- 一级/二级周期甘特图 -->
+      <div class="chart-row" style="grid-template-columns:1fr">
+        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-chart-gantt"></i> 一级 / 二级周期</h3></div><div class="card-body" style="overflow-x:auto;padding:0">
+          <div class="cycle-gantt-shell">
+            <div class="cycle-gantt-header">
+              <div>一级 / 二级周期</div><div>平均时间轴（天）</div><div>近五期趋势</div><div>OTS有效周期</div>
+            </div>
+            <div id="cycleGanttBody"></div>
+          </div>
+          <div class="cycle-legend">
+            <span class="cycle-legend-item"><i class="cycle-ldot blue"></i>蓝色：目标周期</span>
+            <span class="cycle-legend-item"><i class="cycle-ldot green"></i>绿色：实际未超期</span>
+            <span class="cycle-legend-item"><i class="cycle-ldot red"></i>红色：实际超期</span>
+          </div>
+        </div></div>
+      </div>
+      <!-- 趋势图 + 偏差表 -->
+      <div class="chart-row" style="grid-template-columns:6fr 4fr">
+        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-chart-line"></i> 近5期OTS趋势</h3></div><div class="card-body"><div style="height:240px"><canvas id="cycleTrendChart"></canvas></div></div></div>
+        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-circle-exclamation"></i> 六段偏差诊断</h3></div><div class="card-body" style="max-height:240px;overflow-y:auto"><table class="data-table"><thead><tr><th>段</th><th>环节</th><th>目标天</th><th>实际天</th><th>偏差</th><th>状态</th></tr></thead><tbody id="cycleDevTableBody"></tbody></table></div></div>
+      </div>
+    </section>
+
+    <!-- ====== 4.库存健康 ====== -->
+    <!-- ====== 4.项目库存健康 ====== -->
+    <section class="page" id="page-inventory">
+      <!-- 项目选择器 (联动顶部四维) -->
+      <div class="inv-filter-bar">
+        <div class="inv-filter-group">
+          <span class="inv-filter-label">项目</span>
+          <select class="inv-filter-select" id="inventoryProjectSelect" onchange="initPage_inventory()"></select>
+        </div>
+        <div class="inv-filter-spacer"></div>
+        <span class="inv-filter-hint">💡 指标悬浮可查看定义与计算公式；点击链路节点可下钻物料明细</span>
+      </div>
+
+      <!-- ① Hero 项目信息 -->
+      <div class="inv-hero" id="invHero"></div>
+
+      <!-- ② 8指标汇总卡片 -->
+      <div class="inv-summary-grid" id="invSummaryGrid"></div>
+
+      <!-- ③ 全链路库存分布 -->
+      <div class="inv-section-card">
+        <div class="inv-section-head">
+          <h3 class="inv-section-title"><i class="fas fa-link"></i> 全链路库存分布</h3>
+          <div class="inv-section-pill" id="invChainPill">当前节点：供应商库存</div>
+        </div>
+        <div class="inv-chain-board" id="invChainLayout"></div>
+      </div>
+
+      <!-- ④ 物料粒度明细 -->
+      <div class="inv-section-card">
+        <div class="inv-section-head">
+          <h3 class="inv-section-title"><i class="fas fa-cubes"></i> 物料粒度明细</h3>
+          <div class="inv-section-pill" id="invMaterialPill">供应商库存 · 0 条物料</div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="inv-mat-table">
+            <thead>
+              <tr>
+                <th>物料编码</th><th>物料名称</th><th>版本/规格</th><th>数量</th><th>单位</th>
+                <th>金额</th><th>子库</th><th>库龄</th><th>可用量</th><th>预留量</th>
+                <th>近30天需求</th><th>状态</th><th>风险标签</th><th>责任人</th><th>建议动作</th>
+              </tr>
+            </thead>
+            <tbody id="invMatTbody"></tbody>
+          </table>
+          <div id="invMatEmpty" style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;display:none;">
+            <div style="font-size:32px;margin-bottom:8px;">📦</div>当前节点下暂无物料数据
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 5.成本可视 ====== -->
+    <section class="page" id="page-cost">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="costProjectSelect" onchange="onCostProjectChange()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">六域48指标 | 数据源:ERP/MES/QMS/WMS 实时同步 | 三层18项监控</span></div>
+      <div class="sc-hero" id="costHero"><span class="sc-hero-name" id="costHeroName">--</span><div class="sc-hero-pills" id="costHeroPills"></div></div>
+      <!-- 6 KPI 汇总卡 -->
+      <div class="kpi-grid" id="costKpiGrid"></div>
+      <!-- Row 2：六域成本水平条 + 甜甜圈+隐性成本拆解 -->
+      <div class="chart-row" style="grid-template-columns:6fr 4fr;">
+        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-bars"></i> 六大成本域结构</h3><span class="badge" style="background:var(--primary-bg);color:var(--primary);margin-left:auto">本月累计</span></div><div class="card-body"><div id="costDomainBars"></div><div id="costTotalSummary"></div><div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;color:var(--text-sec);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">近6周总成本趋势</div><div style="height:90px"><canvas id="costTrendChart"></canvas></div></div></div></div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="chart-card" style="flex:1"><div class="card-header"><h3><i class="fas fa-chart-pie"></i> 成本域占比</h3><span class="badge" style="background:var(--danger-bg);color:var(--danger);margin-left:auto">实际 vs 目标</span></div><div class="card-body"><div style="display:flex;align-items:center;gap:12px;"><div style="position:relative;width:130px;height:130px;flex-shrink:0"><canvas id="costDonutChart"></canvas><div id="costDonutCenter" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"></div></div><div style="flex:1" id="costDonutLegend"></div></div></div></div>
+          <div class="chart-card"><div class="card-header"><h3><i class="fas fa-iceberg"></i> 隐性成本拆解 TS-06</h3><span class="badge" style="background:var(--danger-bg);color:var(--danger);margin-left:auto" id="costHiddenTotal"></span></div><div class="card-body"><div id="costHiddenBreakdown"></div></div></div>
+        </div>
+      </div>
+      <!-- 🔴 第一层：7大必看指标 -->
+      <div class="chart-row" style="grid-template-columns:1fr"><div class="chart-card"><div class="card-header" style="background:linear-gradient(90deg,var(--danger-bg),var(--card));border-left:4px solid var(--danger)"><h3><i class="fas fa-heart-pulse" style="color:var(--danger)"></i> 第一层指标｜每周必看 · 成本健康诊断仪 <span id="costL1SummaryBadge" style="margin-left:8px;font-size:11px;padding:2px 10px;border-radius:12px;font-weight:600"></span></h3></div><div class="card-body"><div id="costLayer1Grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;"></div></div></div></div>
+      <!-- 🟡 第二层：8个穿透指标 -->
+      <div class="chart-row" style="grid-template-columns:1fr"><div class="chart-card"><div class="card-header" style="background:linear-gradient(90deg,var(--warning-bg),var(--card));border-left:4px solid var(--warning)"><h3><i class="fas fa-magnifying-glass-chart" style="color:var(--warning)"></i> 第二层指标｜触发异常后穿透根因 <span id="costL2SummaryBadge" style="margin-left:8px;font-size:11px;padding:2px 10px;border-radius:12px;font-weight:600"></span></h3></div><div class="card-body"><div id="costLayer2Grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;"></div><div id="costRootChain" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div></div></div></div>
+      <!-- 🔵 第三层 + 六域指标Tab -->
+      <div class="chart-row" style="grid-template-columns:5fr 5fr;">
+        <div class="chart-card"><div class="card-header" style="background:linear-gradient(90deg,var(--info-bg),var(--card));border-left:4px solid var(--info)"><h3><i class="fas fa-shield-halved" style="color:var(--info)"></i> 第三层指标｜每月背景核对 · 趋势健康</h3></div><div class="card-body"><div id="costLayer3Content"></div></div></div>
+        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-table-cells"></i> 供应链总成本指标（六域）</h3></div><div class="card-body" style="padding:0">
+          <div id="costDomainTabs" style="display:flex;border-bottom:1px solid var(--border);overflow-x:auto;"></div>
+          <div style="max-height:420px;overflow-y:auto;" id="costDomainTabContent"></div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ====== 6.物料导入状态 ====== -->
+    <section class="page" id="page-material">
+      <!-- 项目选择器 + 信息（合并一行） -->
+      <div class="filter-bar" style="gap:0">
+        <div class="filter-group"><label>项目:</label><select id="materialProjectSelect" onchange="initPage_material()"></select></div>
+        <span id="npiInfoInline" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:14px"></span>
+      </div>
+
+      <!-- 6汇总卡片 -->
+      <div class="npi-cards" id="npiCards"></div>
+
+      <!-- 项目物料进度百分比 -->
+      <div class="npi-pipeline-panel"><div class="npi-stage-head"><span class="npi-pipeline-panel-title">项目物料进度百分比</span></div><div class="npi-pipeline" id="npiPipeline"></div></div>
+
+      <!-- 风险标签命中分布 -->
+      <div class="npi-risk-panel"><div class="npi-risk-panel-header"><span class="npi-risk-panel-title">风险标签命中分布</span><span id="npiDistFilterHint" style="font-size:11px;color:var(--primary);display:none;">已筛选 · 点击标签取消</span></div><div class="npi-risk-categories" id="npiRiskDist"></div></div>
+
+      <!-- 物料链路明细 -->
+      <div class="npi-table-panel"><div class="npi-table-head"><span class="npi-table-title">物料全链路明细状态</span><span id="npiTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="npi-table-wrap"><table><thead id="npiTHead"></thead><tbody id="npiTBody"></tbody></table></div></div>
+    </section>
+
+    <!-- ====== 7.供方协同 ====== -->
+    <!-- ====== 7.供方深度协同 ====== -->
+    <section class="page" id="page-supplier">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="supplierProjectSelect" onchange="initPage_supplier()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">关键物料供应链全链路追踪 · 供方风险早识别</span></div>
+      <div class="sp-info-bar" id="spInfoBar"><span class="sp-info-name" id="spProjectName"></span><span class="sp-info-items" id="spInfoItems"></span></div>
+      <div class="sp-cards" id="spCards"></div>
+      <div class="sp-pipeline" id="spPipeline"></div>
+      <div class="sp-risk-panel" id="spRiskPanel"><div class="sp-risk-title">供应商风险概览</div><div class="sp-risk-grid" id="spRiskGrid"></div></div>
+      <div class="sp-expedite-panel" id="spExpeditePanel"></div>
+      <div class="sp-table-panel"><div class="sp-table-head"><span class="sp-table-title">关键物料供应链明细</span><span id="spTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="sp-table-wrap"><table><thead id="spTHead"></thead><tbody id="spTBody"></tbody></table></div></div>
+    </section>
+
+    <!-- ====== 8.交期答复 ====== -->
+    <section class="page" id="page-delivery">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="deliveryProjectSelect" onchange="initPage_delivery()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">客户预测交期答复 · 延迟根因分析 · 产能物料瓶颈识别</span></div>
+      <div class="dl-info-bar" id="dlInfoBar"><span class="dl-info-name" id="dlProjectName"></span><span class="dl-info-items" id="dlInfoItems"></span></div>
+      <div class="dl-cards" id="dlCards"></div>
+      <div class="dl-chart-panel"><div class="dl-chart-card"><div class="dl-chart-title">交期趋势 · 最近12周</div><canvas id="dlTimelineChart" height="280"></canvas><div class="dl-chart-legend"><span><i style="background:#22c55e"></i>满足</span><span><i style="background:#ef4444"></i>延迟</span><span><i style="background:#3b82f6"></i>预测</span><span><i style="background:#f59e0b;border-radius:0;width:18px;height:2px;display:inline-block;vertical-align:middle;margin-right:4px"></i>ATP率</span></div></div></div>
+      <div class="dl-root-panel" id="dlRootPanel"></div>
+      <div class="dl-table-panel"><div class="dl-table-head"><span class="dl-table-title">客户交期答复明细</span><span id="dlTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="dl-table-wrap"><table><thead id="dlTHead"></thead><tbody id="dlTBody"></tbody></table></div></div>
+    </section>
+
+    <!-- ====== 9.需求预测 ====== -->
+    <section class="page" id="page-forecast">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="forecastProjectSelect" onchange="initPage_forecast()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">预测准确率/波动率 · 基线预测对比 · 乐观/保守判断</span></div>
+      <div class="fc-info-bar" id="fcInfoBar"><span class="fc-info-name" id="fcProjectName"></span><span class="fc-info-items" id="fcInfoItems"></span></div>
+      <div class="fc-cards" id="fcCards"></div>
+      <div class="fc-chart-panel"><div class="fc-chart-card"><div class="fc-chart-title">客户预测 vs 基线预测 · 滚动12周</div><canvas id="fcBaselineChart" height="260"></canvas></div><div class="fc-chart-card"><div class="fc-chart-title">周度预测准确率 & 波动率</div><canvas id="fcAccuracyChart" height="260"></canvas></div></div>
+      <div class="fc-judge-panel" id="fcJudgePanel"></div>
+      <div class="fc-table-panel"><div class="fc-table-head"><span class="fc-table-title">周度预测明细</span><span id="fcTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="fc-table-wrap"><table><thead id="fcTHead"></thead><tbody id="fcTBody"></tbody></table></div></div>
+    </section>
+
+    <!-- ====== 10.供需齐套 ====== -->
+    <section class="page" id="page-supplydemand">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="sdProjectSelect" onchange="initPage_supplydemand()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">CTB引擎结果 · 齐套缺口分析 · 催料优先级</span></div>
+      <div class="sd-info-bar" id="sdInfoBar"><span class="sd-info-name" id="sdProjectName"></span><span class="sd-info-items" id="sdInfoItems"></span></div>
+      <div class="sd-cards" id="sdCards"></div>
+      <div class="sd-pipeline" id="sdPipeline"></div>
+      <div class="sd-shortage-panel" id="sdShortagePanel"></div>
+      <div class="sd-action-panel" id="sdActionPanel"></div>
+      <div class="sd-table-panel"><div class="sd-table-head"><span class="sd-table-title">CTB齐套明细</span><span id="sdTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="sd-table-wrap"><table><thead id="sdTHead"></thead><tbody id="sdTBody"></tbody></table></div></div>
+    </section>
+
+    <!-- ====== 11.风险雷达预警 ====== -->
+    <section class="page" id="page-risk">
+      <div class="filter-bar" style="gap:0">
+        <div class="filter-group"><label>项目:</label><select id="riskProjectSelect" onchange="initPage_risk()"></select></div>
+        <span id="rrInfoInline" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:14px"></span>
+      </div>
+      <div class="npi-cards" id="rrKpiRow"></div>
+      <div class="rr-layout">
+        <div class="rr-sidebar" id="rrSidebar"></div>
+        <div class="rr-detail" id="rrDetail"><div class="rr-empty">点击左侧风险项查看详情</div></div>
+      </div>
+    </section>
+
+    <!-- ====== 12.事件闭环管理 ====== -->
+    <section class="page" id="page-closedloop">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="closedloopProjectSelect" onchange="initPage_closedloop()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">工单追踪 · 六步闭环 · PDCA驱动 · 时效管控</span></div>
+      <div class="cl-layout">
+        <div class="cl-list" id="clWorkorderList"></div>
+        <div class="cl-detail" id="clWorkorderDetail"><div class="cl-empty">点击左侧工单查看详情</div></div>
+      </div>
+    </section>
+
+    <!-- ====== 15.场景指标清单 ====== -->
+    <section class="page" id="page-indicatorlist">
+      <div class="npi-table-panel">
+        <div class="npi-table-head" style="padding:14px 18px;border-bottom:1px solid var(--border-light)">
+          <span class="npi-table-title">场景指标清单</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="ilTotalCount" style="font-size:11px;color:var(--text-muted)"></span>
+            <button class="ov-page-btn" onclick="exportIndicatorExcel()" style="font-size:11px;padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:4px"><i class="fas fa-file-excel"></i> 导出Excel</button>
+          </div>
+        </div>
+        <div class="npi-table-wrap" style="max-height:70vh">
+          <table><thead id="ilTHead"></thead><tbody id="ilTBody"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 13.系统配置管理 ====== -->
+    <section class="page" id="page-settings">
+      <div class="kpi-grid" id="settingsKpiGrid"></div>
+      <div class="st-tab-bar" id="stTabBar">
+        <div class="st-tab active" data-tab="alerts"><i class="fas fa-bell"></i> 告警阈值</div>
+        <div class="st-tab" data-tab="datasource"><i class="fas fa-database"></i> 数据源管理</div>
+        <div class="st-tab" data-tab="roles"><i class="fas fa-users-gear"></i> 角色权限</div>
+        <div class="st-tab" data-tab="notify"><i class="fas fa-paper-plane"></i> 通知策略</div>
+        <div class="st-tab" data-tab="params"><i class="fas fa-sliders"></i> 系统参数</div>
+      </div>
+      <div class="st-panel active" id="stPanel-alerts"><div class="st-panel-inner"><table class="data-table"><thead><tr><th>指标</th><th>当前阈值</th><th>单位</th><th>预警级别</th><th>状态</th><th>操作</th></tr></thead><tbody id="alertThresholdBody"></tbody></table></div></div>
+      <div class="st-panel" id="stPanel-datasource"><div class="st-panel-inner"><table class="data-table"><thead><tr><th>数据源</th><th>类型</th><th>同步频率</th><th>最近同步</th><th>状态</th></tr></thead><tbody id="dataSourceBody"></tbody></table></div></div>
+      <div class="st-panel" id="stPanel-roles"><div class="st-panel-inner"><table class="data-table"><thead><tr><th>角色</th><th>数据范围</th><th>审批权限</th><th>用户数</th><th>状态</th></tr></thead><tbody id="rolePermBody"></tbody></table></div></div>
+      <div class="st-panel" id="stPanel-notify"><div class="st-panel-inner"><table class="data-table"><thead><tr><th>事件类型</th><th>通知渠道</th><th>接收人</th><th>频率</th><th>状态</th></tr></thead><tbody id="notifyPolicyBody"></tbody></table></div></div>
+      <div class="st-panel" id="stPanel-params"><div class="st-panel-inner"><table class="data-table"><thead><tr><th>参数名</th><th>参数值</th><th>说明</th><th>模块</th><th>更新时间</th></tr></thead><tbody id="sysParamBody"></tbody></table></div></div>
+    </section>
+
+    <!-- ====== 14.智能员工助手 ====== -->
+    <section class="page" id="page-ai">
+      <div class="ai-chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg ai-msg"><div class="msg-avatar"><i class="fas fa-robot"></i></div><div class="msg-body"><p>您好！我是<strong>歌尔供应链控制塔智能助手</strong>，以项目为视角为您服务。</p><p>我可以：</p><ul><li>📊 分析BG/项目维度供应链数据</li><li>⚠️ 解读跨项目风险预警</li><li>🔍 追踪项目物料齐套与交付状态</li><li>🤖 协调 OC/PC/MC/Buyer 跨角色协作</li></ul><p>请选择项目或直接提问：</p></div></div>
+        </div>
+        <div class="chat-input-area">
+          <div class="quick-actions">
+            <button class="quick-btn" onclick="sendQuickMsg('当前有哪些严重风险预警？')">风险预警</button>
+            <button class="quick-btn" onclick="sendQuickMsg('Meta Quest 4 VR项目状态如何？')">VR项目</button>
+            <button class="quick-btn" onclick="sendQuickMsg('生成本周供应链健康度报告')">周报</button>
+            <button class="quick-btn" onclick="sendQuickMsg('协调OC和PC确认Meta Quest 4交期')">协同调度</button>
+            <button class="quick-btn" onclick="sendQuickMsg('MC请确认BES2300芯片齐套情况')">齐套确认</button>
+          </div>
+          <div class="chat-input-wrapper">
+            <textarea id="chatInput" placeholder="输入问题，按 Enter 发送..."></textarea>
+            <button class="btn btn-primary send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<!-- 14 Modules: 1+12+1 -->
+<script src="js/modules/overview.js"></script>
+<script src="js/modules/progress.js"></script>
+<script src="js/modules/cycle.js"></script>
+<script src="js/modules/inventory.js"></script>
+<script src="js/modules/cost.js"></script>
+<script src="js/modules/material.js"></script>
+<script src="js/modules/supplier.js"></script>
+<script src="js/modules/delivery.js"></script>
+<script src="js/modules/forecast.js"></script>
+<script src="js/modules/supplydemand.js"></script>
+<script src="js/modules/risk.js"></script>
+<script src="js/modules/closedloop.js"></script>
+<script src="js/modules/indicatorlist.js"></script>
+<script src="js/modules/ai.js"></script>
+<script src="js/modules/settings.js"></script>
+</body>
+</html>
