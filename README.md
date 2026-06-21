@@ -95,8 +95,22 @@ Goertek-SCCT-Demo/
 
 ## 在线访问
 
-- **主地址**：https://goertek.scct.cloud/
-- **备用地址**：http://114.132.63.242:8888/
+### 公网访问
+
+| # | 方式 | 地址 | 说明 |
+|---|------|------|------|
+| 1 | 🔒 HTTPS 域名 | https://goertek.scct.cloud/ | 推荐：SSL加密 |
+| 2 | 🔄 HTTP 域名 | http://goertek.scct.cloud/ | 自动跳转 HTTPS |
+| 3 | 🔒 HTTPS IP | https://114.132.63.242/ | SSL证书提示可忽略 |
+| 4 | 🔄 HTTP IP | http://114.132.63.242/ | 自动跳转 HTTPS |
+| 5 | ⚡ HTTP IP:8888 | http://114.132.63.242:8888/ | 纯HTTP直连，无跳转 |
+
+### 内网/本机访问
+
+| # | 方式 | 地址 | 说明 |
+|---|------|------|------|
+| 6 | 🔄 本机 80 | http://localhost/ | 自动跳转 HTTPS |
+| 7 | ⚡ 本机 8888 | http://127.0.0.1:8888/ | 纯HTTP直连 |
 
 ## 部署信息
 
@@ -107,7 +121,7 @@ Goertek-SCCT-Demo/
 | 实例 ID | lhins-ftf1tsob |
 | 地域 | ap-guangzhou |
 | 部署方式 | Docker + Nginx Alpine |
-| 端口 | 80 (HTTP→HTTPS) / 443 (HTTPS) |
+| 容器端口 | 80→443跳转 / 443 HTTPS / 8080→8888 HTTP直连 |
 
 ## License
 
