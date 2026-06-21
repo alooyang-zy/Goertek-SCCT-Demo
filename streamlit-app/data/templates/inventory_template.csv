@@ -1,0 +1,6 @@
+product_id,warehouse_id,current_inventory,holding_cost,ordering_cost,lead_time_days,service_level_target
+PROD-001,WH-001,500,2.5,100,7,0.95
+PROD-001,WH-002,300,2.5,100,5,0.95
+PROD-002,WH-001,200,1.8,80,10,0.90
+PROD-002,WH-003,150,1.8,80,8,0.90
+PROD-003,WH-002,400,3.2,120,6,0.98

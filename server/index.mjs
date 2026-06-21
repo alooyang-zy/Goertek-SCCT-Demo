@@ -144,6 +144,25 @@ const server = http.createServer(async (req, res) => {
     return res.end(swaggerHTML(spec));
   }
 
+  // Streamlit 反向代理 → /streamlit/* → localhost:8502/*
+  if (pathname.startsWith("/streamlit") || pathname.startsWith("/~/") || pathname.startsWith("/_stcore") || pathname.startsWith("/component") || pathname.startsWith("/app/static")) {
+    const cleanPath = pathname.replace(/^\/streamlit/, "") || "/";
+    try {
+      const pyUrl = `http://127.0.0.1:8502${cleanPath}${url.search || ""}`;
+      const pyRes = await fetch(pyUrl, { headers: req.headers, method: req.method, redirect: "manual" });
+      const contentType = pyRes.headers.get("content-type") || "text/html";
+      const headers = { "Content-Type": contentType, "Access-Control-Allow-Origin": "*" };
+      // 处理Streamlit的WebSocket升级头
+      if (pyRes.headers.get("location")) headers["Location"] = pyRes.headers.get("location");
+      const body = await pyRes.arrayBuffer();
+      res.writeHead(pyRes.status, headers);
+      return res.end(Buffer.from(body));
+    } catch (e) {
+      res.writeHead(502);
+      return res.end("Streamlit service unavailable");
+    }
+  }
+
   // 智能分析代理 → Python 服务
   if (pathname.startsWith("/api/intelligence")) {
     try {

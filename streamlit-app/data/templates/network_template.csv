@@ -1,0 +1,9 @@
+source_node,destination_node,transport_cost,lead_time_days,capacity,node_type
+SUPPLIER-001,FACTORY-001,500,5,1000,supplier
+SUPPLIER-002,FACTORY-001,600,7,800,supplier
+FACTORY-001,WH-001,300,3,1200,factory
+FACTORY-001,WH-002,350,4,1200,factory
+WH-001,RETAILER-001,150,2,600,warehouse
+WH-001,RETAILER-002,200,3,600,warehouse
+WH-002,RETAILER-003,180,2,500,warehouse
+WH-002,RETAILER-004,220,3,500,warehouse
