@@ -355,3 +355,139 @@ window._rrSwitchTab=function(tab){_rrTab=tab;_expandedEvent=null;renderDetail(cu
 window.initPage_risk=initPage_risk;
 })();
 registerModule('risk', initPage_risk);
+
+// ============================================================
+// 后端API集成 — 控制塔预警引擎 (基于 virbahu 核心引擎)
+// ============================================================
+(function(){
+  const API_BASE = '/api';
+
+  async function fetchAlerts() {
+    try {
+      const [alertsRes, summaryRes, historyRes] = await Promise.all([
+        fetch(`${API_BASE}/alerts`),
+        fetch(`${API_BASE}/alerts/summary`),
+        fetch(`${API_BASE}/alerts/history`)
+      ]);
+      const alerts = (await alertsRes.json()).data || [];
+      const summary = (await summaryRes.json()).data || {};
+      const history = (await historyRes.json()).data || [];
+      return { alerts, summary, history };
+    } catch (e) {
+      console.warn('控制塔后端未连接，使用本地数据');
+      return null;
+    }
+  }
+
+  const typeConfig = {
+    LOW_INVENTORY:  { icon: '📦', name: '库存不足',    color: '#ef4444', level: 'critical' },
+    OTD_MISS:       { icon: '🚚', name: 'OTD未达标',   color: '#f59e0b', level: 'warning'  },
+    QUALITY_ALERT:  { icon: '🔬', name: '质量问题',    color: '#ef4444', level: 'critical' },
+    LT_DEVIATION:   { icon: '⏱️', name: '交期偏差',    color: '#f59e0b', level: 'warning'  },
+    COST_OVERRUN:   { icon: '💰', name: '成本超支',    color: '#f59e0b', level: 'warning'  }
+  };
+
+  function renderAlertCard(alert) {
+    const cfg = typeConfig[alert.type] || { icon: '⚠️', name: alert.type, color: '#999', level: 'warning' };
+    const sColor = alert.severity === 'critical' ? '#ef4444' : '#f59e0b';
+    const sLabel = alert.severity === 'critical' ? '严重' : '警告';
+    return `
+      <div style="background:var(--panel-bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;border-left:3px solid ${sColor}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:1.1em">${cfg.icon} <strong>${alert.entity}</strong></span>
+          <span style="background:${sColor}20;color:${sColor};padding:2px 8px;border-radius:4px;font-size:0.8em;font-weight:600">${sLabel}</span>
+        </div>
+        <div style="color:var(--text-secondary);font-size:0.9em;margin-bottom:4px">${alert.message}</div>
+        <div style="color:var(--primary);font-size:0.85em">💡 ${alert.suggestion}</div>
+        <div style="display:flex;gap:12px;margin-top:6px;font-size:0.75em;color:var(--text-muted)">
+          <span>${alert.project}</span><span>${alert.metric}</span><span>${new Date(alert.timestamp).toLocaleString('zh-CN')}</span>
+        </div>
+      </div>`;
+  }
+
+  function renderControlTowerPanel(data) {
+    if (!data) return '<div style="padding:20px;text-align:center;color:var(--text-muted)">⚠️ 控制塔后端未连接，启动后端服务以查看实时预警</div>';
+
+    const { alerts, summary, history } = data;
+    const total = summary.total_alerts || 0;
+    const critical = summary.critical || 0;
+    const warning = summary.warning || 0;
+    const score = summary.risk_score || 0;
+    const level = summary.risk_level || '—';
+
+    const typeCards = Object.entries(typeConfig).map(([key, cfg]) => {
+      const count = (summary.by_type || {})[key] || 0;
+      const cls = count > 0 ? (cfg.level === 'critical' ? 'critical' : 'warning') : 'normal';
+      return `
+        <div style="flex:1;min-width:100px;background:var(--panel-bg);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:1.5em">${cfg.icon}</div>
+          <div style="font-size:0.8em;color:var(--text-secondary);margin:4px 0">${cfg.name}</div>
+          <div style="font-size:1.3em;font-weight:700;color:${cls==='critical'?'#ef4444':cls==='warning'?'#f59e0b':'var(--text-secondary)'}">${count}</div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div style="margin:16px 0">
+        <h3 style="display:flex;align-items:center;gap:8px">
+          🔔 控制塔预警引擎 <span style="font-size:0.7em;background:var(--primary);color:#fff;padding:2px 8px;border-radius:4px">LIVE</span>
+        </h3>
+
+        <!-- KPI -->
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:0.8em;opacity:0.9">⚠️ 预警总数</div>
+            <div style="font-size:2em;font-weight:800">${total}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:0.8em;opacity:0.9">🔴 严重</div>
+            <div style="font-size:2em;font-weight:800">${critical}</div>
+          </div>
+          <div style="flex:1;min-width:120px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:0.8em;opacity:0.9">🎯 风险评分</div>
+            <div style="font-size:2em;font-weight:800">${score}</div>
+            <div style="font-size:0.75em;opacity:0.9">${level}</div>
+          </div>
+        </div>
+
+        <!-- 5类预警 -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">${typeCards}</div>
+
+        <!-- 预警列表 -->
+        <div style="max-height:500px;overflow-y:auto">
+          ${alerts.slice(0, 20).map(renderAlertCard).join('')}
+        </div>
+      </div>`;
+  }
+
+  // 重写 initPage_risk 以注入控制塔面板
+  const origInit = window.initPage_risk;
+  window.initPage_risk = async function(container) {
+    // 先渲染原始风险页面
+    if (origInit) origInit(container);
+
+    // 注入后端控制塔预警面板
+    const ctPanel = document.createElement('div');
+    ctPanel.id = 'control-tower-alerts';
+    ctPanel.innerHTML = '<div style="padding:20px;text-align:center">⏳ 加载控制塔预警引擎...</div>';
+
+    // 找到风险页面主容器后插入
+    const mainContent = container.querySelector('.page-content') || container;
+    const firstChild = mainContent.firstChild;
+    if (firstChild) {
+      mainContent.insertBefore(ctPanel, firstChild);
+    } else {
+      mainContent.appendChild(ctPanel);
+    }
+
+    // 异步加载数据
+    const data = await fetchAlerts();
+    ctPanel.innerHTML = renderControlTowerPanel(data);
+
+    // 每30秒自动刷新
+    setInterval(async () => {
+      const fresh = await fetchAlerts();
+      if (fresh) ctPanel.innerHTML = renderControlTowerPanel(fresh);
+    }, 30000);
+  };
+
+})();
