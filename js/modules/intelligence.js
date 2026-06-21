@@ -3,20 +3,23 @@
 const API = '/api/intelligence';
 
 function initPage_intelligence(container) {
+  // app.js 不传 container，自己找
+  container = container || document.getElementById('page-intelligence');
+  if (!container) return;
   container.innerHTML = `
     <div class="page-header"><h2>🧠 供应链智能分析</h2><p>基于AI的供应链深度分析引擎 — 需求预测 · 数字孪生 · 中断模拟 · 库存优化 · 风险评估</p></div>
-    <div class="tabs" id="intelTabs">
-      <button class="tab active" data-tab="forecast">📈 需求预测</button>
-      <button class="tab" data-tab="twin">🕸️ 数字孪生</button>
-      <button class="tab" data-tab="sim">🎲 中断模拟</button>
-      <button class="tab" data-tab="inv">📦 库存优化</button>
-      <button class="tab" data-tab="risk">🎯 风险评估</button>
+    <div class="ct-tabs" id="intelTabs">
+      <button class="ct-tab active" data-tab="forecast">📈 需求预测</button>
+      <button class="ct-tab" data-tab="twin">🕸️ 数字孪生</button>
+      <button class="ct-tab" data-tab="sim">🎲 中断模拟</button>
+      <button class="ct-tab" data-tab="inv">📦 库存优化</button>
+      <button class="ct-tab" data-tab="risk">🎯 风险评估</button>
     </div>
     <div id="intelContent"><div class="loading">⏳ 加载中...</div></div>`;
 
-  container.querySelectorAll('#intelTabs .tab').forEach(tab => {
+  container.querySelectorAll('#intelTabs .ct-tab').forEach(tab => {
     tab.onclick = () => {
-      container.querySelectorAll('#intelTabs .tab').forEach(t => t.classList.remove('active'));
+      container.querySelectorAll('#intelTabs .ct-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       loadTab(tab.dataset.tab);
     };
@@ -112,7 +115,7 @@ async function renderSimulation() {
       ${kpi('缺货概率', ((d.stockout_probability?.mean||0)*100).toFixed(1)+'%', '#dc2626')}
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0">
-      ${types.map(t => `<button onclick="window._runSim('${t.k}')" class="tab" style="flex:1;min-width:120px">${t.icon} ${t.n}</button>`).join('')}
+      ${types.map(t => `<button onclick="window._runSim('${t.k}')" class="ct-tab" style="flex:1;min-width:120px">${t.icon} ${t.n}</button>`).join('')}
     </div>
     <div class="panel"><h4 id="simTitle">模拟结果：供应商停产</h4>
       <table class="data-table"><tr><th>指标</th><th>均值</th><th>标准差</th><th>P10</th><th>P90</th></tr>
