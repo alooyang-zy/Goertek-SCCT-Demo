@@ -93,6 +93,22 @@ Goertek-SCCT-Demo/
         └── indicatorlist.js # 指标清单
 ```
 
+## 在线访问
+
+- **主地址**：https://goertek.scct.cloud/
+- **备用地址**：http://114.132.63.242:8888/
+
+## 部署信息
+
+| 项目 | 详情 |
+|------|------|
+| 域名 | goertek.scct.cloud (HTTPS) |
+| 服务器 | OpenCloudOS-YEio (114.132.63.242) |
+| 实例 ID | lhins-ftf1tsob |
+| 地域 | ap-guangzhou |
+| 部署方式 | Docker + Nginx Alpine |
+| 端口 | 80 (HTTP→HTTPS) / 443 (HTTPS) |
+
 ## License
 
 MIT © 2026 Goertek SCCT Team
