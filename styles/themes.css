@@ -1,0 +1,167 @@
+/* ===== 歌尔SCCT 双主题变量 ===== */
+/* 浅色主题（默认）已在 main.css :root 中定义，此处仅覆盖深色主题 */
+
+[data-theme="dark"] {
+  --primary: #4da3ff;
+  --primary-light: #60a5fa;
+  --primary-dark: #93c5fd;
+  --primary-bg: rgba(30,92,179,.22);
+
+  --accent: #f59e0b;
+  --accent-light: rgba(245,158,11,.18);
+
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,.15);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245,158,11,.15);
+  --danger: #ef4444;
+  --danger-bg: rgba(239,68,68,.15);
+  --info: #06b6d4;
+  --info-bg: rgba(6,182,212,.15);
+
+  --token-ok: #22c55e;
+  --token-warn: #f59e0b;
+  --token-bad: #ef4444;
+  --token-ok-bg: rgba(34,197,94,.15);
+  --token-warn-bg: rgba(245,158,11,.15);
+  --token-bad-bg: rgba(239,68,68,.15);
+
+  --text: #e2e8f0;
+  --text-sec: #94a3b8;
+  --text-muted: #64748b;
+
+  --bg: #0f172a;
+  --card: #1e293b;
+  --border: #334155;
+  --border-light: #1e293b;
+
+  --card-shadow: 0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.4);
+  --shadow: 0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 6px rgba(0,0,0,.3),0 2px 4px rgba(0,0,0,.3);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,.4),0 4px 6px rgba(0,0,0,.3);
+}
+
+/* 深色主题下的全局覆盖 */
+[data-theme="dark"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-theme="dark"] .topbar {
+  background: #1e293b;
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .sidebar {
+  background: linear-gradient(180deg, #060e1a 0%, #0f1d33 100%);
+}
+
+[data-theme="dark"] .chart-card,
+[data-theme="dark"] .card,
+[data-theme="dark"] .filter-bar,
+[data-theme="dark"] .ov-filter-bar,
+[data-theme="dark"] .ov-table-card,
+[data-theme="dark"] .npi-pipeline-panel,
+[data-theme="dark"] .npi-risk-panel,
+[data-theme="dark"] .npi-table-panel,
+[data-theme="dark"] .sp-pipeline,
+[data-theme="dark"] .sp-risk-panel,
+[data-theme="dark"] .sp-table-panel,
+[data-theme="dark"] .dl-chart-panel,
+[data-theme="dark"] .dl-root-panel,
+[data-theme="dark"] .dl-table-panel,
+[data-theme="dark"] .fc-chart-panel,
+[data-theme="dark"] .fc-judge-panel,
+[data-theme="dark"] .fc-table-panel,
+[data-theme="dark"] .sd-pipeline,
+[data-theme="dark"] .sd-shortage-panel,
+[data-theme="dark"] .sd-table-panel {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #111827;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] table th {
+  background: #111827;
+  color: var(--text-sec);
+}
+
+[data-theme="dark"] table td {
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .data-table tr:hover td {
+  background: rgba(255,255,255,.03);
+}
+
+[data-theme="dark"] .btn-outline {
+  border-color: var(--border);
+  color: var(--text-sec);
+}
+
+[data-theme="dark"] .badge {
+  color: #fff;
+}
+
+/* Chart.js 适配：canvas 父容器浅背景覆盖 */
+[data-theme="dark"] .chart-wrap {
+  background: transparent;
+}
+
+/* AI 聊天适配 */
+[data-theme="dark"] .ai-chat-container {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .chat-msg.ai-msg .msg-body {
+  background: #1e293b;
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .chat-input-wrapper textarea {
+  background: #111827;
+  border-color: var(--border);
+}
+
+/* Gantt 甘特图适配 */
+[data-theme="dark"] .cycle-gantt-shell {
+  background: var(--card);
+}
+
+[data-theme="dark"] .cycle-gantt-header {
+  background: #111827;
+}
+
+/* 进度模块适配 */
+[data-theme="dark"] .sc-hero {
+  background: linear-gradient(135deg, rgba(30,92,179,.3), rgba(30,92,179,.08));
+  border-color: var(--border);
+}
+
+/* 主题切换按钮 */
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 16px;
+  transition: all .2s;
+}
+.theme-toggle:hover {
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+}

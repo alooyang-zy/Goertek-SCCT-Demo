@@ -6,6 +6,9 @@
   <title>歌尔供应链控制塔 — Goertek SCCT</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%233b82f6'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-size='20' fill='white' font-family='Arial' font-weight='bold'%3ESC%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/sandtable.css">
+  <link rel="stylesheet" href="styles/swimlane.css">
+  <link rel="stylesheet" href="styles/cost-v56.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.onload=null;this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 </head>
@@ -14,27 +17,48 @@
   <div class="sidebar-header">
     <div class="logo">
       <div class="logo-icon"><i class="fas fa-cubes"></i></div>
-      <div class="logo-text"><div class="brand">歌尔供应链控制塔</div><div class="sub">Goertek SCCT v10.26</div></div>
+      <div class="logo-text"><div class="brand">歌尔供应链控制塔</div><div class="sub">Goertek SCCT v11.0</div></div>
     </div>
     <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
   </div>
   <nav class="sidebar-nav">
-    <a href="#" class="nav-item active" data-page="overview"><i class="fas fa-th-large"></i><span>控制塔全局总览</span></a>
-    <a href="#" class="nav-item" data-page="progress"><i class="fas fa-diagram-project"></i><span>项目进度跟踪</span><span class="badge" style="background:#d97706">2</span></a>
-    <a href="#" class="nav-item" data-page="cycle"><i class="fas fa-clock-rotate-left"></i><span>项目周期监控</span></a>
-    <a href="#" class="nav-item" data-page="inventory"><i class="fas fa-heart-pulse"></i><span>项目库存健康</span></a>
-    <a href="#" class="nav-item" data-page="cost"><i class="fas fa-coins"></i><span>项目成本可视</span></a>
-    <a href="#" class="nav-item" data-page="material"><i class="fas fa-microchip"></i><span>物料导入状态</span><span class="badge">2</span></a>
-    <a href="#" class="nav-item" data-page="supplier"><i class="fas fa-handshake"></i><span>供方深度协同</span></a>
-    <a href="#" class="nav-item" data-page="delivery"><i class="fas fa-reply"></i><span>客户交期答复</span></a>
-    <a href="#" class="nav-item" data-page="forecast"><i class="fas fa-chart-line"></i><span>需求预测模型</span></a>
-    <a href="#" class="nav-item" data-page="supplydemand"><i class="fas fa-scale-balanced"></i><span>供需齐套分析</span><span class="badge">3</span></a>
-    <a href="#" class="nav-item" data-page="risk"><i class="fas fa-triangle-exclamation"></i><span>风险雷达预警</span><span class="badge">5</span></a>
-    <a href="#" class="nav-item" data-page="closedloop"><i class="fas fa-circle-check"></i><span>事件闭环管理</span></a>
-    <a href="#" class="nav-item" data-page="ai"><i class="fas fa-robot"></i><span>智能员工助手</span></a>
-    <a href="#" class="nav-item" data-page="intelligence"><i class="fas fa-brain"></i><span>供应链智能分析</span></a>
-    <a href="#" class="nav-item" data-page="settings"><i class="fas fa-gear"></i><span>系统配置管理</span></a>
-    <a href="#" class="nav-item" data-page="indicatorlist" style="display:none"><i class="fas fa-list-check"></i><span>场景指标清单</span></a>
+    <div class="nav-group-title">控制塔总览</div>
+    <a href="#" class="nav-item active" data-page="overview"><i class="fas fa-th-large"></i><span>项目分布</span></a>
+    <a href="#" class="nav-item" data-page="benchmark"><i class="fas fa-chart-column"></i><span>绩效对比</span></a>
+    <a href="#" class="nav-item" data-page="sandtable"><i class="fas fa-map-location-dot"></i><span>沙盘全景</span></a>
+
+    <div class="nav-group-title">项目运营</div>
+    <a href="#" class="nav-item" data-page="progress"><i class="fas fa-diagram-project"></i><span>履约跟踪</span><span class="badge" style="background:#d97706">2</span></a>
+    <a href="#" class="nav-item" data-page="cycle"><i class="fas fa-clock-rotate-left"></i><span>周期监控</span></a>
+    <a href="#" class="nav-item" data-page="inventory"><i class="fas fa-heart-pulse"></i><span>库存健康</span></a>
+    <a href="#" class="nav-item" data-page="cost"><i class="fas fa-coins"></i><span>运作成本</span></a>
+    <a href="#" class="nav-item" data-page="risk"><i class="fas fa-triangle-exclamation"></i><span>风险雷达</span><span class="badge">5</span></a>
+
+    <div class="nav-group-title">计划交付</div>
+    <a href="#" class="nav-item" data-page="forecast"><i class="fas fa-chart-line"></i><span>需求预测</span></a>
+    <a href="#" class="nav-item" data-page="delivery"><i class="fas fa-reply"></i><span>交期答复</span></a>
+    <a href="#" class="nav-item" data-page="supplydemand"><i class="fas fa-scale-balanced"></i><span>供需齐套</span><span class="badge">3</span></a>
+
+    <div class="nav-group-title">供应协同</div>
+    <a href="#" class="nav-item" data-page="supplier"><i class="fas fa-handshake"></i><span>库存协同</span></a>
+    <a href="#" class="nav-item" data-page="supwip"><i class="fas fa-industry"></i><span>在制协同</span></a>
+    <a href="#" class="nav-item" data-page="supquality"><i class="fas fa-check-double"></i><span>质量协同</span></a>
+
+    <div class="nav-group-title">风险闭环</div>
+    <a href="#" class="nav-item" data-page="closedloop"><i class="fas fa-bell"></i><span>事件中心</span></a>
+    <a href="#" class="nav-item" data-page="solutions"><i class="fas fa-lightbulb"></i><span>方案对策</span></a>
+    <a href="#" class="nav-item" data-page="review"><i class="fas fa-clipboard-check"></i><span>闭环复盘</span></a>
+
+    <div class="nav-group-title">智能助手</div>
+    <a href="#" class="nav-item" data-page="knowledge"><i class="fas fa-book"></i><span>知识中心</span></a>
+    <a href="#" class="nav-item" data-page="ai"><i class="fas fa-robot"></i><span>角色助手</span></a>
+
+    <div class="nav-group-title">配置管理</div>
+    <a href="#" class="nav-item" data-page="config-integration"><i class="fas fa-plug"></i><span>数据集成</span></a>
+    <a href="#" class="nav-item" data-page="config-roles"><i class="fas fa-users-gear"></i><span>角色权限</span></a>
+    <a href="#" class="nav-item" data-page="config-rules"><i class="fas fa-sliders"></i><span>规则配置</span></a>
+    <a href="#" class="nav-item" data-page="config-audit"><i class="fas fa-shield-halved"></i><span>监控审计</span></a>
+    <a href="#" class="nav-item" data-page="settings"><i class="fas fa-gear"></i><span>系统参数</span></a>
   </nav>
   <div class="sidebar-footer">
     <div class="user-info"><div class="avatar">供</div><div class="user-detail"><span class="name">供应链总监</span><span class="role">歌尔股份 · 控制塔</span></div></div>
@@ -52,6 +76,7 @@
         <select id="filterProduct" onchange="onFilterChange('product')"><option value="">全部产品</option></select>
         <button class="btn btn-sm btn-outline" onclick="resetGlobalFilter()" title="重置"><i class="fas fa-rotate-right"></i></button>
       </div>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换深色/浅色主题">🌓</button>
       <button class="icon-btn" onclick="toggleFullscreen()" title="全屏"><i class="fas fa-expand"></i></button>
     </div>
   </header>
@@ -171,6 +196,12 @@
       </div>
     </section>
 
+    <!-- ====== 1b.项目全景沙盘 ====== -->
+    <section class="page" id="page-sandtable"></section>
+
+    <!-- ====== 1c.端到端节点 ====== -->
+    <section class="page" id="page-swimlane"></section>
+
     <!-- ====== 2.项目进度跟踪 ====== -->
     <section class="page" id="page-progress">
       <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="progressProjectSelect" onchange="renderProgressPage()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">5大阶段 · 30个核心节点 · SCOR模型加权评估</span></div>
@@ -266,32 +297,7 @@
     </section>
 
     <!-- ====== 5.成本可视 ====== -->
-    <section class="page" id="page-cost">
-      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="costProjectSelect" onchange="onCostProjectChange()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">六域48指标 | 数据源:ERP/MES/QMS/WMS 实时同步 | 三层18项监控</span></div>
-      <div class="sc-hero" id="costHero"><span class="sc-hero-name" id="costHeroName">--</span><div class="sc-hero-pills" id="costHeroPills"></div></div>
-      <!-- 6 KPI 汇总卡 -->
-      <div class="kpi-grid" id="costKpiGrid"></div>
-      <!-- Row 2：六域成本水平条 + 甜甜圈+隐性成本拆解 -->
-      <div class="chart-row" style="grid-template-columns:6fr 4fr;">
-        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-bars"></i> 六大成本域结构</h3><span class="badge" style="background:var(--primary-bg);color:var(--primary);margin-left:auto">本月累计</span></div><div class="card-body"><div id="costDomainBars"></div><div id="costTotalSummary"></div><div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"><div style="font-size:11px;font-weight:700;color:var(--text-sec);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">近6周总成本趋势</div><div style="height:90px"><canvas id="costTrendChart"></canvas></div></div></div></div>
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <div class="chart-card" style="flex:1"><div class="card-header"><h3><i class="fas fa-chart-pie"></i> 成本域占比</h3><span class="badge" style="background:var(--danger-bg);color:var(--danger);margin-left:auto">实际 vs 目标</span></div><div class="card-body"><div style="display:flex;align-items:center;gap:12px;"><div style="position:relative;width:130px;height:130px;flex-shrink:0"><canvas id="costDonutChart"></canvas><div id="costDonutCenter" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"></div></div><div style="flex:1" id="costDonutLegend"></div></div></div></div>
-          <div class="chart-card"><div class="card-header"><h3><i class="fas fa-iceberg"></i> 隐性成本拆解 TS-06</h3><span class="badge" style="background:var(--danger-bg);color:var(--danger);margin-left:auto" id="costHiddenTotal"></span></div><div class="card-body"><div id="costHiddenBreakdown"></div></div></div>
-        </div>
-      </div>
-      <!-- 🔴 第一层：7大必看指标 -->
-      <div class="chart-row" style="grid-template-columns:1fr"><div class="chart-card"><div class="card-header" style="background:linear-gradient(90deg,var(--danger-bg),var(--card));border-left:4px solid var(--danger)"><h3><i class="fas fa-heart-pulse" style="color:var(--danger)"></i> 第一层指标｜每周必看 · 成本健康诊断仪 <span id="costL1SummaryBadge" style="margin-left:8px;font-size:11px;padding:2px 10px;border-radius:12px;font-weight:600"></span></h3></div><div class="card-body"><div id="costLayer1Grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;"></div></div></div></div>
-      <!-- 🟡 第二层：8个穿透指标 -->
-      <div class="chart-row" style="grid-template-columns:1fr"><div class="chart-card"><div class="card-header" style="background:linear-gradient(90deg,var(--warning-bg),var(--card));border-left:4px solid var(--warning)"><h3><i class="fas fa-magnifying-glass-chart" style="color:var(--warning)"></i> 第二层指标｜触发异常后穿透根因 <span id="costL2SummaryBadge" style="margin-left:8px;font-size:11px;padding:2px 10px;border-radius:12px;font-weight:600"></span></h3></div><div class="card-body"><div id="costLayer2Grid" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;"></div><div id="costRootChain" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div></div></div></div>
-      <!-- 🔵 第三层 + 六域指标Tab -->
-      <div class="chart-row" style="grid-template-columns:5fr 5fr;">
-        <div class="chart-card"><div class="card-header" style="background:linear-gradient(90deg,var(--info-bg),var(--card));border-left:4px solid var(--info)"><h3><i class="fas fa-shield-halved" style="color:var(--info)"></i> 第三层指标｜每月背景核对 · 趋势健康</h3></div><div class="card-body"><div id="costLayer3Content"></div></div></div>
-        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-table-cells"></i> 供应链总成本指标（六域）</h3></div><div class="card-body" style="padding:0">
-          <div id="costDomainTabs" style="display:flex;border-bottom:1px solid var(--border);overflow-x:auto;"></div>
-          <div style="max-height:420px;overflow-y:auto;" id="costDomainTabContent"></div>
-        </div></div>
-      </div>
-    </section>
+    <section class="page" id="page-cost"></section>
 
     <!-- ====== 6.物料导入状态 ====== -->
     <section class="page" id="page-material">
@@ -441,28 +447,48 @@
         </div>
       </div>
     </section>
+
+    <!-- ====== 新增模块 ====== -->
+    <section class="page" id="page-benchmark"></section>
+    <section class="page" id="page-supwip"></section>
+    <section class="page" id="page-supquality"></section>
+    <section class="page" id="page-solutions"></section>
+    <section class="page" id="page-review"></section>
+    <section class="page" id="page-knowledge"></section>
+    <section class="page" id="page-config-integration"></section>
+    <section class="page" id="page-config-roles"></section>
+    <section class="page" id="page-config-rules"></section>
+    <section class="page" id="page-config-audit"></section>
   </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
-<!-- 14 Modules: 1+12+1 -->
+<!-- SCCT v11.0 — 22个业务模块 -->
 <script src="js/modules/overview.js"></script>
+<script src="js/modules/benchmark.js"></script>
+<script src="js/modules/sandtable.js"></script>
 <script src="js/modules/progress.js"></script>
 <script src="js/modules/cycle.js"></script>
 <script src="js/modules/inventory.js"></script>
 <script src="js/modules/cost.js"></script>
-<script src="js/modules/material.js"></script>
-<script src="js/modules/supplier.js"></script>
-<script src="js/modules/delivery.js"></script>
-<script src="js/modules/forecast.js"></script>
-<script src="js/modules/supplydemand.js"></script>
 <script src="js/modules/risk.js"></script>
+<script src="js/modules/forecast.js"></script>
+<script src="js/modules/delivery.js"></script>
+<script src="js/modules/supplydemand.js"></script>
+<script src="js/modules/supplier.js"></script>
+<script src="js/modules/supwip.js"></script>
+<script src="js/modules/supquality.js"></script>
 <script src="js/modules/closedloop.js"></script>
-<script src="js/modules/indicatorlist.js"></script>
-<script src="js/modules/intelligence.js"></script>
+<script src="js/modules/solutions.js"></script>
+<script src="js/modules/review.js"></script>
+<script src="js/modules/knowledge.js"></script>
 <script src="js/modules/ai.js"></script>
+<script src="js/modules/config-integration.js"></script>
+<script src="js/modules/config-roles.js"></script>
+<script src="js/modules/config-rules.js"></script>
+<script src="js/modules/config-audit.js"></script>
 <script src="js/modules/settings.js"></script>
 </body>
 </html>

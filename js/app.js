@@ -129,7 +129,7 @@ function switchPage(pageId, opts){
   App.currentPage=pageId;
   // 穿透跳转上下文
   if(opts && opts.projectId) App.drillDown = { pageId: pageId, projectId: opts.projectId };
-  const titles={overview:'控制塔全局总览',progress:'项目进度跟踪',cycle:'项目周期监控',inventory:'项目库存健康',cost:'项目成本可视',material:'物料导入状态',supplier:'供方深度协同',delivery:'客户交期答复',forecast:'需求预测模型',supplydemand:'供需齐套分析',risk:'风险雷达预警',closedloop:'事件闭环管理',settings:'系统配置管理',ai:'智能员工助手',indicatorlist:'场景指标清单'};
+  const titles={overview:'项目分布',benchmark:'绩效对比',sandtable:'沙盘全景',progress:'履约跟踪',cycle:'周期监控',inventory:'库存健康',cost:'运作成本',risk:'风险雷达',forecast:'需求预测',delivery:'交期答复',supplydemand:'供需齐套',supplier:'库存协同',supwip:'在制协同',supquality:'质量协同',closedloop:'事件中心',solutions:'方案对策',review:'闭环复盘',knowledge:'知识中心',ai:'角色助手','config-integration':'数据集成','config-roles':'角色权限','config-rules':'规则配置','config-audit':'监控审计',settings:'系统参数',indicatorlist:'场景指标清单',swimlane:'端到端节点',material:'物料导入状态',intelligence:'供应链智能分析'};
   document.getElementById('pageTitle').textContent=titles[pageId]||'';
   document.getElementById('breadcrumbCurrent').textContent=titles[pageId]||'';
   if(moduleInits[pageId]){moduleInits[pageId]();resizeCharts();}

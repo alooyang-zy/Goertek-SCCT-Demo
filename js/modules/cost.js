@@ -1,339 +1,511 @@
-// ===== 项目成本可视 v9.1 =====
-// 基于《项目成本可视.html》参考 + 48指标体系
-// 浅色主题 · 单项目四维联动 · 六域Tab指标
+// ===== 项目成本可视 V5.6 — 供应链总成本看板 =====
+// 基于《歌尔供应链控制塔项目_供应链总成本_原型设计V5.6.html》
+// IIFE 模块，平台融合版
+(function(){
+"use strict";
 
-registerModule('cost', initPage_cost);
+var periodMeta = { day:{factor:0.08,label:"今日",suffix:"今日"}, week:{factor:0.32,label:"本周",suffix:"本周"}, month:{factor:1,label:"本月",suffix:"本月"} };
 
-// ── 48指标 ──
-const COST_IND = [
-  {id:'PC-01',domain:'采购成本',name:'BOM物料总成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'PC-02',domain:'采购成本',name:'采购价格达成率',unit:'%',normal:'≥98%',yw:'95~98%',rw:'<95%'},
-  {id:'PC-03',domain:'采购成本',name:'紧急采购溢价金额',unit:'元',normal:'≤¥1万',yw:'¥1~10万',rw:'>¥10万'},
-  {id:'PC-04',domain:'采购成本',name:'超额备料损耗',unit:'元',normal:'≤¥2万',yw:'¥2~8万',rw:'>¥8万'},
-  {id:'PC-05',domain:'采购成本',name:'汇率损益',unit:'%',normal:'±1%',yw:'±3%',rw:'>±5%'},
-  {id:'PC-06',domain:'采购成本',name:'关税&进口税费',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'PC-07',domain:'采购成本',name:'采购成本占比',unit:'%',normal:'—',yw:'—',rw:'—'},
-  {id:'MF-01',domain:'制造成本',name:'标准制造成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'MF-02',domain:'制造成本',name:'良率损耗成本',unit:'%',normal:'良率≥99%',yw:'97~99%',rw:'<97%'},
-  {id:'MF-03',domain:'制造成本',name:'返工&维修成本',unit:'元',normal:'≤¥0.5万',yw:'¥0.5~3万',rw:'>¥3万'},
-  {id:'MF-04',domain:'制造成本',name:'产能浪费成本(OEE)',unit:'%',normal:'OEE≥85%',yw:'75~85%',rw:'<75%'},
-  {id:'MF-05',domain:'制造成本',name:'模治具摊销成本',unit:'元',normal:'—',yw:'超5~10%',rw:'>10%'},
-  {id:'MF-06',domain:'制造成本',name:'超/少产成本',unit:'%',normal:'≤±2%',yw:'±2~5%',rw:'>±5%'},
-  {id:'MF-07',domain:'制造成本',name:'制造成本达成率',unit:'%',normal:'≤100%',yw:'100~108%',rw:'>108%'},
-  {id:'IV-01',domain:'库存成本',name:'平均库存金额',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'IV-02',domain:'库存成本',name:'库存持有成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'IV-03',domain:'库存成本',name:'库存周转天数DIO',unit:'天',normal:'≤30',yw:'30~45',rw:'>45'},
-  {id:'IV-04',domain:'库存成本',name:'呆滞料金额',unit:'元',normal:'≤¥2万',yw:'¥2~10万',rw:'>¥10万'},
-  {id:'IV-05',domain:'库存成本',name:'ECN变更报废金额',unit:'元',normal:'≤¥1万',yw:'¥1~5万',rw:'>¥5万'},
-  {id:'IV-06',domain:'库存成本',name:'安全库存超储率',unit:'%',normal:'≤10%',yw:'10~30%',rw:'>30%'},
-  {id:'IV-07',domain:'库存成本',name:'库存成本占比',unit:'%',normal:'—',yw:'—',rw:'—'},
-  {id:'LG-01',domain:'物流成本',name:'入厂物流成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'LG-02',domain:'物流成本',name:'出厂物流成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'LG-03',domain:'物流成本',name:'紧急空运溢价金额',unit:'元',normal:'¥0',yw:'¥1~10万',rw:'>¥10万'},
-  {id:'LG-04',domain:'物流成本',name:'空运占比',unit:'%',normal:'≤3%',yw:'3~10%',rw:'>10%'},
-  {id:'LG-05',domain:'物流成本',name:'仓储费用',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'LG-06',domain:'物流成本',name:'逆向物流成本',unit:'元',normal:'≤¥0.5万',yw:'¥0.5~3万',rw:'>¥3万'},
-  {id:'LG-07',domain:'物流成本',name:'物流成本/营收比',unit:'%',normal:'≤3%',yw:'3~6%',rw:'>6%'},
-  {id:'QC-01',domain:'质量成本',name:'预防成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'QC-02',domain:'质量成本',name:'检验成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'QC-03',domain:'质量成本',name:'内部失效成本',unit:'元',normal:'≤¥1万',yw:'¥1~5万',rw:'>¥5万'},
-  {id:'QC-04',domain:'质量成本',name:'外部失效成本',unit:'元',normal:'≤¥0.5万',yw:'¥0.5~5万',rw:'>¥5万'},
-  {id:'QC-05',domain:'质量成本',name:'DPPM/客诉罚款',unit:'元',normal:'¥0',yw:'单次>¥1万',rw:'单次>¥5万'},
-  {id:'QC-06',domain:'质量成本',name:'COQ总额',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'QC-07',domain:'质量成本',name:'COQ占营收比',unit:'%',normal:'≤5%',yw:'5~8%',rw:'>8%'},
-  {id:'QC-08',domain:'质量成本',name:'外-内失效成本比',unit:'倍',normal:'<1',yw:'1~3',rw:'>3'},
-  {id:'MG-01',domain:'管理成本',name:'SC人力成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'MG-02',domain:'管理成本',name:'系统工具摊销',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'MG-03',domain:'管理成本',name:'供应商管理成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'MG-04',domain:'管理成本',name:'需求预测误差MAPE',unit:'%',normal:'≤10%',yw:'10~20%',rw:'>20%'},
-  {id:'MG-05',domain:'管理成本',name:'紧急协调成本',unit:'元',normal:'≤¥0.5万',yw:'¥0.5~2万',rw:'>¥2万'},
-  {id:'MG-06',domain:'管理成本',name:'管理成本占比',unit:'%',normal:'≤3%',yw:'3~5%',rw:'>5%'},
-  {id:'TS-01',domain:'汇总',name:'供应链总成本',unit:'元',normal:'—',yw:'—',rw:'—'},
-  {id:'TS-02',domain:'汇总',name:'成本达成率',unit:'%',normal:'≤100%',yw:'100~110%',rw:'>110%'},
-  {id:'TS-03',domain:'汇总',name:'单件供应链成本',unit:'元/件',normal:'≤目标',yw:'超5~10%',rw:'>10%'},
-  {id:'TS-04',domain:'汇总',name:'成本超支金额',unit:'元',normal:'≤0',yw:'¥0~50万',rw:'>¥50万'},
-  {id:'TS-05',domain:'汇总',name:'各域成本占比结构',unit:'%',normal:'—',yw:'—',rw:'—'},
-  {id:'TS-06',domain:'汇总',name:'隐性成本率',unit:'%',normal:'≤2%',yw:'2~5%',rw:'>5%'}
+var metricNames = {
+  S1:"供应链总成本",S2:"供应链总成本率",S3:"总成本基线偏差",S4:"CLP成本结构占比",
+  C0:"供应链运营成本",C1:"采购与供应商运营成本",C2:"库存持有成本",C3:"正常仓储与物流运营成本",C4:"计划运营与协调成本",
+  L0:"供应链损失成本",L1:"呆滞物料损失成本",L2:"报废物料损失成本",L3:"紧急采购现货溢价损失",L4:"供应商份额偏差损失成本",L5:"缺料停线损失成本",L6:"跳票/突发品质不良异常处理损失成本",L7:"加急运输与空运增量成本",L8:"客户交付类罚款与索赔",
+  P0:"供应链前瞻投入成本",P1:"策略储备库存投入成本",P2:"供应资源与供应商能力提升投入成本",
+  D1:"供应链总成本采购强度",D2:"单位供应链总成本",D3:"损失成本占比",D4:"前瞻投入占比",D5:"采购与供应商运营成本率",D6:"库存持有成本率",D7:"正常仓储物流成本率",D8:"计划运营协调成本率",D9:"库存周转天数",D10:"损失成本率",D11:"呆滞报废损失率",D12:"紧急采购溢价率",D13:"缺料停线损失率",D14:"异常物流费用占比",D15:"客户交付索赔率",D16:"前瞻投入率",D17:"P类投入回报率"
+};
+
+var dGroups = [
+  {key:"经营总览",metrics:["D1","D2","D3","D4"]},
+  {key:"运营效率",metrics:["D5","D6","D7","D8","D9"]},
+  {key:"损失风险",metrics:["D10","D11","D12","D13","D14","D15"]},
+  {key:"前瞻投入",metrics:["D16","D17"]}
 ];
 
-const L1_IDS=['TS-02','PC-03','LG-03','MF-02','IV-04','QC-04','IV-03'];
-const L2_IDS=['PC-02','IV-05','MF-03','MF-04','QC-08','LG-04','MG-04','MF-05'];
-const L3_IDS=['TS-05','TS-06','QC-07'];
-const DM_COLORS={采购成本:'#3b82f6',制造成本:'#f97316',库存成本:'#eab308',物流成本:'#22c55e',质量成本:'#ef4444',管理成本:'#a855f7',汇总:'#6b7280'};
-const DM_ICONS={采购成本:'fa-box',制造成本:'fa-gears',库存成本:'fa-warehouse',物流成本:'fa-truck-fast',质量成本:'fa-check-double',管理成本:'fa-clipboard-list',汇总:'fa-calculator'};
-const DM_EMOJI={采购成本:'🔵',制造成本:'🟠',库存成本:'🟡',物流成本:'🟢',质量成本:'🔴',管理成本:'🟣',汇总:'⚫'};
-const CLR={d:'#dc2626',w:'#d97706',s:'#16a34a',dbg:'#fef2f2',wbg:'#fef9c3',sbg:'#f0fdf4'};
-const DM_ORDER=['采购成本','制造成本','库存成本','物流成本','质量成本','管理成本','汇总'];
+var projects = [
+  {id:"XR-26-NPI-A01",name:"XR声学模组A01",bg:"消费电子BG",bu:"声学BU",customer:"海外客户A",stage:"PVT爬坡",owner:"IP-声学一部",revenue:620,procurement:360,output:12800,baseline:45.5,inventory:96,shipAmount:515,lineValue:118,standardTransport:4.4,emergencyPurchase:10.5,pBenefit:3.8,invDays:48,c:{C1:9.6,C2:11.8,C3:7.4,C4:4.9},l:{L1:5.8,L2:2.6,L3:2.9,L4:1.4,L5:2.7,L6:1.8,L7:1.9,L8:0.7},p:{P1:5.6,P2:2.2},trend:[42,43,44,45,47,48,50,51,53,54,55,54,53,52],cTrend:[30,31,32,32,33,34,34,34,35,35,35,34,34,34],lTrend:[8,8.5,9,9.5,10.8,11.6,12.7,13.4,14.5,15.2,16,15,14,19.8],actions:[{metric:"L1",reason:"客户预测下修后专用镜片库存进入无需求区间",action:"锁定客户买单清单，同步推动跨项目转用与退供谈判",owner:"IP/销售/采购",saving:4.8,due:"06-24",status:"处理中"},{metric:"L7",reason:"爬坡延误导致连续三批次空运追交",action:"把缺料风险提前到日计划会，空运申请需绑定责任事件",owner:"物流/IP",saving:1.3,due:"06-18",status:"已启动"}]},
+  {id:"AIR-25-MP-B09",name:"TWS整机B09",bg:"消费电子BG",bu:"整机BU",customer:"海外客户B",stage:"MP量产",owner:"IP-整机平台",revenue:1180,procurement:690,output:56200,baseline:62.0,inventory:138,shipAmount:980,lineValue:260,standardTransport:7.2,emergencyPurchase:8.8,pBenefit:3.0,invDays:32,c:{C1:13.2,C2:10.6,C3:11.9,C4:4.8},l:{L1:2.1,L2:1.2,L3:1.1,L4:0.9,L5:1.4,L6:1.1,L7:0.8,L8:0.3},p:{P1:2.1,P2:1.2},trend:[52,53,54,55,57,58,59,60,60,61,60,61,62,63],cTrend:[38,39,40,40,41,41,41,42,42,42,42,42,41,41],lTrend:[7,7,7.2,7.3,7.5,7.7,8,8.2,8.3,8.5,8.4,8.6,8.7,8.9],actions:[{metric:"D7",reason:"海外出货频次高，标准物流单位成本高于同类项目",action:"合并同客户同区域出货窗口，降低零散出运比例",owner:"物流",saving:1.1,due:"06-20",status:"执行中"},{metric:"D2",reason:"单位供应链总成本略高于量产稳定项目均值",action:"复盘仓储作业、采购管理和计划协同三项单位成本",owner:"IP/计划",saving:0.9,due:"06-25",status:"待评审"}]},
+  {id:"SPK-25-MOD-C18",name:"智能音箱模组C18",bg:"智能硬件BG",bu:"声学BU",customer:"国内客户C",stage:"MP量产",owner:"IP-智能硬件",revenue:760,procurement:430,output:36500,baseline:43.2,inventory:82,shipAmount:630,lineValue:145,standardTransport:5.4,emergencyPurchase:5.4,pBenefit:1.9,invDays:29,c:{C1:10.7,C2:7.9,C3:8.6,C4:3.2},l:{L1:1.3,L2:0.8,L3:0.6,L4:0.4,L5:1.2,L6:0.7,L7:0.5,L8:0.1},p:{P1:1.6,P2:0.8},trend:[39,40,40,41,42,41,42,43,42,43,43,44,43,43],cTrend:[29,30,30,30,31,30,31,31,30,31,31,31,31,30],lTrend:[5,5,5,5,5.4,5.2,5.3,5.5,5.3,5.4,5.5,5.8,5.6,5.6],actions:[{metric:"D5",reason:"供应商认证与维护活动集中发生",action:"把共用供应商活动按受益项目拆分，避免单项目承担",owner:"采购",saving:0.8,due:"06-16",status:"已启动"},{metric:"L5",reason:"低频缺料停线，影响小时数可控",action:"纳入风险雷达观察，暂不生成专项工单",owner:"IP",saving:0.5,due:"06-19",status:"观察"}]},
+  {id:"MIC-26-NPI-D05",name:"MEMS麦克风NPI D05",bg:"零组件BG",bu:"微电子BU",customer:"海外客户D",stage:"DVT试产",owner:"IP-微电子",revenue:280,procurement:155,output:5200,baseline:29.8,inventory:52,shipAmount:205,lineValue:65,standardTransport:2.3,emergencyPurchase:3.6,pBenefit:2.2,invDays:55,c:{C1:6.3,C2:5.8,C3:4.1,C4:3.7},l:{L1:1.0,L2:0.6,L3:0.7,L4:0.6,L5:0.5,L6:1.2,L7:0.4,L8:0.0},p:{P1:3.0,P2:4.6},trend:[25,26,27,28,29,31,30,31,32,32,33,34,33,34],cTrend:[18,18,19,19,20,20,20,20,21,21,21,21,20,20],lTrend:[4,4,4.2,4.5,4.6,4.8,4.6,4.9,5,5,5.1,5.2,5,5],actions:[{metric:"D16",reason:"备用源认证与样品测试集中发生，前瞻投入强度偏高",action:"与研发里程碑绑定，DVT后复盘P2投入收益",owner:"采购/研发",saving:1.2,due:"06-30",status:"执行中"},{metric:"D8",reason:"试产变更频次高，计划协调成本偏高",action:"建立NPI变更冻结窗口，超窗变更进入成本看板",owner:"计划/研发",saving:0.9,due:"06-21",status:"处理中"}]},
+  {id:"AUTO-24-SENS-E12",name:"车载声学传感E12",bg:"汽车电子BG",bu:"车载BU",customer:"主机厂E",stage:"MP量产",owner:"IP-车载",revenue:930,procurement:560,output:18200,baseline:58.0,inventory:128,shipAmount:780,lineValue:220,standardTransport:6.2,emergencyPurchase:12.0,pBenefit:2.5,invDays:43,c:{C1:13.4,C2:12.1,C3:9.9,C4:4.6},l:{L1:2.4,L2:1.9,L3:2.7,L4:2.2,L5:2.1,L6:1.6,L7:1.2,L8:0.8},p:{P1:4.2,P2:1.9},trend:[55,56,57,58,58,60,59,61,62,62,63,62,63,62],cTrend:[37,38,38,39,39,40,39,40,41,40,41,40,40,40],lTrend:[12,12,12.4,12.6,12.8,13.4,13,13.5,14,14,14.1,14,14.2,14.9],actions:[{metric:"L4",reason:"车规器件供应商份额临时切换，替代报价高于原价",action:"恢复主力供应商周交付份额，备用源只保留风险缓冲",owner:"采购/质量",saving:1.7,due:"06-22",status:"处理中"},{metric:"L8",reason:"客户OTIF未达成产生预计索赔",action:"建立主机厂交付红线订单每日复盘",owner:"客服/IP",saving:0.6,due:"06-18",status:"已启动"}]},
+  {id:"AUD-25-PRO-G66",name:"专业音频G66",bg:"消费电子BG",bu:"声学BU",customer:"欧洲客户G",stage:"EOL尾期",owner:"IP-声学二部",revenue:360,procurement:220,output:11200,baseline:31.0,inventory:112,shipAmount:310,lineValue:76,standardTransport:2.8,emergencyPurchase:2.9,pBenefit:0.6,invDays:92,c:{C1:5.6,C2:8.9,C3:4.8,C4:2.1},l:{L1:8.4,L2:3.8,L3:0.6,L4:0.3,L5:0.2,L6:0.4,L7:0.2,L8:0.0},p:{P1:0.5,P2:0.2},trend:[29,30,31,32,34,35,36,37,38,39,40,41,41,42],cTrend:[19,20,20,21,21,21,21,21,22,22,22,21,21,21],lTrend:[9,9.4,10,10.5,12,13,14,15,15.5,16,17,18,18,13.9],actions:[{metric:"L1",reason:"EOL尾期预测下修，长库龄专用料无法消耗",action:"冻结新增采购，推动客户买单与跨项目转用",owner:"IP/销售/财务",saving:6.5,due:"06-24",status:"处理中"},{metric:"L2",reason:"旧版本结构件进入报废判定",action:"按残值回收、供应商退换和客户索赔三路径处置",owner:"仓储/质量",saving:1.9,due:"06-28",status:"已启动"}]},
+  {id:"CAM-26-OPT-H22",name:"微型摄像模组H22",bg:"零组件BG",bu:"光学BU",customer:"国内客户H",stage:"EVT验证",owner:"IP-光学NPI",revenue:210,procurement:118,output:2800,baseline:24.2,inventory:46,shipAmount:168,lineValue:42,standardTransport:1.6,emergencyPurchase:2.1,pBenefit:1.5,invDays:61,c:{C1:4.8,C2:3.9,C3:3.2,C4:3.4},l:{L1:0.4,L2:0.3,L3:0.4,L4:0.2,L5:0.2,L6:0.8,L7:0.2,L8:0.0},p:{P1:2.2,P2:3.9},trend:[19,20,20,21,22,22,23,23,24,24,25,25,25,25],cTrend:[13,13.5,14,14,14.5,15,15,15,15.2,15.3,15.5,15.4,15.3,15.3],lTrend:[2,2,2.1,2.1,2.2,2.2,2.3,2.3,2.4,2.4,2.5,2.5,2.5,2.5],actions:[{metric:"P2",reason:"关键镜头备用源开发投入较高",action:"区分一次性认证投入与量产采购溢价，建立ROI追踪",owner:"采购/研发",saving:0.8,due:"06-30",status:"执行中"},{metric:"C4",reason:"EVT阶段变更频繁，计划协调成本偏高",action:"把BOM冻结点前置到试制评审节点",owner:"计划/研发",saving:0.5,due:"06-19",status:"处理中"}]},
+  {id:"PAD-25-HAPT-F09",name:"平板触觉模组F09",bg:"智能硬件BG",bu:"精密结构BU",customer:"海外客户F",stage:"MP量产",owner:"IP-结构",revenue:540,procurement:310,output:24500,baseline:36.5,inventory:68,shipAmount:440,lineValue:108,standardTransport:3.7,emergencyPurchase:3.2,pBenefit:1.1,invDays:35,c:{C1:8.9,C2:6.4,C3:6.8,C4:2.7},l:{L1:1.1,L2:0.7,L3:0.5,L4:0.3,L5:0.6,L6:0.6,L7:0.4,L8:0.0},p:{P1:1.2,P2:0.6},trend:[31,32,32,33,34,34,35,35,35,36,35,35,36,36],cTrend:[23,23,24,24,24,25,25,25,25,25,25,25,25,25],lTrend:[3.5,3.6,3.6,3.7,3.8,3.8,3.9,4,4,4.1,4,4.1,4.2,4.2],actions:[{metric:"C3",reason:"跨仓调拨批次较多，标准物流费用偏高",action:"合并同客户同区域运输批次，降低单台仓配成本",owner:"物流",saving:0.7,due:"06-17",status:"执行中"},{metric:"C2",reason:"安全库存水位高于当前订单覆盖量",action:"把覆盖天数从9天下调到7天，观察断供风险",owner:"计划",saving:0.9,due:"06-20",status:"待评审"}]},
+  {id:"VR-26-OPT-J31",name:"VR光学模组J31",bg:"智能硬件BG",bu:"光学BU",customer:"海外客户J",stage:"PVT爬坡",owner:"IP-VR光学",revenue:480,procurement:285,output:8600,baseline:38.5,inventory:88,shipAmount:390,lineValue:95,standardTransport:3.3,emergencyPurchase:6.8,pBenefit:2.6,invDays:58,c:{C1:7.4,C2:9.2,C3:5.8,C4:4.2},l:{L1:3.2,L2:1.1,L3:1.8,L4:1.0,L5:1.4,L6:1.5,L7:1.1,L8:0.2},p:{P1:4.9,P2:3.1},trend:[35,36,37,38,39,41,42,43,44,45,46,45,44,46],cTrend:[24,25,25,26,26,27,27,27,27,27,27,27,27,27],lTrend:[6,6.4,6.7,7.1,7.6,8.3,8.8,9.4,10,10.6,11,10.6,10.4,11.3],actions:[{metric:"D12",reason:"长周期光学件现货采购溢价高",action:"锁定未来四周需求，审批超框架价采购的触发原因",owner:"采购/IP",saving:1.4,due:"06-23",status:"处理中"},{metric:"D16",reason:"PVT阶段策略储备和供应能力提升投入同时发生",action:"按爬坡里程碑释放P1库存，P2投入纳入供应商能力复盘",owner:"计划/采购",saving:1.0,due:"06-27",status:"执行中"}]},
+  {id:"IOT-25-SENS-K08",name:"IoT传感器K08",bg:"零组件BG",bu:"微电子BU",customer:"国内客户K",stage:"MP量产",owner:"IP-IoT",revenue:390,procurement:225,output:43800,baseline:24.8,inventory:44,shipAmount:318,lineValue:72,standardTransport:2.1,emergencyPurchase:1.8,pBenefit:0.9,invDays:26,c:{C1:5.1,C2:3.8,C3:4.4,C4:1.9},l:{L1:0.6,L2:0.2,L3:0.2,L4:0.1,L5:0.3,L6:0.2,L7:0.1,L8:0.0},p:{P1:0.8,P2:0.5},trend:[22,22.4,22.7,23,23.2,23.4,23.6,23.8,24,24.2,24.4,24.6,24.7,24.8],cTrend:[14.8,15,15.1,15.1,15.2,15.2,15.3,15.3,15.3,15.4,15.4,15.3,15.2,15.2],lTrend:[1.2,1.2,1.3,1.3,1.4,1.4,1.5,1.5,1.6,1.6,1.6,1.7,1.6,1.7],actions:[{metric:"D2",reason:"单位供应链总成本低于组合均值，作为对标项目",action:"沉淀低仓储低损失的标准作业方式",owner:"IP/物流",saving:0.3,due:"06-26",status:"复盘中"},{metric:"D9",reason:"库存周转保持健康，暂无管理红灯",action:"维持当前安全库存策略",owner:"计划",saving:0.2,due:"06-30",status:"观察"}]}
+];
 
-// ── 缓存 ──
-var costCache = null;
+var thresholds = { D1:[12,16],D2:[28,48],D3:[18,28],D4:[10,18],D5:[2.2,3.2],D6:[8,12],D7:[1.3,1.8],D8:[0.8,1.3],D9:[45,70],D10:[1.6,3.2],D11:[6,11],D12:[18,28],D13:[1.2,2.2],D14:[12,22],D15:[0.05,0.12],D16:[1.2,2.4],D17:[45,25] };
 
-// ── 数据生成 ──
-function buildCostData(proj) {
-  const seed=(proj.id||'P001').charCodeAt(4)||0;
-  const rnd=(min,max,o)=>{let s=((seed*7+o*13+proj.name.length*3)%100)/100;return Math.round((min+s*(max-min))*100)/100;};
-  const isNPI=proj.lifecycle==='NPI',isRamp=proj.lifecycle==='Ramp-up',isEOL=proj.lifecycle==='EOL',isMajor=proj.isMajor;
-  const rev=rnd(800,5000,1)*10000;
-  const tgt=rev*rnd(0.55,0.70,2);
-  const bias=isNPI?rnd(1.05,1.18,3):isRamp?rnd(1.02,1.10,3):isEOL?rnd(0.95,1.05,3):rnd(0.97,1.05,3);
-  const act=Math.round(tgt*bias);const shipped=Math.round(rev/85);
-  const pcR=rnd(0.48,0.56,4),mfR=rnd(0.18,0.25,5),ivR=rnd(0.07,0.14,6),lgR=rnd(0.04,0.10,7),qcR=rnd(0.03,0.07,8),mgR=1-pcR-mfR-ivR-lgR-qcR;
-  const domains={采购成本:act*pcR,制造成本:act*mfR,库存成本:act*ivR,物流成本:act*lgR,质量成本:act*qcR,管理成本:act*mgR};
-  const dtgt={采购成本:tgt*pcR,制造成本:tgt*mfR,库存成本:tgt*ivR,物流成本:tgt*lgR,质量成本:tgt*qcR,管理成本:tgt*mgR};
-  const v={};
-  v['PC-01']=Math.round(domains.采购成本*0.88);v['PC-02']=rnd(isNPI?91:isRamp?94:97,100,10);
-  v['PC-03']=isNPI?rnd(30000,180000,11):isRamp?rnd(8000,80000,11):rnd(0,20000,11);
-  v['PC-04']=(isNPI||isRamp)?rnd(10000,90000,12):rnd(0,30000,12);v['PC-05']=rnd(-2,4,13);v['PC-06']=Math.round(domains.采购成本*0.03);v['PC-07']=(domains.采购成本/act*100).toFixed(1);
-  v['MF-01']=Math.round(domains.制造成本*0.7);v['MF-02']=isNPI?rnd(94.5,98.5,14):isRamp?rnd(97,99.5,14):rnd(98.5,99.8,14);
-  v['MF-03']=isNPI?rnd(3000,35000,15):isRamp?rnd(1000,18000,15):rnd(0,8000,15);v['MF-04']=isRamp?rnd(74,87,16):rnd(81,93,16);
-  v['MF-05']=Math.round(domains.制造成本*0.08);v['MF-06']=rnd(-4,6,17);v['MF-07']=(domains.制造成本/dtgt.制造成本*100).toFixed(1);
-  v['IV-01']=Math.round(domains.库存成本/0.02);v['IV-02']=Math.round(domains.库存成本*0.6);
-  v['IV-03']=(isNPI||isRamp)?rnd(25,52,18):isEOL?rnd(32,58,18):rnd(18,34,18);
-  v['IV-04']=(isNPI||isRamp)?rnd(12000,140000,19):isEOL?rnd(40000,220000,19):rnd(0,28000,19);
-  v['IV-05']=(isNPI||isRamp)?rnd(4000,60000,20):rnd(0,18000,20);v['IV-06']=(isNPI||isRamp)?rnd(4,38,21):rnd(0,14,21);v['IV-07']=(v['IV-02']/act*100).toFixed(1);
-  v['LG-01']=Math.round(domains.物流成本*0.45);v['LG-02']=Math.round(domains.物流成本*0.35);
-  v['LG-03']=isNPI?rnd(0,140000,22):isRamp?rnd(0,90000,22):rnd(0,25000,22);
-  v['LG-04']=isNPI?rnd(2,18,23):isRamp?rnd(1,12,23):rnd(0,6,23);v['LG-05']=Math.round(domains.物流成本*0.2);v['LG-06']=rnd(0,10000,24);v['LG-07']=(domains.物流成本/rev*100).toFixed(1);
-  v['QC-01']=Math.round(domains.质量成本*0.12);v['QC-02']=Math.round(domains.质量成本*0.18);
-  v['QC-03']=isNPI?rnd(3000,45000,25):rnd(0,16000,25);v['QC-04']=isMajor?rnd(2000,48000,26):rnd(0,9000,26);
-  v['QC-05']=isMajor?rnd(0,35000,27):0;v['QC-06']=Math.round(v['QC-01']+v['QC-02']+v['QC-03']+v['QC-04']);
-  v['QC-07']=(v['QC-06']/rev*100).toFixed(1);v['QC-08']=v['QC-03']>0?(v['QC-04']/v['QC-03']).toFixed(1):'0.0';
-  v['MG-01']=Math.round(domains.管理成本*0.45);v['MG-02']=Math.round(domains.管理成本*0.15);
-  v['MG-03']=isNPI?rnd(5000,28000,28):rnd(800,10000,28);v['MG-04']=rnd(5,28,29);v['MG-05']=rnd(0,9000,30);v['MG-06']=(domains.管理成本/act*100).toFixed(1);
-  v['TS-01']=Math.round(act);v['TS-02']=(act/tgt*100).toFixed(1);v['TS-03']=Math.round(act/shipped);
-  v['TS-04']=Math.round(act-tgt);v['TS-05']=`${pcR.toFixed(0)}:${mfR.toFixed(0)}:${ivR.toFixed(0)}:${lgR.toFixed(0)}:${qcR.toFixed(0)}:${mgR.toFixed(0)}`;
-  const hidden=v['PC-03']+v['LG-03']+v['IV-04']+Math.max(0,v['QC-05']);v['TS-06']=act>0?(hidden/act*100).toFixed(1):'0.0';
-  return {v,domains,dtgt,act,tgt,rev,shipped,isNPI,isRamp,isEOL,isMajor,pcR,mfR,ivR,lgR,qcR,mgR};
+var currentView = "overview";
+var selectedProjectId = projects[0].id;
+var selectedDomain = "L";
+var selectedMetric = "L1";
+var selectedLoss = "L1";
+var els = {};
+
+function sum(obj){ return Object.values(obj).reduce(function(a,b){return a+b;},0); }
+function total(p){ return sum(p.c)+sum(p.l)+sum(p.p); }
+function c0(p){ return sum(p.c); }
+function l0(p){ return sum(p.l); }
+function p0(p){ return sum(p.p); }
+function scaleValue(v){ return v*periodMeta[els.period.value].factor; }
+function fmtWan(v,d){ d=d||1; return v.toFixed(d)+"万"; }
+function fmtPct(v,d){ d=d||1; return v.toFixed(d)+"%"; }
+function fmtYuan(v,d){ d=d||1; return v.toFixed(d)+"元/件"; }
+
+function calcD(p){
+  var s=total(p);
+  return {D1:s/p.procurement*100,D2:s*10000/p.output,D3:l0(p)/s*100,D4:p0(p)/s*100,D5:p.c.C1/p.procurement*100,D6:p.c.C2/p.inventory*100,D7:p.c.C3/p.shipAmount*100,D8:p.c.C4/p.revenue*100,D9:p.invDays,D10:l0(p)/p.revenue*100,D11:(p.l.L1+p.l.L2)/p.inventory*100,D12:p.emergencyPurchase?p.l.L3/p.emergencyPurchase*100:0,D13:p.l.L5/p.lineValue*100,D14:p.l.L7/(p.standardTransport+p.l.L7)*100,D15:p.l.L8/p.revenue*100,D16:p0(p)/p.revenue*100,D17:p0(p)?p.pBenefit/p0(p)*100:0};
 }
 
-function getSt(ind,val){
-  const id=ind.id;
-  if(id==='TS-02'||id==='MF-07'){const v=parseFloat(val);if(v>110)return'red';if(v>100)return'yellow';return'green';}
-  if(id==='PC-03'){if(val>100000)return'red';if(val>10000)return'yellow';return'green';}
-  if(id==='LG-03'){if(val>100000)return'red';if(val>10000)return'yellow';return'green';}
-  if(id==='MF-02'){if(val<97)return'red';if(val<99)return'yellow';return'green';}
-  if(id==='IV-04'){if(val>100000)return'red';if(val>20000)return'yellow';return'green';}
-  if(id==='QC-04'){if(val>50000)return'red';if(val>5000)return'yellow';return'green';}
-  if(id==='IV-03'){if(val>45)return'red';if(val>30)return'yellow';return'green';}
-  if(id==='PC-02'){if(val<95)return'red';if(val<98)return'yellow';return'green';}
-  if(id==='IV-05'){if(val>50000)return'red';if(val>10000)return'yellow';return'green';}
-  if(id==='MF-03'){if(val>30000)return'red';if(val>5000)return'yellow';return'green';}
-  if(id==='MF-04'){if(val<75)return'red';if(val<85)return'yellow';return'green';}
-  if(id==='QC-08'){if(parseFloat(val)>3)return'red';if(parseFloat(val)>1)return'yellow';return'green';}
-  if(id==='LG-04'){if(val>10)return'red';if(val>3)return'yellow';return'green';}
-  if(id==='MG-04'){if(val>20)return'red';if(val>10)return'yellow';return'green';}
-  if(id==='TS-06'){if(parseFloat(val)>5)return'red';if(parseFloat(val)>2)return'yellow';return'green';}
-  if(id==='QC-07'){if(parseFloat(val)>8)return'red';if(parseFloat(val)>5)return'yellow';return'green';}
-  return'green';
+function statusFor(metric,value){
+  var t=thresholds[metric]||[999,999]; var amber=t[0],red=t[1];
+  if(metric==="D17"){ if(value<red)return"red"; if(value<amber)return"amber"; return"green"; }
+  if(value>=red)return"red"; if(value>=amber)return"amber"; return"green";
+}
+function statusText(s){ return s==="red"?"红色异常":s==="amber"?"黄色关注":"正常可控"; }
+
+function projectStatus(p){
+  var d=calcD(p);
+  var red=Object.keys(d).filter(function(k){return statusFor(k,d[k])==="red";}).length;
+  var amber=Object.keys(d).filter(function(k){return statusFor(k,d[k])==="amber";}).length;
+  var gap=(total(p)-p.baseline)/p.baseline*100;
+  if(red>=2||gap>=22||d.D10>=3.5)return"red";
+  if(red===1||amber>=3||gap>=10)return"amber";
+  return"green";
 }
 
-function fmv(v,u){
-  if(typeof v==='number'){
-    if(v>1000000)return'¥'+(v/10000).toFixed(0)+'万';
-    if(v>10000)return'¥'+(v/10000).toFixed(1)+'万';
-    if(u==='%')return v.toFixed(1)+'%';
-    if(u==='天')return v.toFixed(0)+'天';
-    if(u==='倍')return v.toFixed(1)+'倍';
-    if(u==='元/件')return'¥'+v.toFixed(0);
-    return'¥'+v.toFixed(0);
-  }
-  return String(v);
+function topD(p,limit){
+  limit=limit||3;
+  var d=calcD(p);
+  return Object.entries(d).map(function(e){return{metric:e[0],value:e[1],status:statusFor(e[0],e[1])};}).filter(function(item){return item.status!=="green";}).sort(function(a,b){return (a.status==="red"?-1:1)-(b.status==="red"?-1:1)||b.value-a.value;}).slice(0,limit);
 }
 
-// ── 项目变更（不重建下拉框）──
-function onCostProjectChange(){
-  try{
-    const fp=getFilteredProjects();
-    if(!fp||!fp.length) return;
-    const sel=document.getElementById('costProjectSelect');
-    const projId=sel?sel.value:'';
-    const proj=fp.find(p=>p.id===projId)||fp[0];
-    if(!proj) return;
-    if(sel&&!sel.value&&fp.length) sel.value=proj.id;
-    // Hero
-    const hn=document.getElementById('costHeroName');if(hn)hn.textContent=proj.name;
-    const hp=document.getElementById('costHeroPills');
-    if(hp)hp.innerHTML=[{l:'BG',v:proj.bg},{l:'BU',v:proj.bu},{l:'客户',v:proj.customer},{l:'产品',v:proj.productLine},{l:'阶段',v:proj.engStage}].map(x=>'<span class="sc-hero-pill"><b>'+x.l+':</b> '+(x.v||'--')+'</span>').join('');
-    costCache=buildCostData(proj);
-    renderAll(costCache);
-  }catch(e){console.error('cost project change error:',e);}
+function dValue(metric,value){
+  if(metric==="D2")return fmtYuan(value);
+  if(metric==="D9")return value.toFixed(0)+"天";
+  return fmtPct(value);
 }
 
-// ── 主入口 ──
-function initPage_cost(){
-  try{
-    const fp=getFilteredProjects();if(!fp.length)return;
-    const sel=document.getElementById('costProjectSelect');if(!sel)return;
-    fillProjectSelect(sel,fp);
-    consumeDrillDown('costProjectSelect');
-    const proj=fp.find(function(p){return p.id===sel.value;})||fp[0];
-    if(!proj)return;
-    if(!sel.value&&fp.length)sel.value=proj.id;
-    costCache=buildCostData(proj);
-    renderAll(costCache);
-  }catch(e){console.error('cost init error:',e);}
+function filteredProjects(){
+  var keyword=els.keyword.value.trim().toLowerCase();
+  return projects.filter(function(p){
+    if(els.bg.value&&p.bg!==els.bg.value)return false;
+    if(els.bu.value&&p.bu!==els.bu.value)return false;
+    if(els.stage.value&&p.stage!==els.stage.value)return false;
+    if(els.status.value&&projectStatus(p)!==els.status.value)return false;
+    if(keyword){var text=(p.id+" "+p.name+" "+p.customer+" "+p.owner+" "+p.bg+" "+p.bu).toLowerCase();if(text.indexOf(keyword)<0)return false;}
+    return true;
+  });
 }
 
-// ── 全量渲染 ──
-function renderAll(d){
-  renderKpiCards(d);
-  renderDomainBars(d);
-  renderDonut(d);
-  renderHiddenBreakdown(d);
-  renderLayer1(d);
-  renderLayer2(d);
-  renderLayer3(d);
-  renderDomainTabs(d);
-  drawCostTrend(d);
-  resizeCharts();
+function selectedProject(){ return projects.find(function(p){return p.id===selectedProjectId;})||projects[0]; }
+function uniqueValues(key){ return [...new Set(projects.map(function(p){return p[key];}))]; }
+function fillSelect(select,values,allText){ select.innerHTML='<option value="">'+allText+'</option>'+values.map(function(v){return'<option value="'+v+'">'+v+'</option>';}).join(""); }
+
+function sparkline(values,color){
+  color=color||"#2364d8";
+  var w=96,h=28,pad=3,min=Math.min.apply(null,values),max=Math.max.apply(null,values),range=max-min||1;
+  var pts=values.map(function(v,i){var x=pad+i*((w-pad*2)/(values.length-1));var y=h-pad-(v-min)/range*(h-pad*2);return x.toFixed(1)+","+y.toFixed(1);}).join(" ");
+  var last=pts.split(" ").slice(-1)[0].split(",");
+  return '<svg class="v56-spark" viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="'+last[0]+'" cy="'+last[1]+'" r="2.6" fill="'+color+'"/></svg>';
 }
 
-// ── KPI 6卡 ──
-function renderKpiCards(d){
-  const grid=document.getElementById('costKpiGrid');if(!grid)return;
-  const items=[
-    {lbl:'供应链总成本',val:d.act/10000,unit:'万',target:d.tgt/10000,sub:'目标 ¥'+(d.tgt/10000).toFixed(0)+'万',color:CLR.d,trend:parseFloat(d.v['TS-02'])>100?'▼':''},
-    {lbl:'成本达成率 TS-02',val:parseFloat(d.v['TS-02']),unit:'%',target:100,sub:'目标 ≤100%',color:parseFloat(d.v['TS-02'])>100?CLR.d:CLR.s,badge:parseFloat(d.v['TS-02'])>100?'超支':'达标'},
-    {lbl:'隐性成本率 TS-06',val:parseFloat(d.v['TS-06']),unit:'%',target:3,sub:'目标 ≤3%',color:parseFloat(d.v['TS-06'])>5?CLR.d:parseFloat(d.v['TS-06'])>2?CLR.w:CLR.s},
-    {lbl:'单件成本 TS-03',val:d.v['TS-03'],unit:'元/件',target:Math.round(d.tgt/d.shipped),sub:'出货'+d.shipped+'件',color:'#8957e5'},
-    {lbl:'成本超支 TS-04',val:(d.act-d.tgt)/10000,unit:'万',sub:d.act-d.tgt>0?'超目标':(d.tgt-d.act)>0?'节约':'持平',color:d.act-d.tgt>0?CLR.d:CLR.s},
-    {lbl:'本周告警',val:(()=>{let c=0;L1_IDS.forEach(id=>{if(getSt(COST_IND.find(i=>i.id===id),d.v[id])!=='green')c++;});L2_IDS.forEach(id=>{if(getSt(COST_IND.find(i=>i.id===id),d.v[id])!=='green')c++;});return c;})(),unit:'项',sub:'共监控18项',color:(()=>{let c=0;L1_IDS.forEach(id=>{if(getSt(COST_IND.find(i=>i.id===id),d.v[id])!=='green')c++;});return c>6?CLR.d:c>3?CLR.w:CLR.s;})()}
+function lineChart(seriesList,labels){
+  labels=labels||[];
+  var w=860,h=240,left=42,right=18,top=20,bottom=30;
+  var all=[]; seriesList.forEach(function(s){all=all.concat(s.values);});
+  var min=Math.min.apply(null,all)*0.92,max=Math.max.apply(null,all)*1.08,range=max-min||1;
+  function x(i){return left+i*((w-left-right)/(seriesList[0].values.length-1));}
+  function y(v){return h-bottom-(v-min)/range*(h-top-bottom);}
+  var grid=[0,1,2,3].map(function(i){var gy=top+i*((h-top-bottom)/3);return'<line x1="'+left+'" y1="'+gy+'" x2="'+(w-right)+'" y2="'+gy+'" stroke="#e8eef6"/><text x="8" y="'+(gy+4)+'" fill="#617089" font-size="11">'+(max-i*range/3).toFixed(0)+'</text>';}).join("");
+  var paths=seriesList.map(function(s){var d=s.values.map(function(v,i){return(i===0?"M":"L")+x(i).toFixed(1)+","+y(v).toFixed(1);}).join(" ");return'<path d="'+d+'" fill="none" stroke="'+s.color+'" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';}).join("");
+  var legend=seriesList.map(function(s,i){return'<g transform="translate('+(w-260+i*120)+',10)"><circle cx="0" cy="0" r="4" fill="'+s.color+'"/><text x="8" y="4" fill="#617089" font-size="12">'+s.name+'</text></g>';}).join("");
+  var axisLabels=labels.length?labels.map(function(label,i){return'<text x="'+x(i)+'" y="'+(h-8)+'" text-anchor="middle" fill="#617089" font-size="10">'+label+'</text>';}).join(""):"";
+  return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="趋势图">'+grid+'<line x1="'+left+'" y1="'+(h-bottom)+'" x2="'+(w-right)+'" y2="'+(h-bottom)+'" stroke="#cbd5e1"/>'+paths+axisLabels+legend+'</svg>';
+}
+
+function barChart(items,color,unit){
+  color=color||"#2364d8";unit=unit||"万";
+  var w=860,h=240,left=148,right=32,top=14,rowH=24,max=Math.max.apply(null,items.map(function(i){return i.value;}).concat([1]));
+  var bars=items.map(function(item,i){var y=top+i*rowH;var bw=(w-left-right)*item.value/max;return'<g><text x="0" y="'+(y+15)+'" fill="#172033" font-size="12">'+item.name+'</text><rect x="'+left+'" y="'+(y+4)+'" width="'+bw+'" height="14" rx="7" fill="'+(item.color||color)+'"/><text x="'+(left+bw+8)+'" y="'+(y+15)+'" fill="#617089" font-size="12">'+item.value.toFixed(1)+unit+'</text></g>';}).join("");
+  return '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="柱状图">'+bars+'</svg>';
+}
+
+function donutChart(items){
+  var cx=132,cy=118,r=78,sw=30;
+  var totalValue=items.reduce(function(a,b){return a+b.value;},0)||1;
+  var circumference=2*Math.PI*r,offset=0;
+  var arcs=items.map(function(item){var len=circumference*item.value/totalValue;var dash=len+" "+(circumference-len);var arc='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+item.color+'" stroke-width="'+sw+'" stroke-dasharray="'+dash+'" stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 '+cx+' '+cy+')"/>';offset+=len;return arc;}).join("");
+  var legend=items.map(function(item,i){return'<g transform="translate(282,'+(62+i*38)+')"><rect x="0" y="0" width="12" height="12" rx="3" fill="'+item.color+'"/><text x="20" y="11" fill="#172033" font-size="13" font-weight="700">'+item.name+'</text><text x="150" y="11" fill="#617089" font-size="13">'+fmtWan(scaleValue(item.value))+'｜'+fmtPct(item.value/totalValue*100)+'</text></g>';}).join("");
+  return '<svg viewBox="0 0 620 250" role="img" aria-label="成本构成饼状图"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#edf2f7" stroke-width="'+sw+'"/>'+arcs+'<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" fill="#172033" font-size="18" font-weight="800">S1</text><text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" fill="#617089" font-size="12">'+fmtWan(scaleValue(totalValue))+'</text>'+legend+'</svg>';
+}
+
+function movingAverage(seriesList){
+  var len=seriesList[0].length;
+  return Array.from({length:len},function(_,i){return seriesList.reduce(function(a,s){return a+s[i];},0)/seriesList.length;});
+}
+
+function riskScore(p){
+  var d=calcD(p);
+  var red=Object.keys(d).filter(function(k){return statusFor(k,d[k])==="red";}).length;
+  var amber=Object.keys(d).filter(function(k){return statusFor(k,d[k])==="amber";}).length;
+  var gap=Math.max((total(p)-p.baseline)/p.baseline*100,0);
+  return red*18+amber*7+gap+l0(p)/total(p)*20+p.actions.reduce(function(a,b){return a+b.saving;},0);
+}
+
+function metricsForDomain(domain){
+  if(domain==="C")return["C1","C2","C3","C4"];
+  if(domain==="L")return["L1","L2","L3","L4","L5","L6","L7","L8"];
+  return["P1","P2"];
+}
+function domainObj(p,domain){ return domain==="C"?p.c:domain==="L"?p.l:p.p; }
+function domainTrend(p,domain){
+  if(domain==="C")return p.cTrend;
+  if(domain==="L")return p.lTrend;
+  var base=p0(p);
+  return p.trend.map(function(v,i){return +(base*(0.86+v/p.trend[p.trend.length-1]*0.13+Math.cos(i/2.6)*0.015)).toFixed(2);});
+}
+
+function metricSeries(p,metric){
+  var base=domainObj(p,metric[0])[metric]||1;
+  var pattern=p.trend.map(function(v,i){return 0.88+(v/p.trend[p.trend.length-1])*0.14+Math.sin(i/2)*0.018;});
+  return pattern.map(function(x){return +(base*x).toFixed(2);});
+}
+
+function diagnosisSuggestion(metric,status){
+  var s={D1:"采购强度偏高时，应回看C1供应商管理投入和L3紧急采购溢价。",D2:"单位成本偏高时，应区分产量爬坡、物流频次和损失成本三类因素。",D3:"损失占比偏高时，优先下钻L1-L8并建立责任事件。",D10:"损失成本率偏高时，需要同时看营收规模和损失事件金额。",D11:"呆滞报废损失率偏高时，应联动Aging、ECN和客户预测偏差。",D12:"紧急采购溢价率偏高时，检查长周期料、断供和插单触发原因。",D14:"异常物流费用占比偏高时，检查加急审批、标准线路基准和交付承诺。",D16:"前瞻投入率偏高时，需要明确受益项目和释放节奏。",D17:"投入回报偏低时，应建立基线、观察周期和收益确认规则。"};
+  return s[metric]||(status==="green"?"当前处于可控区间，保持监控。":"建议进入项目复盘，确认业务原因和责任组织。");
+}
+
+// ===== 渲染函数 =====
+function renderKpis(list){
+  var s=list.reduce(function(a,p){return a+total(p);},0);
+  var c=list.reduce(function(a,p){return a+c0(p);},0);
+  var l=list.reduce(function(a,p){return a+l0(p);},0);
+  var pVal=list.reduce(function(a,p){return a+p0(p);},0);
+  var revenue=list.reduce(function(a,p){return a+p.revenue;},0);
+  var output=list.reduce(function(a,p){return a+p.output;},0);
+  var baseline=list.reduce(function(a,p){return a+p.baseline;},0);
+  var red=list.filter(function(p){return projectStatus(p)==="red";}).length;
+  var improve=list.reduce(function(a,p){return a+p.actions.reduce(function(x,c){return x+c.saving;},0);},0);
+  var cards=[
+    {cls:"s",label:periodMeta[els.period.value].suffix+" S1供应链总成本",value:fmtWan(scaleValue(s)),sub:"较基线 "+fmtPct((s-baseline)/baseline*100)},
+    {cls:"c",label:"C0运营成本",value:fmtWan(scaleValue(c)),sub:"占S1 "+fmtPct(c/s*100)},
+    {cls:"l",label:"L0损失成本",value:fmtWan(scaleValue(l)),sub:"占S1 "+fmtPct(l/s*100)},
+    {cls:"p",label:"P0前瞻投入",value:fmtWan(scaleValue(pVal)),sub:"占S1 "+fmtPct(pVal/s*100)},
+    {cls:"d",label:"D2单位供应链总成本",value:fmtYuan(s*10000/output),sub:"跨项目效率对比"},
+    {cls:"warn",label:"红色异常项目",value:red+"个",sub:"预计改善 "+fmtWan(scaleValue(improve))}
   ];
-  grid.innerHTML=items.map(it=>{
-    const valPct=it.val>0?100:0;
-    return `<div class="kpi-card" style="border-top:3px solid ${it.color};">
-      <div style="font-size:11px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">${it.lbl}${it.badge?' <span style="font-size:9px;padding:1px 8px;border-radius:12px;background:'+(it.color===CLR.d?'var(--danger-bg)':'var(--success-bg)')+';color:'+it.color+'">'+it.badge+'</span>':''}</div>
-      <div style="font-size:28px;font-weight:800;color:${it.color};line-height:1;letter-spacing:-.02em;">${typeof it.val==='number'&&it.val<0?'-':''}${(Math.abs(it.val)).toFixed(it.val===Math.round(it.val)?0:1)}<span style="font-size:13px;font-weight:600;color:var(--text-sec);"> ${it.unit}</span></div>
-      <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;"><span>${it.sub}</span>${it.trend?`<span style="color:${it.trend==='▼'?CLR.s:CLR.d};font-weight:600;">${it.trend}</span>`:''}</div>
-      <div style="height:4px;background:var(--border-light);border-radius:3px;overflow:hidden;position:relative;margin-top:6px;"><div style="width:${valPct}%;height:100%;background:${it.color};border-radius:3px;opacity:0.7;"></div>${it.target?`<div style="position:absolute;top:0;bottom:0;left:${Math.min(100,100*it.target/Math.max(it.val,it.target,1))}%;width:2px;background:var(--text-sec);opacity:0.6;"></div>`:''}</div>
-    </div>`;
-  }).join('');
+  document.getElementById("v56-kpiGrid").innerHTML=cards.map(function(card){
+    return '<div class="v56-kpi-card '+card.cls+'"><div class="v56-label">'+card.label+'</div><div class="v56-value">'+card.value+'</div><div class="v56-sub"><span>'+card.sub+'</span><span class="v56-pill '+(card.cls==="l"||card.cls==="warn"?"red":"gray")+'">'+periodMeta[els.period.value].label+'</span></div></div>';
+  }).join("");
 }
 
-// ── 六域水平条 ──
-function renderDomainBars(d){
-  const el=document.getElementById('costDomainBars');if(!el)return;
-  const dmNames=['采购成本','制造成本','库存成本','物流成本','质量成本','管理成本'];
-  const dmPcts=[d.pcR*100,d.mfR*100,d.ivR*100,d.lgR*100,d.qcR*100,d.mgR*100];
-  const dmTgt=[48,22,8,5,7,3];
-  el.innerHTML=dmNames.map((dm,i)=>{
-    const actAmt=d.domains[dm]/10000;
-    const diff=(dmPcts[i]-dmTgt[i]).toFixed(1);
-    const diffBadge=parseFloat(diff)>2?'<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:var(--danger-bg);color:var(--danger);">+'+diff+'%</span>':parseFloat(diff)<-2?'<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:var(--success-bg);color:var(--success);">'+diff+'%</span>':'<span style="font-size:9px;color:var(--text-muted);">'+diff+'%</span>';
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;">
-      <div style="width:80px;font-size:11px;color:var(--text-sec);white-space:nowrap;flex-shrink:0;">${DM_EMOJI[dm]} ${dm.substring(0,2)}</div>
-      <div style="flex:1;height:18px;background:var(--border-light);border-radius:4px;overflow:hidden;position:relative;">
-        <div style="width:${Math.min(100,dmPcts[i]*100/60)}%;height:100%;border-radius:4px;background:linear-gradient(90deg,${DM_COLORS[dm]},${DM_COLORS[dm]}aa);display:flex;align-items:center;padding-left:6px;font-size:9px;font-weight:700;color:#fff;">${dmPcts[i].toFixed(1)}%</div>
-        <div style="position:absolute;top:0;bottom:0;left:${dmTgt[i]*100/60}%;width:2px;background:var(--text-sec);opacity:0.5;"></div>
-      </div>
-      <div style="width:60px;text-align:right;font-size:11px;font-weight:700;color:${DM_COLORS[dm]};">¥${actAmt.toFixed(0)}万</div>
-      <div style="width:40px;text-align:right;">${diffBadge}</div>
-    </div>`;
-  }).join('');
-  const total=document.getElementById('costTotalSummary');
-  if(total){
-    const over=d.act-d.tgt;
-    total.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--primary-bg);border:1px solid var(--primary-bg);border-radius:8px;margin-top:12px;">
-      <div><div style="font-size:12px;font-weight:700;color:var(--text);">供应链总成本</div><div style="font-size:10px;color:var(--text-muted);">目标 ¥${(d.tgt/10000).toFixed(0)}万 | 竖线=目标占比基线</div></div>
-      <div style="text-align:right;"><div style="font-size:18px;font-weight:800;color:var(--primary);">¥${(d.act/10000).toFixed(0)}万</div><div style="font-size:10px;color:${over>0?'var(--danger)':'var(--success)'};">${over>0?'超支 ¥'+(over/10000).toFixed(0)+'万':over<0?'节约 ¥'+(-over/10000).toFixed(0)+'万':'达标'}</div></div>
-    </div>`;
+function renderStructureBars(list){
+  var rows=[...list].sort(function(a,b){return total(b)-total(a);});
+  document.getElementById("v56-structureBars").innerHTML=rows.map(function(p){
+    var s=total(p);var c=c0(p)/s*100;var l=l0(p)/s*100;var pr=p0(p)/s*100;
+    return '<div class="v56-stack-row"><div class="v56-name">'+p.name+'</div><div class="v56-stackbar" title="C '+fmtPct(c)+' / L '+fmtPct(l)+' / P '+fmtPct(pr)+'"><span class="v56-seg c" style="width:'+c+'%"></span><span class="v56-seg l" style="width:'+l+'%"></span><span class="v56-seg p" style="width:'+pr+'%"></span></div><div class="v56-num">'+fmtWan(scaleValue(s))+'</div><span class="v56-pill '+projectStatus(p)+'">'+statusText(projectStatus(p))+'</span></div>';
+  }).join("")||'<div class="v56-empty">当前筛选条件下没有项目数据</div>';
+}
+
+function renderAlerts(list){
+  var alerts=[...list].sort(function(a,b){return riskScore(b)-riskScore(a);}).slice(0,5);
+  document.getElementById("v56-alertList").innerHTML=alerts.map(function(p){
+    var top=topD(p,2);var main=top[0];
+    return '<div class="v56-alert-item"><div><strong>'+p.name+'</strong><p>'+(main?main.metric+" "+metricNames[main.metric]+" "+dValue(main.metric,main.value)+"，"+statusText(main.status)+"。":"当前D类指标整体可控。")+'</p><p>建议关注：'+(p.actions[0]?p.actions[0].reason:"维持当前管理节奏")+'</p></div><span class="v56-pill '+projectStatus(p)+'">'+statusText(projectStatus(p))+'</span></div>';
+  }).join("");
+}
+
+function renderProjectTable(list){
+  document.getElementById("v56-projectCount").textContent=list.length+" 个项目";
+  document.getElementById("v56-projectTableBody").innerHTML=list.map(function(p){
+    var s=total(p);var status=projectStatus(p);var c=c0(p)/s*100;var l=l0(p)/s*100;var pr=p0(p)/s*100;var top=topD(p,3);
+    return '<tr><td><div class="v56-project-name">'+p.name+'</div><div class="v56-project-sub">'+p.id+'｜'+p.customer+'｜'+p.owner+'</div></td><td>'+p.bg+'<div class="v56-project-sub">'+p.bu+'</div></td><td><span class="v56-pill gray">'+p.stage+'</span></td><td class="v56-num">'+fmtWan(scaleValue(s))+'</td><td class="v56-num">'+fmtPct(s/p.revenue*100)+'</td><td class="v56-num"><span class="v56-pill '+status+'">'+fmtPct((s-p.baseline)/p.baseline*100)+'</span></td><td><div class="v56-mini-stack"><span class="v56-seg c" style="width:'+c+'%"></span><span class="v56-seg l" style="width:'+l+'%"></span><span class="v56-seg p" style="width:'+pr+'%"></span></div><div class="v56-project-sub">C '+fmtPct(c,0)+' / L '+fmtPct(l,0)+' / P '+fmtPct(pr,0)+'</div></td><td>'+(top.length?top.map(function(item){return'<span class="v56-pill '+item.status+'" style="margin:2px 4px 2px 0;">'+item.metric+'</span>';}).join(""):'<span class="v56-pill green">无红黄灯</span>')+'<div class="v56-project-sub">'+(top[0]?metricNames[top[0].metric]:"D类诊断可控")+'</div></td><td>'+sparkline(p.trend,status==="red"?"#dc2626":status==="amber"?"#d97706":"#15a05d")+'</td><td><button class="v56-btn" onclick="window.v56selectProject(\''+p.id+'\',\'drill\')">下钻</button></td></tr>';
+  }).join("")||'<tr><td colspan="10"><div class="v56-empty">当前筛选条件下没有项目数据</div></td></tr>';
+}
+
+function renderDiagnosisCards(list){
+  var metrics=["D1","D2","D3","D10","D11","D12","D14","D16","D17","D9"];
+  document.getElementById("v56-diagnosisCards").innerHTML=metrics.map(function(metric){
+    var vals=list.map(function(p){return calcD(p)[metric];});
+    var avg=vals.reduce(function(a,b){return a+b;},0)/Math.max(vals.length,1);
+    var status=statusFor(metric,avg);
+    var redCount=list.filter(function(p){return statusFor(metric,calcD(p)[metric])==="red";}).length;
+    return '<div class="v56-diagnosis-card '+status+'"><div class="v56-metric"><span>'+metric+" "+metricNames[metric]+'</span><span class="v56-pill '+status+'">'+redCount+'红灯</span></div><div class="v56-value">'+dValue(metric,avg)+'</div><div class="v56-hint">组合均值｜'+statusText(status)+"；用于筛出需要下钻的项目和责任方向。</div></div>";
+  }).join("");
+}
+
+function renderHeatmap(list){
+  var metrics=dGroups.reduce(function(a,g){return a.concat(g.metrics);},[]);
+  document.getElementById("v56-heatmapHead").innerHTML='<tr><th style="width:190px;">项目</th>'+metrics.map(function(m){return'<th style="width:70px;">'+m+'</th>';}).join("")+'</tr>';
+  document.getElementById("v56-heatmapBody").innerHTML=list.map(function(p){
+    var d=calcD(p);
+    return '<tr onclick="window.v56selectProject(\''+p.id+'\',\'drill\')" style="cursor:pointer;"><td><div class="v56-project-name">'+p.name+'</div><div class="v56-project-sub">'+p.stage+'｜'+p.customer+'</div></td>'+metrics.map(function(m){var status=statusFor(m,d[m]);return'<td><span class="v56-heat-cell '+status+'" title="'+metricNames[m]+'：'+dValue(m,d[m])+'">'+(status==="red"?"高":status==="amber"?"中":"低")+'</span></td>';}).join("")+'</tr>';
+  }).join("");
+}
+
+function renderRankList(list){
+  var ranked=[...list].sort(function(a,b){return riskScore(b)-riskScore(a);}).slice(0,6);
+  document.getElementById("v56-rankList").innerHTML=ranked.map(function(p,idx){
+    var top=topD(p,3);
+    return '<div class="v56-rank-card"><strong>'+(idx+1)+". "+p.name+'</strong><p>风险分 '+riskScore(p).toFixed(1)+"｜"+(top.map(function(item){return item.metric+" "+dValue(item.metric,item.value);}).join("；")||"D类指标可控")+'</p><p>优先动作：'+(p.actions[0]?p.actions[0].action:"维持当前节奏")+'</p></div>';
+  }).join("");
+}
+
+function renderDomainSummaryPage(domain,containers){
+  var list=filteredProjects();
+  var metrics=metricsForDomain(domain);
+  var color=domain==="C"?"#0e9f9c":"#15a05d";
+  var pill=domain==="C"?"teal":"green";
+  var objGetter=function(p){return domainObj(p,domain);};
+  if(!list.length){
+    document.getElementById(containers.cards).innerHTML='<div class="v56-empty" style="grid-column:1/-1;">当前筛选范围内没有项目数据</div>';
+    document.getElementById(containers.rank).innerHTML='<div class="v56-empty">当前筛选范围内没有项目数据</div>';
+    document.getElementById(containers.trend).innerHTML='<div class="v56-empty">当前筛选范围内没有趋势数据</div>';
+    return;
   }
+  document.getElementById(containers.cards).innerHTML=metrics.map(function(metric){
+    var amount=list.reduce(function(a,p){return a+(objGetter(p)[metric]||0);},0);
+    var topProject=[...list].sort(function(a,b){return (objGetter(b)[metric]||0)-(objGetter(a)[metric]||0);})[0];
+    var domainTotal=list.reduce(function(a,p){return a+sum(objGetter(p));},0)||1;
+    return '<div class="v56-domain-card"><div class="v56-top"><span>'+metric+" "+metricNames[metric]+'</span><span class="v56-pill '+pill+'">'+fmtPct(amount/domainTotal*100)+'</span></div><div class="v56-amount">'+fmtWan(scaleValue(amount))+'</div><div class="v56-foot">最高项目：'+(topProject?topProject.name:"-")+"。点击单项目下钻可看趋势和责任动作。</div></div>";
+  }).join("");
+  var ranked=[...list].sort(function(a,b){return sum(objGetter(b))-sum(objGetter(a));}).slice(0,7);
+  document.getElementById(containers.rank).innerHTML=ranked.map(function(p,idx){
+    var domainAmount=sum(objGetter(p));var d=calcD(p);
+    var focus=domain==="C"?["D5 "+dValue("D5",d.D5),"D6 "+dValue("D6",d.D6),"D7 "+dValue("D7",d.D7),"D8 "+dValue("D8",d.D8)]:["D16 "+dValue("D16",d.D16),"D17 "+dValue("D17",d.D17)];
+    return '<div class="v56-rank-card"><strong>'+(idx+1)+". "+p.name+"｜"+fmtWan(scaleValue(domainAmount))+'</strong><p>'+(domain==="C"?"运营效率":"投入复盘")+"："+focus.join("；")+'</p><p>关联动作：'+(p.actions.find(function(a){return metrics.includes(a.metric)||a.metric.startsWith(domain);})?.action||p.actions[0]?.action||"维持当前管理节奏")+'</p></div>';
+  }).join("")||'<div class="v56-empty">当前筛选范围内没有项目数据</div>';
+  document.getElementById(containers.trend).innerHTML=lineChart([{name:domain+"类组合",values:movingAverage(list.map(function(p){return domainTrend(p,domain);})),color:color},{name:"S1组合",values:movingAverage(list.map(function(p){return p.trend;})),color:"#94a3b8"}],["D-13","","","","","","D-7","","","","","","","D"]);
 }
 
-// ── 甜甜圈 ──
-function renderDonut(d){
-  const ctx=document.getElementById('costDonutChart');if(!ctx)return;
-  if(App.charts.costDonut){App.charts.costDonut.destroy();App.charts.costDonut=null;}
-  const dmNames=['采购成本','制造成本','库存成本','物流成本','质量成本','管理成本'];
-  const actData=dmNames.map(dm=>d.domains[dm]/10000);
-  App.charts.costDonut=new Chart(ctx,{type:'doughnut',data:{labels:dmNames,datasets:[{data:actData,backgroundColor:dmNames.map(dm=>DM_COLORS[dm]),borderColor:'#fff',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false}}}});
-  const center=document.getElementById('costDonutCenter');if(center)center.innerHTML=`<div style="font-size:15px;font-weight:800;color:${d.act-d.tgt>0?'var(--danger)':'var(--success)'};">¥${(d.act/10000).toFixed(0)}</div><div style="font-size:9px;color:var(--text-muted);">万元</div>`;
-  const legend=document.getElementById('costDonutLegend');if(legend)legend.innerHTML=dmNames.map(dm=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:2px 0;"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${DM_COLORS[dm]};margin-right:5px;"></span>${dm.substring(0,2)}</span><span style="font-weight:700;color:${DM_COLORS[dm]};">${(d.domains[dm]/d.act*100).toFixed(1)}%</span></div>`).join('');
+function renderDomainCards(p){
+  var cards=[
+    {key:"C",label:"C0运营成本",amount:c0(p),ratio:c0(p)/total(p)*100,hint:"看正常资源投入是否高于同类项目",pill:"teal"},
+    {key:"L",label:"L0损失成本",amount:l0(p),ratio:l0(p)/total(p)*100,hint:"看异常损失、责任归因和止损动作",pill:"red"},
+    {key:"P",label:"P0前瞻投入",amount:p0(p),ratio:p0(p)/total(p)*100,hint:"看投入强度、受益项目和后续ROI",pill:"green"}
+  ];
+  document.getElementById("v56-domainCards").innerHTML=cards.map(function(card){
+    return '<div class="v56-domain-card '+(selectedDomain===card.key?"active":"")+'" onclick="window.v56selectDomain(\''+card.key+'\')"><div class="v56-top"><span>'+card.label+'</span><span class="v56-pill '+card.pill+'">'+fmtPct(card.ratio)+'</span></div><div class="v56-amount">'+fmtWan(scaleValue(card.amount))+'</div><div class="v56-foot">'+card.hint+'</div></div>';
+  }).join("");
 }
 
-// ── 隐性成本拆解 ──
-function renderHiddenBreakdown(d){
-  const el=document.getElementById('costHiddenBreakdown');if(!el)return;
-  const hiddenTotal=d.v['PC-03']+d.v['LG-03']+d.v['IV-04']+Math.max(0,d.v['QC-05']);
-  const hdr=document.getElementById('costHiddenTotal');if(hdr)hdr.textContent='合计 ¥'+(hiddenTotal/10000).toFixed(0)+'万 / '+d.v['TS-06']+'%';
-  const items=[{lbl:'紧急采购溢价 PC-03',val:d.v['PC-03'],color:CLR.d},{lbl:'空运溢价 LG-03',val:d.v['LG-03'],color:CLR.d},{lbl:'呆滞料损失 IV-04',val:d.v['IV-04'],color:CLR.w},{lbl:'客诉罚款 QC-05',val:Math.max(0,d.v['QC-05']),color:CLR.w}];
-  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${items.map(it=>`<div style="background:var(--bg);border-radius:6px;padding:10px;border:1px solid var(--border-light);"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${it.lbl}</div><div style="font-size:16px;font-weight:800;color:${it.color};">¥${(it.val/10000).toFixed(1)}万</div><div style="height:4px;background:var(--border-light);border-radius:2px;margin-top:6px;overflow:hidden;"><div style="width:${hiddenTotal>0?Math.min(100,it.val/hiddenTotal*100):0}%;height:100%;background:${it.color};border-radius:2px;"></div></div></div>`).join('')}</div>`;
+function renderMetricBreakdown(p){
+  var metrics=metricsForDomain(selectedDomain);var obj=domainObj(p,selectedDomain);var domainTotal=sum(obj);
+  document.getElementById("v56-domainExplain").textContent=selectedDomain==="C"?"正常运营投入":selectedDomain==="L"?"异常损失止损":"前瞻投入复盘";
+  document.getElementById("v56-metricBreakdown").innerHTML=metrics.map(function(metric){
+    var amount=obj[metric];var ratio=amount/domainTotal*100;
+    var rank=[...projects].sort(function(a,b){return (domainObj(b,selectedDomain)[metric]||0)-(domainObj(a,selectedDomain)[metric]||0);}).findIndex(function(x){return x.id===p.id;})+1;
+    return '<div class="v56-metric-card '+(selectedMetric===metric?"active":"")+'" onclick="window.v56selectMetric(\''+metric+'\')"><div class="v56-metric-row"><strong>'+metric+" "+metricNames[metric]+'</strong><span class="v56-pill '+(selectedDomain==="L"?"red":selectedDomain==="P"?"green":"teal")+'">第'+rank+'名</span></div><div class="v56-metric-row" style="margin-top:10px;"><div class="v56-amount">'+fmtWan(scaleValue(amount))+'</div><span class="v56-pill gray">占'+selectedDomain+" "+fmtPct(ratio)+'</span></div><p style="margin-top:8px;">点击查看该指标的趋势、项目排名和关联行动。</p></div>';
+  }).join("");
 }
 
-// ── 第一层 ──
-function renderLayer1(d){
-  const grid=document.getElementById('costLayer1Grid');if(!grid)return;
-  let redC=0,yellowC=0;
-  let cards=L1_IDS.map(id=>{const ind=COST_IND.find(i=>i.id===id);const val=d.v[id];const st=getSt(ind,val);if(st==='red')redC++;else if(st==='yellow')yellowC++;const color=st==='red'?CLR.d:st==='yellow'?CLR.w:CLR.s;const bg=st==='red'?CLR.dbg:st==='yellow'?CLR.wbg:CLR.sbg;let dv=fmv(val,ind.unit);if(ind.id==='MF-02')dv=val.toFixed(1)+'% 良率';const barW=ind.id==='MF-02'?val:ind.id==='MF-04'?val:ind.id==='PC-02'?val*0.95:ind.id==='IV-03'?Math.max(5,100-val/60*100):100;return{ind,val,st,color,bg,dv,barW};});
-  cards.sort((a,b)=>(b.st==='red'?3:0)-(a.st==='red'?3:0)+(b.st==='yellow'?1:0)-(a.st==='yellow'?1:0));
-  grid.innerHTML=cards.map(c=>`<div style="background:${c.bg};border-radius:8px;padding:12px;border:1px solid ${c.st!=='green'?c.color+'44':'var(--border-light)'};${c.st!=='green'?'border-left:3px solid '+c.color:''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><span style="font-size:9px;font-weight:700;color:var(--text-muted);">${c.ind.id} · ${c.ind.domain.substring(0,2)}</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c.color};${c.st!=='green'?'box-shadow:0 0 5px '+c.color:''};"></span></div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">${c.ind.name}</div><div style="font-size:20px;font-weight:800;color:${c.color};">${c.dv}</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">${c.ind.normal}</div><div style="height:3px;background:var(--border-light);border-radius:2px;margin-top:8px;overflow:hidden;"><div style="width:${c.barW}%;height:100%;background:${c.color};border-radius:2px;"></div></div></div>`).join('')+`<div style="background:${redC>0?CLR.dbg:CLR.sbg};border-radius:8px;padding:12px;border:1px solid ${redC>0?CLR.d+'33':'var(--border-light)'};"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><span style="font-size:9px;font-weight:700;color:var(--text-muted);">第一层 · 汇总</span><span style="font-size:9px;padding:1px 8px;border-radius:12px;background:${redC>0?'var(--danger-bg)':'var(--success-bg)'};color:${redC>0?'var(--danger)':'var(--success)'};">${redC}红 ${yellowC}黄 ${7-redC-yellowC}绿</span></div><div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">关键结论</div><div style="font-size:10px;color:var(--text-sec);line-height:1.6;">${d.v['PC-03']>10000?'① 紧采溢价¥'+(d.v['PC-03']/10000).toFixed(1)+'万<br>':''}${d.v['LG-03']>10000?'② 空运溢价¥'+(d.v['LG-03']/10000).toFixed(1)+'万<br>':''}${d.v['MF-02']<99?'③ 良率'+d.v['MF-02'].toFixed(1)+'%低于红线<br>':''}${d.v['IV-04']>20000?'④ 呆滞料¥'+(d.v['IV-04']/10000).toFixed(1)+'万<br>':''}${d.v['QC-04']>5000?'⑤ 外部失效¥'+(d.v['QC-04']/10000).toFixed(1)+'万<br>':''}${d.v['IV-03']>30?'⑥ DIO '+(d.v['IV-03']).toFixed(0)+'天偏高':''}</div>${redC>0?'<div style="margin-top:8px;font-size:9px;padding:2px 8px;border-radius:4px;background:var(--danger-bg);color:var(--danger);display:inline-block;">立即行动</div>':''}</div>`;
+function renderProjectDiagnosis(p){
+  var top=topD(p,6);
+  var list=top.length?top:Object.entries(calcD(p)).slice(0,4).map(function(e){return{metric:e[0],value:e[1],status:"green"};});
+  document.getElementById("v56-projectDiagnosisList").innerHTML=list.map(function(item){
+    return '<div class="v56-diag-item"><strong>'+item.metric+" "+metricNames[item.metric]+' <span class="v56-pill '+item.status+'">'+statusText(item.status)+'</span></strong><p>当前值 '+dValue(item.metric,item.value)+"。"+diagnosisSuggestion(item.metric,item.status)+'</p></div>';
+  }).join("");
 }
 
-// ── 第二层 ──
-function renderLayer2(d){
-  const grid=document.getElementById('costLayer2Grid');if(!grid)return;
-  let redC=0,yellowC=0;
-  grid.innerHTML=L2_IDS.map(id=>{const ind=COST_IND.find(i=>i.id===id);const val=d.v[id];const st=getSt(ind,val);if(st==='red')redC++;else if(st==='yellow')yellowC++;const color=st==='red'?CLR.d:st==='yellow'?CLR.w:CLR.s;const bg=st==='red'?CLR.dbg:st==='yellow'?CLR.wbg:CLR.sbg;let dv=fmv(val,ind.unit);if(ind.id==='MF-04')dv='OEE '+val.toFixed(0)+'%';if(ind.id==='QC-08')dv=val+'倍';if(ind.id==='MG-04')dv='MAPE '+val.toFixed(1)+'%';if(ind.id==='PC-02')dv=val.toFixed(1)+'%';const noteMap={'PC-02':'穿透TS-02：核心器件溢价','IV-05':'穿透IV-04：ECN致报废','MF-03':'穿透MF-02：返工掩盖','MF-04':'穿透TS-02：停线推高制费','QC-08':'穿透QC-04：质控前置不足','LG-04':'穿透LG-03：高频空运被低估','MG-04':'穿透PC-03：预测偏差致紧采','MF-05':'穿透TS-03：爬坡摊销虚高'};return`<div style="background:${bg};border-radius:8px;padding:12px;border:1px solid ${st!=='green'?color+'44':'var(--border-light)'};${st!=='green'?'border-left:3px solid '+color:''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;"><span style="font-size:9px;font-weight:700;color:var(--text-muted);">${ind.id} · ${ind.domain.substring(0,2)}</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${color};"></span></div><div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;">${ind.name}</div><div style="font-size:18px;font-weight:800;color:${color};">${dv}</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">${ind.normal}</div><div style="font-size:8px;color:var(--text-muted);margin-top:3px;">${noteMap[id]||''}</div></div>`;}).join('');
-  const badge=document.getElementById('costL2SummaryBadge');if(badge)badge.textContent=redC+'红 '+yellowC+'黄 '+(8-redC-yellowC)+'绿';
-  const chain=document.getElementById('costRootChain');
-  if(chain){const items=[];if(parseFloat(d.v['TS-02'])>100)items.push({from:'TS-02超支',to:['PC-02议价','MF-04停线'],c:CLR.d});if(d.v['PC-03']>10000)items.push({from:'PC-03紧采',to:['MG-04预测偏差'],c:CLR.d});if(d.v['IV-04']>20000)items.push({from:'IV-04呆滞',to:['IV-05 ECN变更'],c:CLR.d});if(d.v['QC-04']>5000)items.push({from:'QC-04外部失效',to:['QC-08外内比','MF-03返工'],c:CLR.d});chain.innerHTML=items.length?`<div style="font-size:11px;font-weight:700;color:var(--text-sec);margin-bottom:10px;">根因穿透关系</div><div style="display:flex;gap:8px;flex-wrap:wrap;">`+items.map(it=>`<div style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg);border:1px solid var(--border-light);border-radius:8px;font-size:10px;"><span style="color:${it.c};font-weight:700;">${it.from}</span><span style="color:var(--text-muted);">←</span>${it.to.map(t=>`<span style="color:var(--text-sec);">${t}</span>`).join('<span style="color:var(--text-muted);">+</span>')}</div>`).join('')+'</div>':'';}
+function renderProjectActions(p){
+  document.getElementById("v56-projectActionList").innerHTML=p.actions.map(function(a){
+    return '<div class="v56-action-card"><strong>'+a.metric+" "+metricNames[a.metric]+"｜"+a.owner+'</strong><p>'+a.reason+'</p><p style="margin-top:6px;">动作：'+a.action+'</p><p style="margin-top:6px;">预计改善 '+fmtWan(a.saving)+"｜计划完成 "+a.due+"｜"+a.status+'</p></div>';
+  }).join("");
 }
 
-// ── 第三层 ──
-function renderLayer3(d){
-  const el=document.getElementById('costLayer3Content');if(!el)return;
-  const dmNames=['采购成本','制造成本','库存成本','物流成本','质量成本','管理成本'];
-  const dmPcts=[d.pcR*100,d.mfR*100,d.ivR*100,d.lgR*100,d.qcR*100,d.mgR*100],dmTgt=[48,22,8,5,7,3];
-  el.innerHTML=`<div style="background:var(--bg);border:1px solid var(--border-light);border-radius:8px;padding:13px;margin-bottom:10px;border-left:3px solid var(--warning);"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:9px;font-weight:700;color:var(--text-muted);">TS-05 · 汇总</div><div style="font-size:12px;font-weight:700;color:var(--text);">各域成本占比结构</div></div><span style="font-size:9px;padding:2px 8px;border-radius:12px;background:${parseFloat(dmPcts[2])>10?'var(--warning-bg)':'var(--success-bg)'};color:${parseFloat(dmPcts[2])>10?'var(--warning)':'var(--success)'};">${parseFloat(dmPcts[2])>10?'库存域膨胀':'正常'}</span></div><div style="height:80px;"><canvas id="costDomainRadar"></canvas></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px;font-size:9px;color:var(--text-muted);text-align:center;">${dmNames.map((dm,i)=>`<div><span style="color:${DM_COLORS[dm]};font-weight:700;">${dm.substring(0,2)} ${dmPcts[i].toFixed(1)}%</span><br><span style="font-size:8px;">目标${dmTgt[i]}%</span></div>`).join('')}</div></div><div style="background:var(--bg);border:1px solid var(--border-light);border-radius:8px;padding:13px;margin-bottom:10px;border-left:3px solid ${parseFloat(d.v['TS-06'])>5?'var(--danger)':parseFloat(d.v['TS-06'])>2?'var(--warning)':'var(--success)'};"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;"><div><div style="font-size:9px;font-weight:700;color:var(--text-muted);">TS-06 · 汇总</div><div style="font-size:12px;font-weight:700;color:var(--text);">隐性成本率趋势</div></div><div style="text-align:right;"><div style="font-size:18px;font-weight:800;color:${parseFloat(d.v['TS-06'])>5?'var(--danger)':'var(--warning)'};">${d.v['TS-06']}%</div><div style="font-size:9px;color:var(--text-muted);">目标 ≤3%</div></div></div><div style="height:60px;"><canvas id="costHiddenTrend"></canvas></div></div><div style="background:var(--bg);border:1px solid var(--border-light);border-radius:8px;padding:13px;border-left:3px solid var(--success);"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;"><div><div style="font-size:9px;font-weight:700;color:var(--text-muted);">QC-07 · 质量</div><div style="font-size:12px;font-weight:700;color:var(--text);">COQ占营收比</div></div><div style="text-align:right;"><div style="font-size:18px;font-weight:800;color:var(--success);">${d.v['QC-07']}%</div><div style="font-size:9px;color:var(--text-muted);">目标 ≤5%</div></div></div><div style="height:60px;"><canvas id="costCOQTrend"></canvas></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">${[{l:'预防',v:d.v['QC-01'],c:'var(--primary)'},{l:'检验',v:d.v['QC-02'],c:'#0891b2'},{l:'内失效',v:d.v['QC-03'],c:'var(--warning)'},{l:'外失效',v:d.v['QC-04'],c:'var(--danger)'}].map(q=>`<div style="background:var(--card);border-radius:6px;padding:8px;text-align:center;"><div style="font-size:9px;color:var(--text-muted);">${q.l}</div><div style="font-size:13px;font-weight:700;color:${q.c};">¥${(q.v/10000).toFixed(0)}万</div></div>`).join('')}</div><div style="font-size:9px;color:var(--text-muted);margin-top:6px;">COQ总额¥${(d.v['QC-06']/10000).toFixed(0)}万 | 世界级&lt;2.5%</div></div>`;
-  setTimeout(()=>{
-    const ctx=document.getElementById('costDomainRadar');if(!ctx)return;if(App.charts.costRadar){App.charts.costRadar.destroy();App.charts.costRadar=null;}
-    App.charts.costRadar=new Chart(ctx,{type:'radar',data:{labels:dmNames,datasets:[{label:'实际%',data:dmPcts,borderColor:CLR.d,backgroundColor:'rgba(220,38,38,0.08)',borderWidth:1.5,pointRadius:3},{label:'目标%',data:dmTgt,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.06)',borderWidth:1.5,borderDash:[4,3],pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{backgroundColor:'rgba(241,245,249,.4)',grid:{color:'#e2e8f0'},pointLabels:{font:{size:9}},ticks:{display:false,stepSize:15},suggestedMin:0,suggestedMax:60}}}});
-    const ctx3=document.getElementById('costHiddenTrend');if(!ctx3)return;if(App.charts.costHidden){App.charts.costHidden.destroy();App.charts.costHidden=null;}
-    App.charts.costHidden=new Chart(ctx3,{type:'line',data:{labels:['W16','W17','W18','W19','W20','W21'],datasets:[{label:'隐性成本率%',data:[Math.max(1,parseFloat(d.v['TS-06'])*0.3),Math.max(1.5,parseFloat(d.v['TS-06'])*0.45),Math.max(2,parseFloat(d.v['TS-06'])*0.6),Math.max(2.5,parseFloat(d.v['TS-06'])*0.75),Math.max(3,parseFloat(d.v['TS-06'])*0.9),parseFloat(d.v['TS-06'])],borderColor:CLR.d,backgroundColor:'rgba(220,38,38,0.08)',borderWidth:2,fill:true,tension:0.35,pointRadius:3},{label:'目标线',data:[3,3,3,3,3,3],borderColor:'#3b82f6',borderWidth:1.5,borderDash:[4,3],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{min:0,ticks:{font:{size:9},callback:v=>v+'%'}}}}});
-    const ctx4=document.getElementById('costCOQTrend');if(!ctx4)return;if(App.charts.costCOQ){App.charts.costCOQ.destroy();App.charts.costCOQ=null;}
-    App.charts.costCOQ=new Chart(ctx4,{type:'bar',data:{labels:['3月','4月','5月'],datasets:[{label:'预防',data:[d.v['QC-01']*0.8/10000,d.v['QC-01']*0.9/10000,d.v['QC-01']/10000],backgroundColor:'rgba(59,130,246,0.3)',borderColor:'#3b82f6',borderWidth:1},{label:'检验',data:[d.v['QC-02']*0.85/10000,d.v['QC-02']*0.93/10000,d.v['QC-02']/10000],backgroundColor:'rgba(8,145,178,0.25)',borderColor:'#0891b2',borderWidth:1},{label:'内失效',data:[d.v['QC-03']*0.8/10000,d.v['QC-03']*0.9/10000,d.v['QC-03']/10000],backgroundColor:'rgba(217,119,6,0.25)',borderColor:'#d97706',borderWidth:1},{label:'外失效',data:[d.v['QC-04']*0.5/10000,d.v['QC-04']*0.7/10000,d.v['QC-04']/10000],backgroundColor:'rgba(220,38,38,0.25)',borderColor:'#dc2626',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:9}}},y:{stacked:true,ticks:{font:{size:9},callback:v=>'¥'+v+'万'}}}}});
-  },100);
+function renderDrill(){
+  var p=selectedProject();
+  document.getElementById("v56-selectedProjectSummary").textContent=p.name+"｜"+p.id+"｜"+p.bg+"/"+p.bu+"｜"+p.customer+"｜"+p.stage+"｜S1 "+fmtWan(scaleValue(total(p)))+"｜S2 "+fmtPct(total(p)/p.revenue*100)+"｜状态 "+statusText(projectStatus(p));
+  renderDomainCards(p);
+  document.getElementById("v56-projectPieChart").innerHTML=donutChart([{name:"C0运营成本",value:c0(p),color:"#0e9f9c"},{name:"L0损失成本",value:l0(p),color:"#dc2626"},{name:"P0前瞻投入",value:p0(p),color:"#15a05d"}]);
+  document.getElementById("v56-projectOverallTrend").innerHTML=lineChart([{name:"S1总成本",values:p.trend,color:"#2364d8"},{name:"C0运营",values:p.cTrend,color:"#0e9f9c"},{name:"L0损失",values:p.lTrend,color:"#dc2626"}],["D-13","","","","","","D-7","","","","","","","D"]);
+  renderMetricBreakdown(p);
+  renderProjectDiagnosis(p);
+  renderProjectActions(p);
+  document.getElementById("v56-selectedMetricName").textContent=selectedMetric+" "+metricNames[selectedMetric];
+  var series=metricSeries(p,selectedMetric);
+  var portfolio=movingAverage(projects.map(function(x){return metricSeries(x,selectedMetric);}));
+  document.getElementById("v56-metricTrend").innerHTML=lineChart([{name:p.name,values:series,color:selectedMetric.startsWith("L")?"#dc2626":selectedMetric.startsWith("P")?"#15a05d":"#0e9f9c"},{name:"组合均值",values:portfolio,color:"#94a3b8"}],["D-13","","","","","","D-7","","","","","","","D"]);
 }
 
-// ── 六域Tab指标表 ──
-var costActiveDomain='采购成本';
-function switchCostDomainTab(domain){
-  costActiveDomain=domain;
-  if(!costCache) return;
-  renderDomainTabs(costCache);
-}
-function renderDomainTabs(d){
-  var tabs=document.getElementById('costDomainTabs');
-  var content=document.getElementById('costDomainTabContent');
-  if(!tabs||!content) return;
-  tabs.innerHTML=DM_ORDER.map(function(dm){
-    var ccount=COST_IND.filter(function(i){return i.domain===dm;}).length;
-    var reds=COST_IND.filter(function(i){return i.domain===dm && getSt(i,d.v[i.id])==='red';}).length;
-    var dot=reds>0?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--danger);margin-left:4px;"></span>':'';
-    var active=costActiveDomain===dm;
-    return '<div onclick="switchCostDomainTab(\''+dm+'\')" style="padding:9px 14px;font-size:11px;font-weight:'+(active?'700':'400')+';color:'+(active?DM_COLORS[dm]:'var(--text-sec)')+';cursor:pointer;border-bottom:2px solid '+(active?DM_COLORS[dm]:'transparent')+';white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:4px;">'+DM_EMOJI[dm]+dm+'<span style="font-size:10px;color:var(--text-muted);">('+ccount+')</span>'+dot+'</div>';
-  }).join('');
-  renderCostDomainContent(d);
-}
-function renderCostDomainContent(d){
-  var el=document.getElementById('costDomainTabContent'); if(!el) return;
-  var inds=COST_IND.filter(function(i){return i.domain===costActiveDomain;});
-  if(!inds.length){el.innerHTML='<div style="padding:20px;color:var(--text-muted);text-align:center;">暂无数据</div>';return;}
-  el.innerHTML='<table class="data-table" style="width:100%"><thead><tr><th>编号</th><th>指标名称</th><th>值</th><th>正常阈值</th><th>状态</th></tr></thead><tbody>'+inds.map(function(ind){
-    var val=d.v[ind.id]; var st=getSt(ind,val);
-    var dv=fmv(val,ind.unit); if(ind.unit==='%')dv+='%'; else if(ind.unit==='天')dv+='天'; else if(ind.unit==='倍')dv+='倍';
-    var bg=st==='red'?CLR.dbg:st==='yellow'?CLR.wbg:'';
-    return'<tr style="background:'+bg+'"><td style="font-size:10px">'+ind.id+'</td><td style="font-size:11px">'+ind.name+'</td><td style="font-weight:600;color:'+(st==='red'?CLR.d:st==='yellow'?CLR.w:'var(--text)')+';">'+dv+'</td><td style="font-size:10px;color:var(--text-muted);">'+ind.normal+'</td><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(st==='red'?CLR.d:st==='yellow'?CLR.w:CLR.s)+';margin-right:4px;"></span>'+(st==='red'?'异常':st==='yellow'?'关注':'正常')+'</td></tr>';
-  }).join('')+'</tbody></table>';
+function renderLossCards(list){
+  var lossMetrics=["L1","L2","L3","L4","L5","L6","L7","L8"];
+  document.getElementById("v56-lossCards").innerHTML=lossMetrics.map(function(metric){
+    var amount=list.reduce(function(a,p){return a+p.l[metric];},0);
+    var topProject=[...list].sort(function(a,b){return b.l[metric]-a.l[metric];})[0];
+    return '<div class="v56-loss-card '+(selectedLoss===metric?"active":"")+'" onclick="window.v56selectLoss(\''+metric+'\')"><strong>'+metric+" "+metricNames[metric]+'</strong><div class="v56-metric-row" style="margin-top:10px;"><div class="v56-amount">'+fmtWan(scaleValue(amount))+'</div><span class="v56-pill red">L类</span></div><p style="margin-top:8px;">最高项目：'+(topProject?topProject.name:"-")+"，点击后下方联动项目展开与多维分析。</p></div>";
+  }).join("");
 }
 
-// ── 6周趋势 ──
-function drawCostTrend(d){
-  setTimeout(()=>{
-    const ctx=document.getElementById('costTrendChart');if(!ctx)return;
-    if(App.charts.costTrend){App.charts.costTrend.destroy();App.charts.costTrend=null;}
-    const tgt=d.tgt/10000,act=d.act/10000;
-    const trendData=[act*0.78,act*0.84,act*0.89,act*0.93,act*0.96,act];
-    App.charts.costTrend=new Chart(ctx,{type:'line',data:{labels:['W16','W17','W18','W19','W20','W21'],datasets:[{label:'实际总成本(万)',data:trendData,borderColor:CLR.d,backgroundColor:'rgba(220,38,38,0.06)',borderWidth:2,fill:true,tension:0.35,pointRadius:3},{label:'目标(万)',data:[tgt,tgt,tgt,tgt,tgt,tgt],borderColor:'#3b82f6',borderWidth:1.5,borderDash:[4,3],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#e2e8f066'},ticks:{font:{size:9}}},y:{ticks:{font:{size:9},callback:v=>'¥'+v+'万'}}}}});
-  },150);
+function renderLossDimensions(list){
+  var totalLoss=list.reduce(function(a,p){return a+(p.l[selectedLoss]||0);},0)||1;
+  function by(key){var map=new Map();list.forEach(function(p){map.set(p[key],(map.get(p[key])||0)+(p.l[selectedLoss]||0));});return [...map.entries()].sort(function(a,b){return b[1]-a[1];})[0]||["-",0];}
+  var topBg=by("bg"),topBu=by("bu"),topStage=by("stage"),topCustomer=by("customer");
+  var redProjects=list.filter(function(p){return (p.l[selectedLoss]||0)/total(p)>0.08;}).length;
+  var cards=[
+    {title:"最高BG",value:topBg[0],body:fmtWan(scaleValue(topBg[1]))+"，占该损失 "+fmtPct(topBg[1]/totalLoss*100)},
+    {title:"最高BU",value:topBu[0],body:fmtWan(scaleValue(topBu[1]))+"，说明责任组织需要优先介入"},
+    {title:"集中阶段",value:topStage[0],body:fmtPct(topStage[1]/totalLoss*100)+" 的损失发生在该阶段"},
+    {title:"重点客户",value:topCustomer[0],body:fmtWan(scaleValue(topCustomer[1]))+"，需要与客户承诺和订单波动联动分析"},
+    {title:"红色项目",value:redProjects+"个",body:"按该损失占S1比例超过8%识别"}
+  ];
+  document.getElementById("v56-lossDimCards").innerHTML=cards.map(function(card){
+    return '<div class="v56-diag-item"><strong>'+card.title+"｜"+card.value+'</strong><p>'+card.body+'</p></div>';
+  }).join("");
 }
+
+function renderLoss(){
+  var list=filteredProjects();
+  renderLossCards(list);
+  var sorted=[...list].sort(function(a,b){return b.l[selectedLoss]-a.l[selectedLoss];});
+  var items=sorted.slice(0,8).map(function(p){return{name:p.name,value:scaleValue(p.l[selectedLoss]),color:projectStatus(p)==="red"?"#dc2626":"#d97706"};});
+  document.getElementById("v56-lossFocusTitle").textContent=selectedLoss+" "+metricNames[selectedLoss]+"｜按项目贡献排序";
+  document.getElementById("v56-lossChart").innerHTML=barChart(items,"#dc2626","万");
+  renderLossDimensions(list);
+  document.getElementById("v56-lossProjectBody").innerHTML=sorted.map(function(p){
+    var amount=p.l[selectedLoss]||0;
+    var action=p.actions.find(function(a){return a.metric===selectedLoss;})||p.actions.find(function(a){return a.metric.startsWith("L");})||p.actions[0];
+    return '<tr><td><div class="v56-project-name">'+p.name+'</div><div class="v56-project-sub">'+p.id+"｜"+p.customer+'</div></td><td>'+p.bg+'<div class="v56-project-sub">'+p.bu+'</div></td><td><span class="v56-pill gray">'+p.stage+'</span></td><td class="v56-num">'+fmtWan(scaleValue(amount))+'</td><td class="v56-num">'+fmtPct(amount/l0(p)*100)+'</td><td class="v56-num"><span class="v56-pill '+(amount/total(p)>0.08?"red":amount/total(p)>0.04?"amber":"green")+'">'+fmtPct(amount/total(p)*100)+'</span></td><td>'+sparkline(metricSeries(p,selectedLoss),amount/total(p)>0.08?"#dc2626":"#d97706")+'</td><td>'+(action?action.reason+'<div class="v56-project-sub">下一步：'+action.action+'</div>':"暂无专项归因，建议进入单项目复盘")+'</td><td><button class="v56-btn" onclick="window.v56selectProject(\''+p.id+'\',\'drill\')">下钻</button></td></tr>';
+  }).join("")||'<tr><td colspan="9"><div class="v56-empty">当前筛选范围内没有项目数据</div></td></tr>';
+}
+
+function renderCurrent(){
+  var list=filteredProjects();
+  if(currentView==="overview"){renderKpis(list);renderStructureBars(list);renderAlerts(list);renderProjectTable(list);}
+  if(currentView==="cCost")renderDomainSummaryPage("C",{cards:"v56-cCostCards",rank:"v56-cCostRankList",trend:"v56-cCostTrend"});
+  if(currentView==="pInvest")renderDomainSummaryPage("P",{cards:"v56-pInvestCards",rank:"v56-pInvestRankList",trend:"v56-pInvestTrend"});
+  if(currentView==="loss")renderLoss();
+  if(currentView==="diagnosis"){renderDiagnosisCards(list);renderHeatmap(list);renderRankList(list);}
+  if(currentView==="drill")renderDrill();
+}
+
+function switchView(id){
+  currentView=id;
+  document.querySelectorAll("#page-cost .v56-tab").forEach(function(tab){tab.classList.toggle("active",tab.dataset.view===id);});
+  document.querySelectorAll("#page-cost .v56-view").forEach(function(view){view.classList.toggle("active",view.id==="v56-view-"+id);});
+  renderCurrent();
+}
+
+function selectProject(id,view){
+  selectedProjectId=id;
+  if(view)switchView(view);else renderCurrent();
+}
+function selectDomain(domain){selectedDomain=domain;selectedMetric=metricsForDomain(domain)[0];renderDrill();}
+function selectMetric(metric){selectedMetric=metric;renderDrill();}
+function selectLoss(metric){selectedLoss=metric;renderLoss();}
+
+// 暴露给 onclick
+window.v56selectProject=selectProject;
+window.v56selectDomain=selectDomain;
+window.v56selectMetric=selectMetric;
+window.v56selectLoss=selectLoss;
+
+function initPage_cost(){
+  var container=document.getElementById("page-cost");
+  if(!container)return;
+
+  container.innerHTML='<div class="v56-page">'+
+    '<div class="v56-toolbar">'+
+    '<div class="v56-field"><label>统计范围</label><select id="v56-periodFilter"><option value="day">今日发生</option><option value="week">本周累计</option><option value="month">本月累计</option></select></div>'+
+    '<div class="v56-field"><label>BG</label><select id="v56-bgFilter"><option value="">全部BG</option></select></div>'+
+    '<div class="v56-field"><label>BU</label><select id="v56-buFilter"><option value="">全部BU</option></select></div>'+
+    '<div class="v56-field"><label>项目阶段</label><select id="v56-stageFilter"><option value="">全部阶段</option></select></div>'+
+    '<div class="v56-field"><label>成本状态</label><select id="v56-statusFilter"><option value="">全部状态</option><option value="red">红色异常</option><option value="amber">黄色关注</option><option value="green">正常可控</option></select></div>'+
+    '<div class="v56-field"><label>项目 / 客户 / 责任人</label><input id="v56-keywordFilter" type="search" placeholder="输入关键词定位项目" /></div>'+
+    '<button class="v56-btn" id="v56-resetFilter" type="button">重置</button>'+
+    '</div>'+
+    '<nav class="v56-nav">'+
+    '<button class="v56-tab active" data-view="overview" type="button">管理总览</button>'+
+    '<button class="v56-tab" data-view="cCost" type="button">C类运营成本</button>'+
+    '<button class="v56-tab" data-view="loss" type="button">L损失专项</button>'+
+    '<button class="v56-tab" data-view="pInvest" type="button">P类前瞻投入</button>'+
+    '<button class="v56-tab" data-view="diagnosis" type="button">D类诊断矩阵</button>'+
+    '<button class="v56-tab" data-view="drill" type="button">单项目下钻</button>'+
+    '</nav>'+
+
+    '<section id="v56-view-overview" class="v56-view active">'+
+    '<div id="v56-kpiGrid" class="v56-grid v56-kpi-grid"></div>'+
+    '<div class="v56-two-col">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>项目供应链总成本结构</h2><p>每行一个项目，同时看总成本规模、C/L/P结构和D类诊断状态。</p></div><div class="v56-legend"><span><i class="v56-dot c"></i>C 运营</span><span><i class="v56-dot l"></i>L 损失</span><span><i class="v56-dot p"></i>P 前瞻投入</span></div></div><div id="v56-structureBars" class="v56-stack-wrap"></div></section>'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>今日管理关注</h2><p>从基线偏差、损失成本率、呆滞报废、异常物流和客户索赔中自动识别优先级。</p></div><span class="v56-pill blue">系统推荐</span></div><div id="v56-alertList" class="v56-alert-list"></div></section>'+
+    '</div>'+
+    '<section class="v56-card" style="margin-top:14px;"><div class="v56-section-head"><div><h2>多项目对比</h2><p>D类指标进入项目列表，管理者可以直接看到项目异常来自成本强度、单位成本、损失成本、库存质量还是交付索赔。</p></div><span class="v56-pill gray" id="v56-projectCount">0 个项目</span></div><div style="overflow-x:auto;"><table class="v56-table"><thead><tr><th style="width:220px;">项目</th><th style="width:150px;">BG / BU</th><th style="width:86px;">阶段</th><th class="v56-num" style="width:98px;">S1总成本</th><th class="v56-num" style="width:88px;">S2成本率</th><th class="v56-num" style="width:92px;">S3偏差</th><th style="width:142px;">CLP结构</th><th style="width:208px;">D类主要异常</th><th style="width:112px;">趋势</th><th style="width:88px;">操作</th></tr></thead><tbody id="v56-projectTableBody"></tbody></table></div></section>'+
+    '</section>'+
+
+    '<section id="v56-view-cCost" class="v56-view">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>C类运营成本：正常运营投入的效率管理</h2><p>C类页面只看正常供应链运转投入，重点比较C1-C4在不同项目、阶段、客户下的单位效率、占比结构和趋势变化。</p></div><span class="v56-pill teal">C0 = C1 + C2 + C3 + C4</span></div><div id="v56-cCostCards" class="v56-domain-cards"></div></section>'+
+    '<div class="v56-two-col">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>C类项目展开</h2><p>按C类运营成本规模、单位成本和D5-D9诊断排序，定位采购、库存、物流、计划运营的效率问题。</p></div></div><div id="v56-cCostRankList" class="v56-diag-list"></div></section>'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>C类趋势与行动</h2><p>趋势和动作不再单独成页，而是在对应成本域内直接看到变化与动作。</p></div></div><div id="v56-cCostTrend" class="v56-chart-box"></div></section>'+
+    '</div></section>'+
+
+    '<section id="v56-view-loss" class="v56-view">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>L损失专项：点击L1-L8后联动展开项目明细</h2><p>损失专项是止损入口。选择任一损失指标后，下方联动展示该指标的项目贡献、维度拆解、趋势和项目级归因。</p></div><span class="v56-pill red">止损优先</span></div><div id="v56-lossCards" class="v56-loss-grid"></div></section>'+
+    '<div class="v56-two-col">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>损失指标项目贡献</h2><p id="v56-lossFocusTitle">-</p></div></div><div id="v56-lossChart" class="v56-chart-box"></div></section>'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>多维度拆解</h2><p>从BG/BU、项目阶段、客户和责任方向判断这项损失到底集中在哪里。</p></div></div><div id="v56-lossDimCards" class="v56-diag-list"></div></section>'+
+    '</div>'+
+    '<section class="v56-card" style="margin-top:14px;"><div class="v56-section-head"><div><h2>该损失指标的项目展开</h2><p>每一行是一个项目在当前损失指标上的表现，支持继续进入单项目下钻。</p></div></div><div style="overflow-x:auto;"><table class="v56-table"><thead><tr><th style="width:220px;">项目</th><th style="width:150px;">BG / BU</th><th style="width:88px;">阶段</th><th class="v56-num" style="width:110px;">损失金额</th><th class="v56-num" style="width:110px;">占L0</th><th class="v56-num" style="width:110px;">占S1</th><th style="width:130px;">趋势</th><th>主要归因 / 下一步动作</th><th style="width:90px;">操作</th></tr></thead><tbody id="v56-lossProjectBody"></tbody></table></div></section>'+
+    '</section>'+
+
+    '<section id="v56-view-pInvest" class="v56-view">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>P类前瞻投入：从费用看板进入投资复盘</h2><p>P类页面关注策略储备库存和供应能力提升投入，管理重点是投入强度、受益项目、释放节奏和后续回报。</p></div><span class="v56-pill green">P0 = P1 + P2</span></div><div id="v56-pInvestCards" class="v56-domain-cards"></div></section>'+
+    '<div class="v56-two-col">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>P类项目展开</h2><p>按P类投入强度、D16前瞻投入率和D17投入回报率判断项目是否存在投入过重或回报不清。</p></div></div><div id="v56-pInvestRankList" class="v56-diag-list"></div></section>'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>P类趋势与复盘</h2><p>查看前瞻投入是否随项目阶段释放，并对后续损失下降或效率提升形成复盘输入。</p></div></div><div id="v56-pInvestTrend" class="v56-chart-box"></div></section>'+
+    '</div></section>'+
+
+    '<section id="v56-view-diagnosis" class="v56-view">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>D类效率诊断：从金额看板进入问题定位</h2><p>D类不再作为指标解释，而是用于判断"异常在哪里"：采购强度、单位成本、损失占比、库存周转、异常物流、客户索赔、前瞻投入回报。</p></div><span class="v56-pill purple">D1-D17</span></div><div id="v56-diagnosisCards" class="v56-diagnosis-grid"></div></section>'+
+    '<div class="v56-two-col">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>项目诊断热力图</h2><p>红色代表管理层需要介入，黄色代表业务关注，绿色代表当前可控。点击项目可进入单项目下钻。</p></div></div><div class="v56-heatmap-wrap"><table class="v56-heatmap"><thead id="v56-heatmapHead"></thead><tbody id="v56-heatmapBody"></tbody></table></div></section>'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>优先治理排序</h2><p>按D类红灯数量、损失成本率、基线偏差和可改善金额综合排序。</p></div></div><div id="v56-rankList" class="v56-diag-list"></div></section>'+
+    '</div></section>'+
+
+    '<section id="v56-view-drill" class="v56-view">'+
+    '<section class="v56-card"><div class="v56-section-head"><div><h2>单项目下钻：构成、诊断、趋势、行动</h2><p id="v56-selectedProjectSummary">-</p></div><button class="v56-btn primary" id="v56-backToOverview" type="button">返回总览</button></div>'+
+    '<div id="v56-domainCards" class="v56-domain-cards"></div>'+
+    '<div class="v56-two-col">'+
+    '<section class="v56-card"><div class="v56-panel-title"><h3>成本构成饼状图</h3><span class="v56-pill gray">C/L/P结构</span></div><div id="v56-projectPieChart" class="v56-chart-box"></div></section>'+
+    '<section class="v56-card"><div class="v56-panel-title"><h3>项目总成本趋势</h3><span class="v56-pill blue">S1 / C0 / L0</span></div><div id="v56-projectOverallTrend" class="v56-chart-box"></div></section>'+
+    '</div>'+
+    '<div class="v56-split">'+
+    '<section class="v56-card"><div class="v56-panel-title"><h3>成本构成下钻</h3><span id="v56-domainExplain" class="v56-pill gray">-</span></div><div id="v56-metricBreakdown" class="v56-metric-grid"></div></section>'+
+    '<section class="v56-card"><div class="v56-panel-title"><h3>D类诊断与管理动作</h3><span class="v56-pill purple">定位问题</span></div><div id="v56-projectDiagnosisList" class="v56-diag-list"></div></section>'+
+    '</div>'+
+    '<div class="v56-two-col">'+
+    '<section class="v56-card"><div class="v56-panel-title"><h3>选中指标趋势</h3><span id="v56-selectedMetricName" class="v56-pill blue">-</span></div><div id="v56-metricTrend" class="v56-chart-box"></div></section>'+
+    '<section class="v56-card"><div class="v56-panel-title"><h3>归因与责任追踪</h3><span class="v56-pill amber">行动闭环</span></div><div id="v56-projectActionList" class="v56-diag-list"></div></section>'+
+    '</div>'+
+    '</section>'+
+    '</div>';
+
+  els={
+    period:document.getElementById("v56-periodFilter"),
+    bg:document.getElementById("v56-bgFilter"),
+    bu:document.getElementById("v56-buFilter"),
+    stage:document.getElementById("v56-stageFilter"),
+    status:document.getElementById("v56-statusFilter"),
+    keyword:document.getElementById("v56-keywordFilter")
+  };
+
+  fillSelect(els.bg,uniqueValues("bg"),"全部BG");
+  fillSelect(els.bu,uniqueValues("bu"),"全部BU");
+  fillSelect(els.stage,uniqueValues("stage"),"全部阶段");
+
+  document.querySelectorAll("#page-cost .v56-tab").forEach(function(tab){tab.addEventListener("click",function(){switchView(tab.dataset.view);});});
+  Object.values(els).forEach(function(el){el.addEventListener("input",renderCurrent);});
+  document.getElementById("v56-resetFilter").addEventListener("click",function(){
+    els.period.value="day";els.bg.value="";els.bu.value="";els.stage.value="";els.status.value="";els.keyword.value="";
+    renderCurrent();
+  });
+  document.getElementById("v56-backToOverview").addEventListener("click",function(){switchView("overview");});
+
+  renderCurrent();
+}
+
+registerModule('cost', initPage_cost);
+})();
