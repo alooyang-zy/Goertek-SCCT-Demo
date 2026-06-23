@@ -3,7 +3,7 @@
 (function(){
 "use strict";
 
-var RAIL_W=150, GUT=16, LANE_W=322, LANE_GAP=12;
+var RAIL_W=185, GUT=12, LANE_W=310, LANE_GAP=10;
 var LANES_X0=RAIL_W+GUT;
 function laneLeft(i){return LANES_X0+i*(LANE_W+LANE_GAP);}
 function laneCx(i){return laneLeft(i)+LANE_W/2;}
@@ -11,7 +11,7 @@ var HEAD_H=50, ROW_Y0=HEAD_H+40, ROW_GAP=94;
 function rowY(r){return ROW_Y0+r*ROW_GAP;}
 var NODE_W=164, NODE_H=54, WH_W=74, WH_H=80;
 var CANVAS_W=laneLeft(4)+LANE_W+6;
-var CANVAS_H=rowY(5)+NODE_H+22;
+var CANVAS_H=rowY(5)+NODE_H+8;
 var FACTOR=1.0;
 var refreshTimer=null;
 var clockTimer=null;
@@ -366,38 +366,36 @@ function bindEvents(container){
   if(cc)cc.addEventListener('click',openCycle);
 }
 
-function fit(container){
-  var wrap=container.querySelector(".st-canvas-wrap");
-  var canvas=container.querySelector(".st-canvas");
-  if(!wrap||!canvas)return;
-  var s=Math.min(1,wrap.clientWidth/CANVAS_W);
-  canvas.style.transform="scale("+s+")";
-  wrap.style.height=(CANVAS_H*s)+"px";
-}
+var currentProjectId=null;
+var currentTimeRange='累计';
 
-function tick(){var el=document.getElementById("stClock");if(el){var d=new Date(),p=function(x){return String(x).padStart(2,"0");};el.textContent=p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());}}
+// 项目数据
+var PROJECTS=[
+  {id:'P001',name:'HW-TWS-A1001',customer:'华为',bg:'A01',bu:'A01-BU1',productLine:'真无线耳机',engStage:'EVT',pm:'张明远',scale:1.0},
+  {id:'P002',name:'HW-TWS-A1002',customer:'华为',bg:'A01',bu:'A01-BU1',productLine:'真无线耳机',engStage:'DVT',pm:'李建国',scale:0.85},
+  {id:'P004',name:'HW-TWS-A1004',customer:'华为',bg:'A01',bu:'A01-BU1',productLine:'真无线耳机',engStage:'MP',pm:'赵丽',scale:1.2},
+  {id:'P005',name:'HW-TWS-A1005',customer:'华为',bg:'A01',bu:'A01-BU1',productLine:'真无线耳机',engStage:'MP',pm:'陈伟',scale:1.15},
+  {id:'P009',name:'HW-OHP-A1003',customer:'华为',bg:'A01',bu:'A01-BU1',productLine:'头戴耳机',engStage:'MP',pm:'郑凯',scale:0.9},
+  {id:'P038',name:'HW-ARG-C2001',customer:'华为',bg:'CEP',bu:'CEP-BU1',productLine:'AR眼镜',engStage:'EVT',pm:'吴芳',scale:0.65}
+];
+var TIMEF={"累计":1.0,"本年":0.85,"本月":0.24,"本周":0.065};
 
 function initPage_sandtable(container){
   container=container||document.getElementById('page-sandtable');
   if(!container)return;
   container.innerHTML='';
-
-  // 构建全局筛选提示
-  var gf=(typeof App!=='undefined'&&App.filter)?App.filter:{};
+  
+  // 默认第一个项目
+  currentProjectId=PROJECTS[0].id;
 
   container.innerHTML=
     '<div class="sandtable-shell">'+
     '<div class="st-wrap">'+
-    '<div class="st-topbar st-brk">'+
-    '<span class="st-c st-tl"></span><span class="st-c st-tr"></span><span class="st-c st-bl"></span><span class="st-c st-br"></span>'+
-    '<div class="st-brand"><div class="st-logo">G</div><div><h1>歌尔供应链控制塔</h1><p>SUPPLY CHAIN CONTROL TOWER · 端到端节点泳道图</p></div></div>'+
-    '<div class="st-top-meta"><div class="st-run"><span class="st-gear"></span>SYSTEM RUNNING</div>'+
-    '<div class="st-chip">REFRESH · 2026-06-22</div>'+
-    '<div class="st-chip st-chip-live"><span class="st-dot-live"></span><span id="stClock">LIVE</span></div></div>'+
-    '</div>'+
-    '<div class="st-global-hint">'+
-    '<b>全局筛选</b> BG:<span class="st-val">'+(gf.bg||'全部')+'</span> BU:<span class="st-val">'+(gf.bu||'全部')+'</span> 客户:<span class="st-val">'+(gf.customer||'全部')+'</span> 产品:<span class="st-val">'+(gf.product||'全部')+'</span>'+
-    ' <span style="margin-left:auto;font-size:10px;color:var(--st-txt3)">筛选条件由顶部▾控制</span>'+
+    // 筛选栏：项目 + 时间范围
+    '<div class="st-filter-bar">'+
+    '<div class="st-fl"><b>项目号</b><select class="st-sel" id="st-proj-select">'+PROJECTS.map(function(p){return'<option value="'+p.id+'">'+p.id+' · '+p.name+'</option>';}).join('')+'</select></div>'+
+    '<div class="st-fl"><b>时间范围</b><select class="st-sel" id="st-time-select"><option value="累计" selected>累计</option><option value="本年">本年</option><option value="本月">本月</option><option value="本周">本周</option></select></div>'+
+    '<div class="st-proj-info" id="st-proj-info"></div>'+
     '</div>'+
     '<div class="st-kribbon" id="stKribbon">'+KPI.map(function(k){return'<div class="st-kc '+(k[3]||'')+'"><span class="st-sheen"></span><label>'+k[0]+'</label><b data-num="'+k[1]+'" data-mode="'+k[4]+'">0<i>'+k[2]+'</i>'+trendHtml(k[4])+'</b></div>';}).join("")+'</div>'+
     '<div class="st-board st-brk">'+
@@ -418,28 +416,59 @@ function initPage_sandtable(container){
     buildNodesHTML()+
     '</div></div>'+
     '</div>'+
-    '<div class="st-foot"><div class="st-pills"><span class="st-pill">履约节点: 30</span><span class="st-pill">缓冲库: 3</span><span class="st-pill" style="border-color:var(--st-red);color:var(--st-red)">红风险: 2</span><span class="st-pill" style="border-color:var(--st-warn);color:var(--st-warn)">黄风险: 1</span></div><span>Data Node Stream Alignment Matrix · Virtual Simulation Demo Data</span></div>'+
+    '<div class="st-foot"><div class="st-pills"><span class="st-pill">履约节点: 30</span><span class="st-pill">缓冲库: 3</span><span class="st-pill" style="border-color:var(--st-red);color:var(--st-red)">红风险: 2</span><span class="st-pill" style="border-color:var(--st-warn);color:var(--st-warn)">黄风险: 1</span></div><span>Data: Virtual Simulation Demo</span></div>'+
     '</div></div>';
 
   setupSVGLinks(container);
   initMetrics(container);
   bindEvents(container);
+  updateProjectInfo(container);
+
+  // 项目/时间联动
+  var projSel=container.querySelector('#st-proj-select');
+  var timeSel=container.querySelector('#st-time-select');
+  if(projSel){projSel.addEventListener('change',function(){currentProjectId=this.value;onFilterChange(container);});}
+  if(timeSel){timeSel.addEventListener('change',function(){currentTimeRange=this.value;onFilterChange(container);});}
 
   // 初始渲染数据
   NUMS.forEach(function(o){animateTo(o,o.base,950);});
-  fit(container);
-  window.addEventListener("resize",function(){fit(container);});
+  fitAll(container);
+  window.addEventListener("resize",function(){fitAll(container);});
   // 5秒刷新
   if(refreshTimer)clearInterval(refreshTimer);
   refreshTimer=setInterval(function(){refreshSweep(container);},5000);
-  // 时钟
-  tick();
-  if(clockTimer)clearInterval(clockTimer);
-  clockTimer=setInterval(tick,1000);
 
   // 存储清理引用
   container._stRefresh=refreshTimer;
-  container._stClock=clockTimer;
+}
+
+function onFilterChange(container){
+  var proj=PROJECTS.find(function(p){return p.id===currentProjectId;});
+  var scale=proj?proj.scale:1.0;
+  var timeScale=TIMEF[currentTimeRange]||1.0;
+  FACTOR=scale*timeScale;
+  updateProjectInfo(container);
+  setRail(container);
+  // 刷新可缩放数据
+  NUMS.forEach(function(o){if(o.scalable){o.base=Math.max(0,Math.round(o.base0*FACTOR));o.delta=deltaFor(o.base);animateTo(o,o.base,600);}});
+}
+
+function updateProjectInfo(container){
+  var proj=PROJECTS.find(function(p){return p.id===currentProjectId;});
+  var info=container.querySelector('#st-proj-info');
+  if(info&&proj){
+    info.innerHTML='<span>BG: <b>'+proj.bg+'</b></span><span>BU: <b>'+proj.bu+'</b></span><span>客户: <b>'+proj.customer+'</b></span><span>产品: <b>'+proj.productLine+'</b></span><span>阶段: <b>'+proj.engStage+'</b></span><span>PM: <b>'+proj.pm+'</b></span>';
+  }
+}
+
+function fitAll(container){
+  var wrap=container.querySelector(".st-canvas-wrap");
+  var canvas=container.querySelector(".st-canvas");
+  if(!wrap||!canvas)return;
+  var s=Math.min(1,wrap.clientWidth/CANVAS_W);
+  canvas.style.transform="scale("+s+")";
+  // 给适当高度，确保占满可用空间
+  wrap.style.height=Math.max(CANVAS_H*s,400)+"px";
 }
 
 function buildNodesHTML(){

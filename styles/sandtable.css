@@ -59,9 +59,13 @@
 .st-global-hint b{color:var(--st-txt);font-weight:bold;}
 .st-global-hint .st-val{padding:3px 10px;background:rgba(31,107,255,0.08);border:1px solid rgba(31,107,255,0.25);color:var(--st-blue);font-weight:600;border-radius:2px;}
 
-.st-filters{position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 18px;
-  background:linear-gradient(90deg,var(--card,#fff),var(--primary-bg,#eef4fc));border:1px solid var(--st-line);backdrop-filter:blur(5px);border-radius:4px;
-  box-shadow:0 2px 10px rgba(20,50,90,0.04);}
+/* 项目筛选栏 */
+.st-filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:8px 16px;
+  background:var(--card,#fff);border:1px solid var(--st-line);border-radius:6px;box-shadow:var(--card-shadow);}
+.st-proj-info{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-left:auto;font-size:11.5px;color:var(--st-txt2);}
+.st-proj-info span{display:flex;align-items:center;gap:4px;}
+.st-proj-info b{color:var(--st-txt);font-weight:700;}
+.st-proj-info b::before{display:none;}
 .st-fl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--st-txt3);}
 .st-fl b{color:var(--st-txt2);font-weight:bold;}
 .st-fl .st-sel{padding:4px 24px 4px 10px;background:rgba(31,107,255,0.08);border:1px solid rgba(31,107,255,0.25);color:var(--st-blue);font-weight:600;border-radius:2px;font-size:12px;cursor:pointer;appearance:none;-webkit-appearance:none;
