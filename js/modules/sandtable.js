@@ -7,11 +7,11 @@ var RAIL_W=185, GUT=12, LANE_W=310, LANE_GAP=10;
 var LANES_X0=RAIL_W+GUT;
 function laneLeft(i){return LANES_X0+i*(LANE_W+LANE_GAP);}
 function laneCx(i){return laneLeft(i)+LANE_W/2;}
-var HEAD_H=50, ROW_Y0=HEAD_H+40, ROW_GAP=94;
+var HEAD_H=50, ROW_Y0=HEAD_H+40, ROW_GAP=122;
 function rowY(r){return ROW_Y0+r*ROW_GAP;}
 var NODE_W=164, NODE_H=54, WH_W=74, WH_H=80;
 var CANVAS_W=laneLeft(4)+LANE_W+6;
-var CANVAS_H=rowY(5)+NODE_H+8;
+var CANVAS_H=rowY(5)+NODE_H+28;
 var FACTOR=1.0;
 var refreshTimer=null;
 var clockTimer=null;
@@ -245,11 +245,11 @@ function openCycle(){
   var cards=ST.map(function(x){var ov=x[1]>x[2];return'<div class="st-cyc-stage'+(ov?' st-over':'')+'"><div class="st-cs-n">'+x[0]+'</div><div class="st-cs-v">'+x[1].toFixed(1)+'<small>d</small></div><div class="st-cs-t">目标 '+x[2].toFixed(1)+'d '+(ov?'<span class="st-cs-d">+'+(x[1]-x[2]).toFixed(1)+'</span>':'<span class="st-cs-ok">达标</span>')+'</div></div>';}).join('<span class="st-cyc-plus">+</span>');
   var series=[14.5,15.2,16.8,15.0,14.2,15.5,16.2,16.0],labels=["04-09","04-16","04-23","04-30","05-07","05-14","05-21","05-28"];
   var html='<button class="st-nd-x" onclick="stCloseNode()">×</button>'+
-    '<div class="st-nd-head"><span class="st-nd-id">周期</span><h3>履约周期分析</h3><span class="st-nd-badge st-red">实际 16d / 目标 14d · 超 2d</span><span class="st-nd-st">OTS · 端到端</span></div>'+
+    '<div class="st-nd-head"><span class="st-nd-id">周期</span><h3>OTS周期分析</h3><span class="st-nd-badge st-red">实际 16d / 目标 14d · 超 2d</span><span class="st-nd-st">OTS · 端到端</span></div>'+
     '<div class="st-nd-body">'+
-    '<div class="st-nd-sec"><h5>周期构成 · 各阶段拆解</h5><div class="st-cyc-eq"><div class="st-cyc-total"><div class="st-cs-n">履约周期</div><div class="st-cs-v">16.0<small>d</small></div><div class="st-cs-t">目标 14.0d</div></div><span class="st-cyc-eqs">=</span>'+cards+'</div></div>'+
-    '<div class="st-nd-sec"><h5>历史趋势 · 履约周期（天）</h5><div class="st-cyc-legend"><span class="st-lg-a">实际</span><span class="st-lg-t">目标线 14d</span></div>'+cycleChart(series,14,labels)+'</div>'+
-    '<div class="st-nd-sec"><h5>经营结论</h5><p class="st-nd-judge">履约周期 16 天、超目标 2 天；主要拖累为 <b>计划→备料（+0.8d，缺料齐套）</b> 与 <b>采购→入库（+0.6d，供应商交期）</b>。压缩这两段是缩短整体交期的关键。</p></div>'+
+    '<div class="st-nd-sec"><h5>周期构成 · 各阶段拆解</h5><div class="st-cyc-eq"><div class="st-cyc-total"><div class="st-cs-n">OTS周期</div><div class="st-cs-v">16.0<small>d</small></div><div class="st-cs-t">目标 14.0d</div></div><span class="st-cyc-eqs">=</span>'+cards+'</div></div>'+
+    '<div class="st-nd-sec"><h5>历史趋势 · OTS周期（天）</h5><div class="st-cyc-legend"><span class="st-lg-a">实际</span><span class="st-lg-t">目标线 14d</span></div>'+cycleChart(series,14,labels)+'</div>'+
+    '<div class="st-nd-sec"><h5>经营结论</h5><p class="st-nd-judge">OTS周期 16 天、超目标 2 天；主要拖累为 <b>计划→备料（+0.8d，缺料齐套）</b> 与 <b>采购→入库（+0.6d，供应商交期）</b>。压缩这两段是缩短整体交期的关键。</p></div>'+
     '</div>';
   var m=document.getElementById('stNdModal');m.querySelector('.st-nd-card').innerHTML=html;m.classList.add('st-open');
 }
@@ -312,7 +312,7 @@ function buildAll(container){
   var svgHtml='<svg class="st-links" width="'+CANVAS_W+'" height="'+CANVAS_H+'" viewBox="0 0 '+CANVAS_W+' '+CANVAS_H+'"><defs><marker id="st-arw" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1f6bff"/></marker><marker id="st-arwW" markerWidth="12" markerHeight="12" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#0d9488"/></marker></defs>'+paths+pkts+'</svg>';
 
   var railHtml='<div class="st-rail" style="width:'+RAIL_W+'px;">'+
-    '<div class="st-rail-ots" id="st-cyc-cell" style="height:'+HEAD_H+'px;cursor:pointer;"><span class="st-rt">履约周期</span><span class="st-nums"><span>目标<b>14</b></span><span>实际<b class="st-act">16</b></span></span></div>'+
+    '<div class="st-rail-ots" id="st-cyc-cell" style="height:'+HEAD_H+'px;cursor:pointer;"><span class="st-rt">OTS周期</span><span class="st-nums"><span>目标<b>14</b></span><span>实际<b class="st-act">16</b></span></span></div>'+
     '<div class="st-rail-card"><h4>履约总览</h4>'+
     '<div class="st-hp-row"><span>OTD准时率</span><b class="st-bad">88%</b></div>'+
     '<div class="st-hp-row"><span>承诺缺口</span><b class="st-bad" id="st-rk-gap">1,340<i>件</i></b></div>'+
@@ -380,6 +380,35 @@ var PROJECTS=[
 ];
 var TIMEF={"累计":1.0,"本年":0.85,"本月":0.24,"本周":0.065};
 
+// SCOR 五维数据
+var SCOR_DIMS=["交付","质量","成本","敏捷","韧性"];
+var SCOR_COLORS=["#2563eb","#0b9e6e","#d97706","#0aa2c0","#8b5cf6"];
+function scorHash(pid){var h=5381;for(var i=0;i<pid.length;i++)h=((h<<5)+h)+pid.charCodeAt(i);return h>>>0;}
+function getScorDims(pid){
+  var s=scorHash(pid);function rr(){s=(s*9301+49297)%233280;return s/233280;}
+  var dims=[];for(var i=0;i<5;i++){var base=70+(rr()*28);dims.push(Math.round(Math.min(100,Math.max(35,base))));}
+  var score=Math.round(dims.reduce(function(a,b){return a+b;},0)/5);
+  return{dims:dims,score:score};
+}
+
+function updateSCOR(container){
+  var dims=getScorDims(currentProjectId);
+  var bars=container.querySelector('#st-scor-bars');
+  var scoreEl=container.querySelector('#st-scor-score');
+  if(bars){
+    bars.innerHTML=SCOR_DIMS.map(function(label,i){
+      var v=dims.dims[i],w=v,color=SCOR_COLORS[i];
+      var cls=v>=80?'':v>=65?'mid':'low';
+      return'<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:10px;">'+
+        '<span style="width:26px;color:var(--st-txt2);font-weight:600">'+label+'</span>'+
+        '<div style="flex:1;height:8px;background:rgba(30,90,180,0.08);border-radius:4px;overflow:hidden">'+
+        '<div style="width:'+w+'%;height:100%;background:'+color+';border-radius:4px;transition:width .4s"></div></div>'+
+        '<span style="width:22px;text-align:right;font-weight:700;font-size:10px;color:'+color+'">'+v+'</span></div>';
+    }).join('');
+  }
+  if(scoreEl){scoreEl.innerHTML=dims.score+'<i>分</i>';scoreEl.className=(dims.score>=80?'':'st-bad');}
+}
+
 function initPage_sandtable(container){
   container=container||document.getElementById('page-sandtable');
   if(!container)return;
@@ -407,11 +436,12 @@ function initPage_sandtable(container){
     '<svg class="st-links" width="'+CANVAS_W+'" height="'+CANVAS_H+'" viewBox="0 0 '+CANVAS_W+' '+CANVAS_H+'"><defs><marker id="st-arw" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1f6bff"/></marker><marker id="st-arwW" markerWidth="12" markerHeight="12" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#0d9488"/></marker></defs></svg>'+
     LANES.map(function(L,i){return'<div class="st-lane-head" style="left:'+laneLeft(i)+'px;top:0;width:'+LANE_W+'px;height:'+HEAD_H+'px;"><div class="st-lh"><span class="st-num">'+L.code+'</span><strong>'+L.name+'</strong></div><span class="st-sub">目标 '+CYC[L.code][0]+'d · 实际 '+CYC[L.code][1]+'d</span></div>';}).join('')+
     '<div class="st-rail" style="width:'+RAIL_W+'px;">'+
-    '<div class="st-rail-ots" id="st-cyc-cell" style="height:'+HEAD_H+'px;cursor:pointer;"><span class="st-rt">履约周期</span><span class="st-nums"><span>目标<b>14</b></span><span>实际<b class="st-act">16</b></span></span></div>'+
+    '<div class="st-rail-ots" id="st-cyc-cell" style="height:'+HEAD_H+'px;cursor:pointer;"><span class="st-rt">OTS周期</span><span class="st-nums"><span>目标<b>14</b></span><span>实际<b class="st-act">16</b></span></span></div>'+
     '<div class="st-rail-card"><h4>履约总览</h4><div class="st-hp-row"><span>OTD准时率</span><b class="st-bad">88%</b></div><div class="st-hp-row"><span>承诺缺口</span><b class="st-bad" id="st-rk-gap">1,340<i>件</i></b></div><div class="st-hp-row"><span>风险订单</span><b class="st-bad" id="st-rk-risk">32<i>单</i></b></div></div>'+
     '<div class="st-rail-card"><h4>风险分布</h4><div class="st-dist"><span class="st-seg-r" style="flex:2"></span><span class="st-seg-y" style="flex:1"></span><span class="st-seg-g" style="flex:27"></span></div><div class="st-warnrail"><div class="st-wr"><span class="st-led2 st-led-r"></span>红风险 · 2</div><div class="st-wr"><span class="st-led2 st-led-y"></span>黄风险 · 1</div><div class="st-wr"><span class="st-led2 st-led-g"></span>正常 · 27</div></div></div>'+
     '<div class="st-rail-card"><h4>TOP 风险卡点</h4><div class="st-top3" data-go="2.5"><span class="st-d st-d-r"></span><span class="st-t3"><b>2.5 物料齐套</b><em>缺料 2 单 · MC</em></span></div><div class="st-top3" data-go="5.6"><span class="st-d st-d-r"></span><span class="st-t3"><b>5.6 交付签收</b><em>超期 680 · OC</em></span></div><div class="st-top3" data-go="3.2"><span class="st-d st-d-y"></span><span class="st-t3"><b>3.2 供应商协同</b><em>准时 78.6% · Buyer</em></span></div></div>'+
     '<div class="st-rail-card"><h4>风险闭环</h4><div class="st-hp-row"><span>未关闭重大风险</span><b>2<i>项</i></b></div><div class="st-hp-row"><span>平均关闭周期</span><b>4.6<i>天</i></b></div><div class="st-hp-row"><span>关闭及时率</span><b>66.7%</b></div></div>'+
+    '<div class="st-rail-card" id="st-scor-card"><h4>SCOR 五维健康</h4><div id="st-scor-bars"></div><div class="st-hp-row" style="margin-top:8px;"><span>综合评分</span><b id="st-scor-score">86<i>分</i></b></div></div>'+
     '</div>'+
     buildNodesHTML()+
     '</div></div>'+
@@ -423,6 +453,7 @@ function initPage_sandtable(container){
   initMetrics(container);
   bindEvents(container);
   updateProjectInfo(container);
+  updateSCOR(container);
 
   // 项目/时间联动
   var projSel=container.querySelector('#st-proj-select');
@@ -448,6 +479,7 @@ function onFilterChange(container){
   var timeScale=TIMEF[currentTimeRange]||1.0;
   FACTOR=scale*timeScale;
   updateProjectInfo(container);
+  updateSCOR(container);
   setRail(container);
   // 刷新可缩放数据
   NUMS.forEach(function(o){if(o.scalable){o.base=Math.max(0,Math.round(o.base0*FACTOR));o.delta=deltaFor(o.base);animateTo(o,o.base,600);}});
