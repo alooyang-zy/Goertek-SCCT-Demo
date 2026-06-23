@@ -19,8 +19,7 @@ var _ovSortKey='key',_ovSortDir=-1;
 var _ovPage=1,_ovPageSize=15;
 var _ovChartLifecycle=null,_ovChartRadar=null,_ovChartCustomer=null;
 var _ovDebouncedFilter=null;
-var _ovMode='compact'; // compact | detail
-var _ovShowMom=false;  // 环比开关
+var _ovMode='detail'; // 默认详细模式，含SCOR五维+环比
 var _ovFactoryMapInited=false;
 
 /* ═══ 3. 工厂数据 ═══ */
@@ -35,30 +34,13 @@ var _OV_FACTORIES=[
 function initPage_overview(){
   try{
     if(!_ovDebouncedFilter)_ovDebouncedFilter=debounce(ovApplyFilters,300);
-    ovUpdateGlobalHint();
     ovApplyFilters();
   }catch(e){console.error('overview init error:',e);}
 }
 registerModule('overview',initPage_overview);
 
-/* ═══ 5. 全局筛选提示条 ═══ */
-function ovUpdateGlobalHint(){
-  var el=document.getElementById('ovGlobalHint');
-  if(!el)return;
-  var f=App.filter||{};
-  var bgLabel={A01:'A01 声学BG',CEP:'CEP 消费电子BG',SAC:'SAC 微电子BG'};
-  var html='<i class="fas fa-filter"></i> <b>全局筛选范围</b> · ';
-  html+='BG: <span class="ov-gh-val">'+(f.bg?(bgLabel[f.bg]||f.bg):'全部')+'</span> · ';
-  html+='BU: <span class="ov-gh-val">'+(f.bu||'全部')+'</span> · ';
-  html+='客户: <span class="ov-gh-val">'+(f.customer||'全部')+'</span> · ';
-  html+='产品: <span class="ov-gh-val">'+(f.product||'全部')+'</span>';
-  html+=' <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">↑ 筛选条件由顶部控制</span>';
-  el.innerHTML=html;
-}
-
-/* ═══ 6. 筛选逻辑 ═══ */
+/* ═══ 5. 筛选逻辑 ═══ */
 function ovApplyFilters(){
-  ovUpdateGlobalHint();
   var fp=getFilteredProjects();
   var lc=document.getElementById('ovFLifecycle')?document.getElementById('ovFLifecycle').value:'';
   var st=document.getElementById('ovFStage')?document.getElementById('ovFStage').value:'';
@@ -137,26 +119,17 @@ function ovUpdateFunnel(){
   steps.forEach(function(s,i){
     var pct=Math.round((s.val/maxNpi)*100);
     var w=Math.max(pct,12);
-    // 转化率
-    var convRate=i>0&&steps[i-1].val>0?Math.round((s.val/steps[i-1].val)*100):100;
-    var convHtml=i>0?'<span style="font-size:9px;color:var(--text-muted);margin-left:6px">转化率'+convRate+'%</span>':'';
     var row=document.createElement('div');
     row.className='ov-funnel-step';
-    row.innerHTML='<div class="ov-funnel-label">'+s.label+convHtml+'</div><div class="ov-funnel-bar-wrap"><div class="ov-funnel-bar" style="width:'+w+'%;background:'+funnelColors[i]+';min-width:50px;">'+s.val+'</div></div><div class="ov-funnel-count">'+s.val+' 个</div>';
+    row.innerHTML='<div class="ov-funnel-label">'+s.label+'</div><div class="ov-funnel-bar-wrap"><div class="ov-funnel-bar" style="width:'+w+'%;background:'+funnelColors[i]+';min-width:50px;">'+s.val+'</div></div><div class="ov-funnel-count">'+s.val+' 个</div>';
     fwrap.appendChild(row);
     if(i<2){var arr=document.createElement('div');arr.className='ov-funnel-arrow';arr.innerHTML='▼';fwrap.appendChild(arr);}
   });
-  // 卡阶段提示
-  var stuckCount=_ovFiltered.filter(function(d){return d.engStage!=='MP'&&d._ovKpi&&d._ovKpi.health==='r';}).length;
-  var stuckTip=document.createElement('div');
-  stuckTip.style.cssText='font-size:10px;color:var(--danger);margin-top:6px;text-align:center';
-  stuckTip.innerHTML=stuckCount>0?'⚠ '+stuckCount+'个项目卡在NPI阶段且健康异常':'✓ 无卡阶段项目';
-  fwrap.appendChild(stuckTip);
   var mpBars=document.getElementById('ovMpStageBars');if(!mpBars)return;
   mpBars.innerHTML='';
   [{label:'Ramp-up',val:ramp,color:'var(--primary-light)'},{label:'Mass Pro.',val:mass,color:'var(--success)'},{label:'EOL',val:eol,color:'var(--text-muted)'}].forEach(function(item){
-    var pct=Math.round((item.val/maxMp)*100);
-    mpBars.innerHTML+='<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:10px;color:var(--text-sec);width:52px;flex-shrink:0;">'+item.label+'</span><div style="flex:1;background:var(--border-light);border-radius:3px;height:12px;overflow:hidden;"><div style="width:'+Math.max(pct,4)+'%;height:100%;background:'+item.color+';border-radius:3px;transition:width .4s;"></div></div><span style="font-size:11px;font-weight:700;color:'+item.color+';width:24px;text-align:right;">'+item.val+'</span></div>';
+    var pct=Math.round((item.val/maxMp)*100),w=Math.max(pct,10);
+    mpBars.innerHTML+='<div class="ov-funnel-step"><div class="ov-funnel-label">'+item.label+'</div><div class="ov-funnel-bar-wrap"><div class="ov-funnel-bar" style="width:'+w+'%;background:'+item.color+';">'+item.val+'</div></div><div class="ov-funnel-count">'+item.val+'</div></div>';
   });
 }
 
@@ -274,11 +247,9 @@ function ovRenderCustomerChart(){
 /* ═══ 11. 工厂地理分布地图 ═══ */
 function ovUpdateFactoryMap(){
   var el=document.getElementById('ovFactoryMap');if(!el)return;
-  // 简易SVG世界地图（示意性）
-  var w=1000,h=260;
+  var w=1200,h=380;
   var factoryStats=_OV_FACTORIES.map(function(f){
     var pool=_ovFiltered.filter(function(d){
-      // 按项目ID哈希分配工厂（模拟）
       var hash=d.id.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0);
       var fi=hash%_OV_FACTORIES.length;
       return _OV_FACTORIES[fi].name===f.name;
@@ -288,29 +259,40 @@ function ovUpdateFactoryMap(){
     return{factory:f,count:total,red:red};
   });
   var maxCount=Math.max.apply(null,factoryStats.map(function(f){return f.count;}).concat([1]));
-  var html='<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:240px;background:linear-gradient(135deg,#e0f2fe,#f0f9ff);border-radius:8px">';
-  // 简化大陆轮廓
-  html+='<path d="M50,80 Q150,60 250,75 T450,70 Q500,65 550,75 L580,120 Q560,160 500,170 L300,165 Q200,160 150,150 L80,130 Z" fill="#cbd5e1" opacity="0.5"/>'; // 亚欧
-  html+='<path d="M600,60 Q650,50 700,55 L730,90 Q720,120 690,130 L640,125 Q610,110 600,90 Z" fill="#cbd5e1" opacity="0.5"/>'; // 北美
-  html+='<path d="M100,150 Q130,145 160,155 L170,190 Q150,210 120,205 L100,180 Z" fill="#cbd5e1" opacity="0.5"/>'; // 非洲
-  html+='<path d="M700,170 Q730,165 760,175 L770,200 Q750,215 720,210 L700,195 Z" fill="#cbd5e1" opacity="0.5"/>'; // 南美
-  html+='<path d="M750,200 Q800,195 820,205 L825,230 Q800,240 770,235 Z" fill="#cbd5e1" opacity="0.4"/>'; // 澳洲
-  // 工厂气泡
+  var html='<div class="ov-map-ctrl"><span style="font-size:11px;color:var(--text-muted)">缩放</span><input type="range" min="100" max="200" value="100" id="ovMapZoomSlider" oninput="ovMapZoomChange(this.value)" style="width:80px;accent-color:var(--primary)"><span style="font-size:11px;font-weight:700;color:var(--primary)" id="ovMapZoomVal">100%</span></div>';
+  html+='<div class="ov-map-container" id="ovMapContainer">';
+  html+='<svg class="ov-map-svg" id="ovMapSvg" viewBox="0 0 '+w+' '+h+'" style="width:100%;background:linear-gradient(135deg,#e0f2fe,#f0f9ff);border-radius:8px">';
+  // 大陆轮廓
+  html+='<path d="M60,110 Q160,90 280,105 T500,95 Q560,90 620,105 L640,160 Q620,210 560,225 L340,215 Q220,210 180,195 L100,175 Z" fill="#cbd5e1" opacity="0.5"/>';
+  html+='<path d="M680,80 Q740,70 800,75 L840,120 Q830,160 790,175 L730,170 Q690,150 680,120 Z" fill="#cbd5e1" opacity="0.5"/>';
+  html+='<path d="M120,210 Q160,205 190,220 L200,270 Q175,300 140,290 L120,260 Z" fill="#cbd5e1" opacity="0.5"/>';
+  html+='<path d="M800,240 Q840,235 880,250 L890,290 Q865,310 830,300 L800,280 Z" fill="#cbd5e1" opacity="0.5"/>';
+  html+='<path d="M860,290 Q920,285 950,295 L955,330 Q920,345 880,335 Z" fill="#cbd5e1" opacity="0.4"/>';
+  // 工厂
   factoryStats.forEach(function(fs){
     var x=fs.factory.x/100*w,y=fs.factory.y/100*h;
-    var r=Math.max(8,Math.min(32,(fs.count/maxCount)*30+8));
+    var r=Math.max(14,Math.min(45,(fs.count/maxCount)*38+12));
     var color=fs.red>0?'var(--danger)':fs.count>0?'var(--primary)':'var(--text-muted)';
     var bgColor=fs.red>0?'rgba(220,38,38,0.3)':'rgba(59,130,246,0.25)';
-    html+='<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+bgColor+'" stroke="'+color+'" stroke-width="2"/>';
-    html+='<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+(fs.red>0?'#dc2626':'#1e5cb3')+'">'+fs.count+'</text>';
-    html+='<text x="'+x+'" y="'+(y+r+14)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">'+fs.factory.name+'</text>';
-    if(fs.red>0)html+='<text x="'+x+'" y="'+(y+r+26)+'" text-anchor="middle" font-size="9" fill="#dc2626">⚠'+fs.red+'异常</text>';
+    html+='<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+bgColor+'" stroke="'+color+'" stroke-width="2.5"/>';
+    html+='<text x="'+x+'" y="'+(y+5)+'" text-anchor="middle" font-size="14" font-weight="800" fill="'+(fs.red>0?'#dc2626':'#1e5cb3')+'">'+fs.count+'</text>';
+    html+='<text x="'+x+'" y="'+(y+r+18)+'" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">'+fs.factory.name+'</text>';
+    if(fs.red>0)html+='<text x="'+x+'" y="'+(y+r+33)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">⚠ '+fs.red+'个异常</text>';
   });
-  html+='</svg>';
-  // 图例
-  html+='<div style="display:flex;gap:16px;font-size:11px;color:var(--text-sec);margin-top:6px"><span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(59,130,246,0.5);border:1px solid var(--primary)"></span> 正常工厂</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(220,38,38,0.3);border:1px solid var(--danger)"></span> 有异常项目</span></div>';
+  html+='</svg></div>';
+  html+='<div class="ov-map-legend"><span><span class="ov-lg-dot ok"></span> 正常工厂</span><span><span class="ov-lg-dot bad"></span> 有异常项目</span></div>';
   el.innerHTML=html;
 }
+
+function ovMapZoomChange(val){
+  var svg=document.getElementById('ovMapSvg');
+  var label=document.getElementById('ovMapZoomVal');
+  if(!svg)return;
+  svg.style.transform='scale('+(val/100)+')';
+  svg.style.transformOrigin='top left';
+  if(label)label.textContent=val+'%';
+}
+window.ovMapZoomChange=ovMapZoomChange;
 
 /* ═══ 12. 图表导出 ═══ */
 function ovExportChart(type,format){
@@ -339,23 +321,7 @@ function ovExportChart(type,format){
 }
 window.ovExportChart=ovExportChart;
 
-/* ═══ 13. 紧凑/详细模式 + 环比 ═══ */
-function ovSetMode(mode){
-  _ovMode=mode;
-  document.getElementById('ovModeCompact').classList.toggle('active',mode==='compact');
-  document.getElementById('ovModeDetail').classList.toggle('active',mode==='detail');
-  ovRenderTable();
-}
-window.ovSetMode=ovSetMode;
-
-function ovToggleMom(){
-  _ovShowMom=!_ovShowMom;
-  document.getElementById('ovMomToggle').classList.toggle('active',_ovShowMom);
-  ovRenderTable();
-}
-window.ovToggleMom=ovToggleMom;
-
-/* ═══ 14. 表格排序（含箭头指示） ═══ */
+/* ═══ 13. 表格排序（含箭头指示） ═══ */
 function ovSortTable(key,keepDir){
   if(!keepDir){if(_ovSortKey===key)_ovSortDir*=-1;else{_ovSortKey=key;_ovSortDir=-1;}}
   var keyMap={key:'isMajor',bg:'bg',bu:'bu',customer:'customer',product:'productLine',name:'name',stage:'engStage',lifecycle:'lifecycleRaw',score:'_ovScore',health:'_ovHealth'};
@@ -379,20 +345,21 @@ var _OV_HEALTH_LABEL={g:'正常',y:'预警',r:'异常'};
 var _OV_DIM_SHORT=['可靠','响应','成本','资产','韧性'];
 
 function ovRenderTable(){
-  // 动态表头
+  // 动态表头（详细模式 + 环比常驻）
   var thead=document.getElementById('ovProjThead');
   if(thead){
     var sortIcon=function(key){if(_ovSortKey!==key)return'<span class="ov-sort-icon">↕</span>';return'<span class="ov-sort-icon active">'+(_ovSortDir>0?'↑':'↓')+'</span>';};
     var html='<tr>';
     html+='<th onclick="ovSortTable(\'key\')">⭐ '+sortIcon('key')+'</th>';
-    if(_ovMode==='detail'){html+='<th onclick="ovSortTable(\'bg\')">BG '+sortIcon('bg')+'</th><th onclick="ovSortTable(\'bu\')">BU '+sortIcon('bu')+'</th>';}
+    html+='<th onclick="ovSortTable(\'bg\')">BG '+sortIcon('bg')+'</th><th onclick="ovSortTable(\'bu\')">BU '+sortIcon('bu')+'</th>';
     html+='<th onclick="ovSortTable(\'customer\')">客户 '+sortIcon('customer')+'</th>';
-    if(_ovMode==='detail')html+='<th onclick="ovSortTable(\'product\')">产品 '+sortIcon('product')+'</th>';
+    html+='<th onclick="ovSortTable(\'product\')">产品 '+sortIcon('product')+'</th>';
     html+='<th onclick="ovSortTable(\'name\')">项目名称 '+sortIcon('name')+'</th>';
     html+='<th onclick="ovSortTable(\'stage\')">阶段 '+sortIcon('stage')+'</th>';
-    if(_ovMode==='detail'){html+='<th onclick="ovSortTable(\'lifecycle\')">生命周期 '+sortIcon('lifecycle')+'</th>';html+='<th title="交付可靠性" style="cursor:help">①可靠</th><th title="响应速度" style="cursor:help">②响应</th><th title="盈利能力" style="cursor:help">③成本</th><th title="资产效率" style="cursor:help">④资产</th><th title="敏捷韧性" style="cursor:help">⑤韧性</th>';}
+    html+='<th onclick="ovSortTable(\'lifecycle\')">生命周期 '+sortIcon('lifecycle')+'</th>';
+    html+='<th title="交付可靠性" style="cursor:help">①可靠</th><th title="响应速度" style="cursor:help">②响应</th><th title="盈利能力" style="cursor:help">③成本</th><th title="资产效率" style="cursor:help">④资产</th><th title="敏捷韧性" style="cursor:help">⑤韧性</th>';
     html+='<th onclick="ovSortTable(\'score\')">综合评分 '+sortIcon('score')+'</th>';
-    if(_ovShowMom)html+='<th>环比</th>';
+    html+='<th>环比</th>';
     html+='<th onclick="ovSortTable(\'health\')">健康 '+sortIcon('health')+'</th>';
     html+='<th style="width:36px;text-align:center;">→</th>';
     html+='</tr>';
@@ -413,20 +380,20 @@ function ovRenderTable(){
   if(!tbody)return;
   tbody.innerHTML=slice.map(function(d){
     var kpi=d._ovKpi||{dims:[75,75,75,75,75],score:75,health:'y',mom:0};
-    var dimTds=_ovMode==='detail'?kpi.dims.map(function(v,i){var cls=v>=80?'g':v>=65?'y':'r';return'<td><div class="ov-dim-cell '+cls+'" style="width:auto;padding:0 5px;font-size:10px;" title="'+_OV_DIM_SHORT[i]+'维度：'+v+' 分">'+v+'</div></td>';}).join(''):'';
+    var dimTds=kpi.dims.map(function(v,i){var cls=v>=80?'g':v>=65?'y':'r';return'<td><div class="ov-dim-cell '+cls+'" style="width:auto;padding:0 5px;font-size:10px;" title="'+_OV_DIM_SHORT[i]+'维度：'+v+' 分">'+v+'</div></td>';}).join('');
     var lcClass=_OV_LC_MAP[d.lifecycleRaw]||'ov-lc-npi';
     var lcText=d.lifecycleRaw==='Ramp-up'?'量产爬坡':d.lifecycleRaw==='Mass Production'?'稳定量产':d.lifecycleRaw==='EOL'?'量产EOL':d.lifecycleRaw;
     var drillTarget=kpi.health==='r'?'风险预警':d.lifecycleRaw==='NPI'?'物料状态':'项目进度';
-    var momTd=_ovShowMom?(kpi.mom!==0?'<td><span style="color:'+(kpi.mom>0?'var(--success)':'var(--danger)')+';font-weight:700;font-size:11px">'+(kpi.mom>0?'▲':'▼')+Math.abs(kpi.mom)+'</span></td>':'<td><span style="color:var(--text-muted)">—</span></td>'):'';
-    var lcTd=_ovMode==='detail'?'<td><span class="ov-lc-badge '+lcClass+'">'+lcText+'</span></td>':'';
-    var bgTd=_ovMode==='detail'?'<td>'+d.bg+'</td><td style="color:var(--text-sec);">'+d.bu+'</td>':'';
-    var prodTd=_ovMode==='detail'?'<td style="color:var(--text-sec);">'+d.productLine+'</td>':'';
+    var momTd=kpi.mom!==0?'<td><span style="color:'+(kpi.mom>0?'var(--success)':'var(--danger)')+';font-weight:700;font-size:11px">'+(kpi.mom>0?'▲':'▼')+Math.abs(kpi.mom)+'</span></td>':'<td><span style="color:var(--text-muted)">—</span></td>';
     return'<tr class="ov-drill-row" onclick="ovDrillTo(\''+d.id+'\')" title="点击查看「'+drillTarget+'」详情">'+
       '<td style="text-align:center;width:32px;">'+(d.isMajor?'<span class="ov-star-mark">★</span>':'')+'</td>'+
-      bgTd+'<td><strong>'+d.customer+'</strong></td>'+prodTd+
+      '<td>'+d.bg+'</td><td style="color:var(--text-sec);">'+d.bu+'</td>'+
+      '<td><strong>'+d.customer+'</strong></td>'+
+      '<td style="color:var(--text-sec);">'+d.productLine+'</td>'+
       '<td class="td-name">'+d.name+'</td>'+
       '<td><span class="ov-stage-badge ov-stage-'+d.engStage+'">'+d.engStage+'</span></td>'+
-      lcTd+dimTds+
+      '<td><span class="ov-lc-badge '+lcClass+'">'+lcText+'</span></td>'+
+      dimTds+
       '<td><span class="ov-score-pill '+kpi.health+'">'+kpi.score+'</span></td>'+
       momTd+
       '<td><span class="ov-health-dot '+kpi.health+'">'+_OV_HEALTH_LABEL[kpi.health]+'</span></td>'+

@@ -85,10 +85,8 @@
   <div class="page-container">
     <!-- ====== 1.全局总览 ====== -->
     <section class="page active" id="page-overview">
-      <!-- ⓪ 全局筛选联动提示条 -->
-      <div class="ov-global-hint" id="ovGlobalHint"></div>
 
-      <!-- ① 筛选条件（主维度BG/BU/客户/产品已在顶部联动，此处为补充筛选） -->
+      <!-- ① 筛选条件 -->
       <div class="ov-filter-bar">
         <div class="ov-filter-group">
           <span class="ov-filter-label">生命周期</span>
@@ -120,40 +118,33 @@
       <!-- ② 标签卡片（汇总KPI） -->
       <div class="ov-summary-grid" id="ovSummaryGrid"></div>
 
-      <!-- ③ 图表第一行：BG×生命周期堆叠柱状图 + SCOR五维健康雷达 -->
-      <div class="chart-row">
+      <!-- ③ 第一行：BG生命周期 + 工厂地理分布 + SCOR雷达 -->
+      <div class="chart-row ov-row-3">
         <div class="chart-card">
           <div class="card-header"><h3><i class="fas fa-diagram-project"></i> 各 BG 项目生命周期分布</h3><div class="ov-chart-actions"><button class="ov-chart-btn" onclick="ovExportChart('lifecycle','PNG')" title="导出PNG">📷</button><button class="ov-chart-btn" onclick="ovExportChart('lifecycle','CSV')" title="导出CSV">📄</button><span class="ov-chart-sub" id="ovChart1Total"></span></div></div>
-          <div class="card-body"><div class="chart-wrap" style="height:300px"><canvas id="ovChartLifecycle"></canvas></div></div>
+          <div class="card-body"><div class="chart-wrap" style="height:280px"><canvas id="ovChartLifecycle"></canvas></div></div>
         </div>
         <div class="chart-card">
-          <div class="card-header"><h3><i class="fas fa-chart-pie"></i> SCOR 五维健康雷达</h3><div class="ov-chart-actions"><button class="ov-chart-btn" onclick="ovExportChart('radar','PNG')" title="导出PNG">📷</button><div id="ovRadarLegend" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div></div>
-          <div class="card-body"><div class="chart-wrap" style="height:300px"><canvas id="ovChartRadar"></canvas></div></div>
-        </div>
-      </div>
-
-      <!-- ③b 图表行：工厂地理分布地图 -->
-      <div class="chart-row">
-        <div class="chart-card" style="grid-column:1/-1">
           <div class="card-header"><h3><i class="fas fa-globe"></i> 项目工厂地理分布</h3><span class="ov-chart-sub">气泡大小=项目规模 · 颜色=健康状态</span></div>
           <div class="card-body"><div id="ovFactoryMap" class="ov-factory-map"></div></div>
         </div>
+        <div class="chart-card">
+          <div class="card-header"><h3><i class="fas fa-chart-pie"></i> SCOR 五维健康雷达</h3><div class="ov-chart-actions"><button class="ov-chart-btn" onclick="ovExportChart('radar','PNG')" title="导出PNG">📷</button><div id="ovRadarLegend" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div></div>
+          <div class="card-body"><div class="chart-wrap" style="height:280px"><canvas id="ovChartRadar"></canvas></div></div>
+        </div>
       </div>
 
-      <!-- ④ 图表第二行：客户分布 + NPI漏斗 + 重大项目红绿灯 -->
+      <!-- ④ 第二行：客户分布 + 项目阶段分布 + 重大项目 -->
       <div class="chart-row ov-row-3">
         <div class="chart-card">
           <div class="card-header"><h3><i class="fas fa-building"></i> 客户项目数量分布</h3><div class="ov-chart-actions"><button class="ov-chart-btn" onclick="ovExportChart('customer','PNG')" title="导出PNG">📷</button></div></div>
           <div class="card-body"><div class="chart-wrap" style="height:280px"><canvas id="ovChartCustomer"></canvas></div></div>
         </div>
         <div class="chart-card">
-          <div class="card-header"><h3><i class="fas fa-flask"></i> NPI 阶段漏斗</h3></div>
-          <div class="card-body" style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+          <div class="card-header"><h3><i class="fas fa-flask"></i> 项目阶段分布</h3></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:4px;justify-content:flex-start;padding:8px 16px;">
             <div class="ov-funnel-wrap" id="ovFunnelWrap"></div>
-            <div style="margin-top:14px;padding:0 8px;">
-              <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:600;">MP 阶段分布</div>
-              <div id="ovMpStageBars" style="display:flex;flex-direction:column;gap:6px;"></div>
-            </div>
+            <div style="border-top:1px solid var(--border-light);padding-top:4px;"><div id="ovMpStageBars" style="display:flex;flex-direction:column;gap:2px;"></div></div>
           </div>
         </div>
         <div class="chart-card">
@@ -167,9 +158,6 @@
         <div class="ov-table-header">
           <div style="font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;"><i class="fas fa-list" style="color:var(--primary-light)"></i> 项目全量数据表 <span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:4px;" id="ovTableTitleCount"></span></div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <button class="ov-mode-btn active" id="ovModeCompact" onclick="ovSetMode('compact')" title="紧凑模式：核心列">紧凑</button>
-            <button class="ov-mode-btn" id="ovModeDetail" onclick="ovSetMode('detail')" title="详细模式：含SCOR五维">详细</button>
-            <button class="ov-mode-btn" id="ovMomToggle" onclick="ovToggleMom()" title="显示环比变化">环比</button>
             <span style="font-size:11px;color:var(--text-muted);">每页</span>
             <select class="ov-page-size-select" id="ovPageSize" onchange="ovChangePageSize()">
               <option value="15">15 条</option><option value="20">20 条</option><option value="30">30 条</option><option value="50">50 条</option>
@@ -228,7 +216,7 @@
 
     <!-- ====== 3.项目周期监控 ====== -->
     <section class="page" id="page-cycle">
-      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="cycleProjectSelect" onchange="onCycleProjectChange()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">OTS六段周期下钻 · T1需求→T2计划→T3采购→T4制造→T5库存→T6物流</span></div>
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="cycleProjectSelect" onchange="onCycleProjectChange()"></select></div><div class="filter-group"><label>数据周期:</label><select id="cyclePeriodSelect" onchange="onCycleProjectChange()"><option value="90">近90天滚动</option><option value="60">近60天滚动</option><option value="30">近30天滚动</option></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">OTS六段周期下钻 · T1需求→T2计划→T3采购→T4制造→T5库存→T6物流</span></div>
       <!-- OTS KPI 汇总 -->
       <div class="kpi-grid" id="cycleKpiGrid"></div>
       <!-- 一级/二级周期甘特图 -->
@@ -249,8 +237,8 @@
       </div>
       <!-- 趋势图 + 偏差表 -->
       <div class="chart-row" style="grid-template-columns:6fr 4fr">
-        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-chart-line"></i> 近5期OTS趋势</h3></div><div class="card-body"><div style="height:240px"><canvas id="cycleTrendChart"></canvas></div></div></div>
-        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-circle-exclamation"></i> 六段偏差诊断</h3></div><div class="card-body" style="max-height:240px;overflow-y:auto"><table class="data-table"><thead><tr><th>段</th><th>环节</th><th>目标天</th><th>实际天</th><th>偏差</th><th>状态</th></tr></thead><tbody id="cycleDevTableBody"></tbody></table></div></div>
+        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-chart-line"></i> OTS趋势</h3><span class="cycle-trend-toggle"><select class="bm-sel" id="cycleTrendSeg" onchange="switchTrendSeg()"><option value="ots">实际OTS</option><option value="T1">T1 需求响应</option><option value="T2">T2 计划运转</option><option value="T3">T3 物料采购</option><option value="T4">T4 生产制造</option><option value="T5">T5 库存在库</option><option value="T6">T6 物流发运</option></select><button class="ctg-btn" onclick="switchTrendPeriod(5)">近5期</button><button class="ctg-btn active" onclick="switchTrendPeriod(10)">近10期</button></span></div><div class="card-body"><div style="height:240px"><canvas id="cycleTrendChart"></canvas></div></div></div>
+        <div class="chart-card"><div class="card-header"><h3><i class="fas fa-circle-exclamation"></i> 六段偏差诊断</h3></div><div class="card-body" style="max-height:240px;overflow-y:auto"><table class="data-table"><thead><tr><th>段</th><th>环节名称</th><th>目标(天)</th><th>实际(天)</th><th>偏差</th><th>趋势</th><th>状态</th></tr></thead><tbody id="cycleDevTableBody"></tbody></table></div></div>
       </div>
     </section>
 
@@ -273,13 +261,13 @@
       <!-- ② 8指标汇总卡片 -->
       <div class="inv-summary-grid" id="invSummaryGrid"></div>
 
-      <!-- ③ 全链路库存分布 -->
+      <!-- ③ 全链路库存分布 · 拓扑地图 -->
       <div class="inv-section-card">
         <div class="inv-section-head">
-          <h3 class="inv-section-title"><i class="fas fa-link"></i> 全链路库存分布</h3>
-          <div class="inv-section-pill" id="invChainPill">当前节点：供应商库存</div>
+          <h3 class="inv-section-title"><i class="fas fa-project-diagram"></i> 全链路库存拓扑</h3>
+          <span class="inv-section-pill" style="font-size:11px;color:var(--text-muted)">供应商 → IQC/MRB → 原材料 → 在制品 → 成品，点击任意节点联动下方物料表</span>
         </div>
-        <div class="inv-chain-board" id="invChainLayout"></div>
+        <div class="inv-topo-board" id="invChainLayout"></div>
       </div>
 
       <!-- ④ 物料粒度明细 -->

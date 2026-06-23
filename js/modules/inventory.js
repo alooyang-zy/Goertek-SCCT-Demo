@@ -290,58 +290,68 @@ function buildChainForProject(p){
   return { l1Ids:l1Ids, nodesById:nodesById };
 }
 
-// ═══════════════ 渲染 ═══════════════
+// ═══════════════ 拓扑地图渲染 ═══════════════
+var _topoColors = {
+  supplier:'#2f6fa9', 'iqc-mrb':'#7a5cab', raw:'#4f8f64', wip:'#b78434', finished:'#9a6b2f'
+};
+
 function invRenderChain(p){
   var chain = buildChainForProject(p);
   var selectedNode = chain.nodesById[_selectedNodeId] || chain.nodesById.supplier;
-  var activeParentId = selectedNode.level==='L1' ? selectedNode.id : selectedNode.parentId;
-  var activeParent = chain.nodesById[activeParentId];
-  var childNodes = activeParent.children.map(function(cid){return chain.nodesById[cid];});
-
-  var pill = document.getElementById('invChainPill');
-  if(pill) pill.textContent = '当前节点：'+selectedNode.title;
-
   var layout = document.getElementById('invChainLayout');
   if(!layout) return;
-  layout.innerHTML = ''
-    +'<div class="inv-chain-lane">'
-      +'<div class="inv-chain-lane-head"><div class="inv-chain-lane-title">一级节点</div><div class="inv-chain-lane-meta">点击一级节点可直接展开物料明细</div></div>'
-      +'<div class="inv-chain-track inv-chain-parents">'
-        +chain.l1Ids.map(function(pid){
-          var parent = chain.nodesById[pid];
-          var sel = activeParentId===parent.id;
-          var metrics = [
-            {label:parent.qtyLabel, value:metricValueForNode(parent.qtyLabel, parent.amount, parent.materials)},
-            {label:parent.timeLabel, value:metricValueForNode(parent.timeLabel, parent.amount, parent.materials)},
-            {label:parent.riskLabel, value:metricValueForNode(parent.riskLabel, parent.amount, parent.materials)}
-          ];
-          return '<div class="inv-chain-card '+(sel?'selected':'')+'" data-inv-node="'+parent.id+'">'
-            +'<div class="inv-chain-parent-left"><div class="inv-chain-level">一级节点</div><div class="inv-chain-name">'+parent.title+'</div><div class="inv-chain-caption">'+parent.amountLabel+'</div></div>'
-            +'<div class="inv-chain-value">'+formatWan(parent.amount)+' 万</div>'
-            +'<div class="inv-chain-meta-grid">'+metrics.map(function(m){return '<div class="inv-chain-metric-box"><div class="inv-chain-meta-label">'+m.label+'</div><div class="inv-chain-meta-value">'+m.value+'</div></div>';}).join('')+'</div>'
-            +'</div>';
-        }).join('')
-      +'</div>'
-    +'</div>'
-    +'<div class="inv-chain-lane">'
-      +'<div class="inv-chain-lane-head"><div class="inv-chain-lane-title">二级构成</div><div class="inv-chain-lane-meta">当前归属：'+activeParent.title+'</div></div>'
-      +'<div class="inv-chain-track inv-chain-children">'
-        +childNodes.map(function(child){
-          var sel = _selectedNodeId===child.id;
-          var metrics = [
-            {label:child.qtyLabel, value:metricValueForNode(child.qtyLabel, child.amount, child.materials)},
-            {label:child.timeLabel, value:metricValueForNode(child.timeLabel, child.amount, child.materials)},
-            {label:child.riskLabel, value:metricValueForNode(child.riskLabel, child.amount, child.materials)}
-          ];
-          return '<div class="inv-chain-child-card '+(sel?'selected':'')+'" data-inv-node="'+child.id+'">'
-            +'<div class="inv-chain-child-left"><div class="inv-chain-level">二级构成</div><div class="inv-chain-name">'+child.title+'</div></div>'
-            +'<div class="inv-chain-value">'+formatWan(child.amount)+' 万</div>'
-            +'<div class="inv-chain-meta-grid">'+metrics.map(function(m){return '<div class="inv-chain-metric-box"><div class="inv-chain-meta-label">'+m.label+'</div><div class="inv-chain-meta-value">'+m.value+'</div></div>';}).join('')+'</div>'
-            +'</div>';
-        }).join('')
-      +'</div>'
-    +'</div>';
 
+  // 5个L1节点按供应链顺序排列
+  var l1Order = ['supplier','iqc-mrb','raw','wip','finished'];
+  var selectedParentId = selectedNode.level==='L1' ? selectedNode.id : selectedNode.parentId;
+
+  var cols = l1Order.map(function(pid, colIdx){
+    var parent = chain.nodesById[pid];
+    var l1Sel = selectedParentId===pid;
+    var color = _topoColors[pid] || '#2f6fa9';
+    var children = parent.children.map(function(cid){return chain.nodesById[cid];});
+
+    // L1 卡片
+    var l1Html = '<div class="inv-topo-l1 '+(l1Sel?'selected':'')+'" data-inv-node="'+parent.id+'" style="--tc:'+color+'">'
+      +'<div class="inv-topo-l1-label">'+parent.title+'</div>'
+      +'<div class="inv-topo-l1-val">'+formatWan(parent.amount)+' 万</div>'
+      +'<div class="inv-topo-l1-meta">'
+        +'<span>'+metricValueForNode(parent.qtyLabel, parent.amount, parent.materials)+'</span>'
+        +'<span>'+metricValueForNode(parent.timeLabel, parent.amount, parent.materials)+'</span>'
+        +'<span>'+metricValueForNode(parent.riskLabel, parent.amount, parent.materials)+'</span>'
+      +'</div>'
+      +'<div class="inv-topo-l1-tags">'+parent.qtyLabel+' | '+parent.timeLabel+' | '+parent.riskLabel+'</div>'
+      +'</div>';
+
+    // L2 子卡片
+    var l2Html = children.map(function(child){
+      var sel = _selectedNodeId===child.id;
+      var riskCount = child.materials.filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});}).length;
+      return '<div class="inv-topo-l2 '+(sel?'selected':'')+'" data-inv-node="'+child.id+'" style="--tc:'+color+'">'
+        +'<div class="inv-topo-l2-name">'+child.title+'</div>'
+        +'<div class="inv-topo-l2-val">'+formatWan(child.amount)+' 万</div>'
+        +'<div class="inv-topo-l2-meta">'
+          +(riskCount>0?'<span class="inv-topo-risk">⚠'+riskCount+'</span>':'')
+          +'<span>'+metricValueForNode(child.timeLabel, child.amount, child.materials)+'</span>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+
+    // 流程箭头（最后一列不需要）
+    var arrow = colIdx < l1Order.length-1
+      ? '<div class="inv-topo-arrow">→</div>'
+      : '';
+
+    return '<div class="inv-topo-col">'
+      + l1Html
+      + '<div class="inv-topo-l2-list">' + l2Html + '</div>'
+      + arrow
+      + '</div>';
+  }).join('');
+
+  layout.innerHTML = '<div class="inv-topo-flow">' + cols + '</div>';
+
+  // 绑定点击事件
   layout.querySelectorAll('[data-inv-node]').forEach(function(el){
     el.onclick = function(){
       _selectedNodeId = el.dataset.invNode;
@@ -356,7 +366,7 @@ function invRenderMaterials(p){
   var selectedNode = chain.nodesById[_selectedNodeId] || chain.nodesById.supplier;
   var materials = selectedNode.materials || [];
   var pill = document.getElementById('invMaterialPill');
-  if(pill) pill.textContent = selectedNode.title + ' · ' + materials.length + ' 条物料';
+  if(pill) pill.innerHTML = '<i class=\"fas fa-cubes\"></i> '+selectedNode.title + ' · <b>'+materials.length+'</b> 条物料';
   var tbody = document.getElementById('invMatTbody');
   var emptyEl = document.getElementById('invMatEmpty');
   if(!tbody) return;
