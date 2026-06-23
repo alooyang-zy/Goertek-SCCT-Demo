@@ -344,64 +344,75 @@ function invRenderChain(p){
   l1Order.forEach(function(pid, colIdx){
     var parent = chain.nodesById[pid];
     var l1p = _L1_POS[colIdx];
-    allNodes.push({type:'L1', id:parent.id, x:l1p.x, y:l1p.y, parent:parent, color:_topoColors[pid], sel:selectedParentId===pid});
+    var l1Risk = parent.materials.filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});}).length;
+    allNodes.push({type:'L1', id:parent.id, x:l1p.x, y:l1p.y, parent:parent, color:_topoColors[pid], sel:selectedParentId===pid, riskCount:l1Risk});
     var children = parent.children.map(function(cid){return chain.nodesById[cid];});
     var offsets = _L2_OFFSETS[children.length] || _L2_OFFSETS[4];
     children.forEach(function(child, i){
       var off = offsets[i] || offsets[0];
-      allNodes.push({type:'L2', id:child.id, x:l1p.x+off.dx, y:l1p.y+off.dy, parent:child, color:_topoColors[pid], sel:_selectedNodeId===child.id, l1x:l1p.x, l1y:l1p.y, l1id:pid});
+      var childRisk = child.materials.filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});}).length;
+      allNodes.push({type:'L2', id:child.id, x:l1p.x+off.dx, y:l1p.y+off.dy, parent:child, color:_topoColors[pid], sel:_selectedNodeId===child.id, l1x:l1p.x, l1y:l1p.y, l1id:pid, riskCount:childRisk});
     });
   });
 
   // ── SVG连线 (L1之间主干流 + L1→L2分支) ──
   var svgPaths = '';
   var particles = '';
-  // L1→L1 主干流线
+  // L1→L1 主干流线 (加粗+更多粒子)
   for(var i=0; i<_L1_POS.length-1; i++){
     var aL = _L1_POS[i], aR = _L1_POS[i+1];
     var d = 'M'+(aL.x+52)+','+aL.y+' C'+(aL.x+180)+','+aL.y+' '+(aR.x-180)+','+aR.y+' '+(aR.x-52)+','+aR.y;
     svgPaths += '<path d="'+d+'" class="inv-nw-main"/>';
-    // 4个粒子
-    for(var p=0; p<4; p++){
-      particles += '<circle r="3" class="inv-nw-pkt inv-nw-pkt-'+(i%4)+'"><animateMotion dur="'+(2.5+Math.random())+'s" begin="'+(p*0.7)+'s" repeatCount="indefinite" path="'+d+'"/></circle>';
+    // 6个粒子 (密度增加)
+    for(var pk=0; pk<6; pk++){
+      var dur = (2.2+Math.random()*1.2).toFixed(2);
+      var beg = (pk*0.5+Math.random()*0.3).toFixed(2);
+      var sz = 2.5+Math.random()*2;
+      particles += '<circle r="'+sz.toFixed(1)+'" class="inv-nw-pkt inv-nw-pkt-'+(i%4)+'"><animateMotion dur="'+dur+'s" begin="'+beg+'s" repeatCount="indefinite" path="'+d+'"/></circle>';
     }
   }
-  // L1→L2 分支线
+  // L1→L2 分支线 (含粒子)
   allNodes.forEach(function(n){
     if(n.type==='L2'){
       var d2 = 'M'+n.l1x+','+(n.l1y+32)+' Q'+n.l1x+','+(n.y-20)+' '+n.x+','+(n.y-22);
-      svgPaths += '<path d="'+d2+'" class="inv-nw-branch"/>';
-      particles += '<circle r="2" class="inv-nw-pkt inv-nw-pkt-b"><animateMotion dur="2s" begin="'+Math.random()+'s" repeatCount="indefinite" path="'+d2+'"/></circle>';
+      var brCls = n.riskCount>0 ? 'inv-nw-branch inv-nw-branch-risk' : 'inv-nw-branch';
+      svgPaths += '<path d="'+d2+'" class="'+brCls+'"/>';
+      // 高风险节点粒子为红色
+      var pktCls = n.riskCount>0 ? 'inv-nw-pkt-risk' : 'inv-nw-pkt-b';
+      particles += '<circle r="2" class="inv-nw-pkt '+pktCls+'"><animateMotion dur="'+(1.8+Math.random())+'s" begin="'+Math.random()+'s" repeatCount="indefinite" path="'+d2+'"/></circle>';
     }
   });
 
-  // ── HTML 节点 ──
-  var nodesHtml = allNodes.map(function(n, ni){
-    var cls = 'inv-nw-node '+(n.type==='L1'?'inv-nw-l1':'inv-nw-l2')+(n.sel?' selected':'');
-    var pad = n.type==='L1'?14:8, w = n.type==='L1'?104:90, h = n.type==='L1'?64:40;
+  // ── HTML 节点 (L1加呼吸光环，高风险L2加红圈脉冲) ──
+  var nodesHtml = allNodes.map(function(n){
+    var cls = 'inv-nw-node '+(n.type==='L1'?'inv-nw-l1':'inv-nw-l2')+(n.sel?' selected':'')+(n.riskCount>0?' has-risk':'');
+    var w = n.type==='L1'?108:92, h = n.type==='L1'?66:42;
     var l = n.x-w/2, t = n.y-h/2;
     var inner;
     if(n.type==='L1'){
       inner = '<div class="inv-nw-ico" style="background:'+n.color+'">'+n.parent.id.charAt(0).toUpperCase()+'</div>'
         +'<div class="inv-nw-title">'+n.parent.title+'</div>'
-        +'<div class="inv-nw-val">'+formatWan(n.parent.amount)+'万</div>';
+        +'<div class="inv-nw-val">'+formatWan(n.parent.amount)+'万</div>'
+        +(n.riskCount>0?'<div class="inv-nw-badge">⚠'+n.riskCount+'</div>':'');
     } else {
-      var riskCount = n.parent.materials.filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});}).length;
       inner = '<div class="inv-nw-l2-name">'+n.parent.title+'</div>'
         +'<div class="inv-nw-l2-val">'+formatWan(n.parent.amount)+'万'
-          +(riskCount>0?' <span class="inv-nw-risk">⚠'+riskCount+'</span>':'')
+          +(n.riskCount>0?' <span class="inv-nw-risk">⚠'+n.riskCount+'</span>':'')
         +'</div>';
     }
     return '<div class="'+cls+'" data-inv-node="'+n.id+'" style="left:'+l+'px;top:'+t+'px;width:'+w+'px;height:'+h+'px;--nc:'+n.color+'">'+inner+'</div>';
   }).join('');
 
-  // ── 标签 ──
+  // ── L1标签 ──
   var labelsHtml = _L1_POS.map(function(pos, i){
-    return '<div class="inv-nw-label" style="left:'+(pos.x-36)+'px;top:'+(pos.y+38)+'px;color:'+_topoColors[l1Order[i]]+'">'+l1Order[i]+'</div>';
+    return '<div class="inv-nw-label" style="left:'+(pos.x-40)+'px;top:'+(pos.y+40)+'px;color:'+_topoColors[l1Order[i]]+'">'+chain.nodesById[l1Order[i]].title+'</div>';
   }).join('');
 
   layout.innerHTML = '<div class="inv-nw-canvas" style="width:'+_TOPO_W+'px;height:'+_TOPO_H+'px;">'
-    +'<svg class="inv-nw-svg" viewBox="0 0 '+_TOPO_W+' '+_TOPO_H+'"><defs><filter id="inv-glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
+    +'<svg class="inv-nw-svg" viewBox="0 0 '+_TOPO_W+' '+_TOPO_H+'"><defs>'
+    +'<filter id="inv-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+    +'<filter id="inv-risk-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+    +'</defs>'
     +svgPaths+particles+'</svg>'
     +nodesHtml+labelsHtml
     +'</div>'
@@ -413,26 +424,70 @@ function invRenderChain(p){
       _selectedNodeId = el.dataset.invNode;
       invRenderChain(p);
       invRenderMaterials(p);
+      // 滚动到物料表
+      var matSection = document.getElementById('invMatTbody');
+      if(matSection && matSection.closest('.inv-section-card')){
+        setTimeout(function(){
+          matSection.closest('.inv-section-card').scrollIntoView({behavior:'smooth', block:'start'});
+        }, 100);
+      }
     };
   });
 
-  // 更新指标面板
+  // 更新展开指标面板
   updateNwMetrics(chain, selectedNode);
 }
 
 function updateNwMetrics(chain, node){
   var el = document.getElementById('invNwMetrics');
   if(!el) return;
+  var mats = node.materials || [];
+  var riskMats = mats.filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});});
+  var p0Count = mats.filter(function(m){return m.riskLevel==='P0';}).length;
+  var p1Count = mats.filter(function(m){return m.riskLevel==='P1';}).length;
+  var totalRelease = mats.reduce(function(s,m){return s+(m.releaseAmount||0);},0);
+
   var metrics = [
-    {label:node.qtyLabel||node.title, value:metricValueForNode(node.qtyLabel||e.amountLabel, node.amount, node.materials||[])},
-    {label:node.timeLabel||'金额', value:metricValueForNode(node.timeLabel||'锁定金额合计', node.amount, node.materials||[])},
-    {label:node.riskLabel||'风险指标', value:metricValueForNode(node.riskLabel||'锁定量覆盖率', node.amount, node.materials||[])}
+    {label:node.qtyLabel||'数量', value:metricValueForNode(node.qtyLabel||node.amountLabel, node.amount, mats), icon:'📦'},
+    {label:node.timeLabel||'时间', value:metricValueForNode(node.timeLabel||'锁定金额合计', node.amount, mats), icon:'⏱'},
+    {label:node.riskLabel||'风险', value:metricValueForNode(node.riskLabel||'锁定量覆盖率', node.amount, mats), icon:'⚠'}
   ];
-  var riskCount = (node.materials||[]).filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});}).length;
-  var totalCount = (node.materials||[]).length;
-  el.innerHTML = '<div class=\"inv-nw-mt-head\">📊 当前节点：<b>'+node.title+'</b> · '+formatWan(node.amount)+' 万 · '+(riskCount>0?'<span class=\"inv-nw-rd\">⚠'+riskCount+'条高风险</span>':'✓ 无高风险物料')+'</div>'
-    +'<div class=\"inv-nw-mt-grid\">'
-    +metrics.map(function(m){return'<div class=\"inv-nw-mt-item\"><span class=\"inv-nw-mt-l\">'+m.label+'</span><span class=\"inv-nw-mt-v\">'+m.value+'</span></div>';}).join('')
+
+  // 收集该节点的所有风险标签
+  var allTags = {};
+  mats.forEach(function(m){m.tags.forEach(function(t){
+    if(!allTags[t]) allTags[t] = {count:0, tone:toneForTag(t)};
+    allTags[t].count++;
+  });});
+  var tagList = Object.keys(allTags).sort(function(a,b){return allTags[b].count-allTags[a].count;}).slice(0,6);
+
+  var headColor = riskMats.length>0 ? 'var(--danger)' : 'var(--primary)';
+  el.innerHTML = '<div class="inv-nw-mt-head" style="border-left:3px solid '+headColor+'">'
+    +'<span class="inv-nw-mt-icon">'+(node.level==='L1'?'🔷':'🔸')+'</span>'
+    +'<b>'+node.title+'</b>'
+    +'<span class="inv-nw-mt-amount">'+formatWan(node.amount)+' 万</span>'
+    +(riskMats.length>0?'<span class="inv-nw-rd">⚠ '+riskMats.length+'条高风险物料</span>':'<span class="inv-nw-ok">✓ 无高风险</span>')
+    +'<button class="inv-nw-jump" onclick="document.getElementById(\'invMatTbody\').closest(\'.inv-section-card\').scrollIntoView({behavior:\'smooth\'})">查看物料清单 ↓</button>'
+    +'</div>'
+    // 关键指标 3列
+    +'<div class="inv-nw-mt-grid">'
+    +metrics.map(function(m){return'<div class="inv-nw-mt-item"><span class="inv-nw-mt-ico">'+m.icon+'</span><div><span class="inv-nw-mt-l">'+m.label+'</span><span class="inv-nw-mt-v">'+m.value+'</span></div></div>';}).join('')
+    +'</div>'
+    // 风险标签 + 风险等级分布
+    +'<div class="inv-nw-mt-extra">'
+    +'<div class="inv-nw-mt-tags">'
+      +'<span class="inv-nw-mt-section">🏷 风险标签</span>'
+      +(tagList.length>tagList.length?tagList:tagList).map(function(t){
+        return '<span class="inv-pill inv-pill-'+allTags[t].tone+'">'+t+' <b>'+allTags[t].count+'</b></span>';
+      }).join('')
+    +'</div>'
+    +'<div class="inv-nw-mt-levels">'
+      +'<span class="inv-nw-mt-section">📊 风险等级</span>'
+      +(p0Count>0?'<span class="inv-pill red">P0 '+p0Count+'</span>':'')
+      +(p1Count>0?'<span class="inv-pill orange">P1 '+p1Count+'</span>':'')
+      +'<span class="inv-pill purple">P2 '+(mats.length-p0Count-p1Count>0?mats.length-p0Count-p1Count:0)+'</span>'
+      +'<span class="inv-nw-mt-release">💰 预计释放 <b>'+formatWan(totalRelease)+'</b> 万</span>'
+    +'</div>'
     +'</div>';
 }
 

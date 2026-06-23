@@ -497,44 +497,62 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .inv-topo-board{padding:8px 0 0;overflow-x:auto}
 .inv-nw-canvas{position:relative;min-width:1100px;margin:0 auto;overflow:visible}
 .inv-nw-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.inv-nw-svg path{fill:none;stroke-width:2;stroke-linecap:round}
+.inv-nw-svg path{fill:none;stroke-linecap:round}
 .inv-nw-main{stroke:#cbd5e1;stroke-width:3;stroke-dasharray:8 3}
 .inv-nw-branch{stroke:#e2e8f0;stroke-width:1.5;stroke-dasharray:4 3;opacity:0.7}
+.inv-nw-branch-risk{stroke:#fca5a5;stroke-width:2;stroke-dasharray:4 3;opacity:0.85}
 .inv-nw-pkt{filter:url(#inv-glow)}
 .inv-nw-pkt-0{fill:#2f6fa9;animation:pktPulse 2s infinite}
 .inv-nw-pkt-1{fill:#4f8f64;animation:pktPulse 2s 0.5s infinite}
 .inv-nw-pkt-2{fill:#b78434;animation:pktPulse 2s 1s infinite}
 .inv-nw-pkt-3{fill:#9a6b2f;animation:pktPulse 2s 1.5s infinite}
 .inv-nw-pkt-b{fill:#94a3b8;animation:pktPulse 3s infinite}
+.inv-nw-pkt-risk{fill:#ef4444;filter:url(#inv-risk-glow);animation:riskPulse 1.5s infinite}
 @keyframes pktPulse{0%,100%{opacity:.85}50%{opacity:.25}}
+@keyframes riskPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
 
 /* 节点卡片 */
 .inv-nw-node{position:absolute;border-radius:14px;border:2px solid #e2e8f0;
   background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);cursor:pointer;
   transition:all .2s ease;box-shadow:0 4px 16px rgba(18,45,74,0.06);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  overflow:visible}
+  overflow:visible;z-index:2}
 .inv-nw-node:hover{transform:scale(1.08);z-index:10;box-shadow:0 8px 28px rgba(18,45,74,0.14)}
-.inv-nw-node.selected{border-color:var(--nc);box-shadow:0 12px 32px rgba(18,45,74,0.16),0 0 0 4px rgba(var(--nc-rgb),.1)}
-.inv-nw-l1{border-top:4px solid var(--nc);border-radius:12px 12px 14px 14px}
+.inv-nw-node.selected{border-color:var(--nc);box-shadow:0 12px 32px rgba(18,45,74,0.16),0 0 0 4px rgba(59,130,246,0.1)}
+.inv-nw-l1{border-top:4px solid var(--nc);border-radius:12px 12px 14px 14px;animation:l1Breath 3s ease-in-out infinite}
+@keyframes l1Breath{0%,100%{box-shadow:0 4px 16px rgba(18,45,74,0.06),0 0 0 0 var(--nc)}50%{box-shadow:0 4px 16px rgba(18,45,74,0.06),0 0 0 6px rgba(47,111,169,0)}}
 .inv-nw-l2{border-radius:10px}
+.inv-nw-l2.has-risk{border-color:rgba(239,68,68,0.4);animation:riskNodePulse 1.8s ease-in-out infinite}
+@keyframes riskNodePulse{0%,100%{box-shadow:0 4px 16px rgba(18,45,74,0.06),0 0 0 0 rgba(239,68,68,0.5)}50%{box-shadow:0 4px 16px rgba(18,45,74,0.06),0 0 0 5px rgba(239,68,68,0)}}
 .inv-nw-ico{width:22px;height:22px;border-radius:6px;color:#fff;font-size:11px;font-weight:900;display:grid;place-items:center;margin-bottom:3px}
 .inv-nw-title{font-size:12px;font-weight:800;color:#1e293b;text-align:center;line-height:1.2}
 .inv-nw-val{font-size:16px;font-weight:900;color:var(--nc)}
+.inv-nw-badge{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:8px;box-shadow:0 2px 6px rgba(220,38,38,0.3)}
 .inv-nw-l2-name{font-size:11px;font-weight:700;color:#334155;text-align:center;line-height:1.1;margin-bottom:1px}
 .inv-nw-l2-val{font-size:13px;font-weight:800;color:var(--nc)}
 .inv-nw-risk{font-size:9px;color:var(--danger);background:var(--danger-bg);padding:1px 5px;border-radius:6px;font-weight:700}
-.inv-nw-label{position:absolute;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.7;text-align:center;width:72px}
+.inv-nw-label{position:absolute;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.7;text-align:center;width:80px}
 
-/* 节点指标面板 */
-.inv-nw-metrics{padding:8px 16px 12px;margin-top:4px;border-top:1px solid var(--border-light)}
-.inv-nw-mt-head{font-size:12px;color:var(--text-sec);margin-bottom:8px}
-.inv-nw-mt-head b{color:var(--text)}
-.inv-nw-rd{color:var(--danger);font-weight:700}
-.inv-nw-mt-grid{display:flex;gap:16px;flex-wrap:wrap}
-.inv-nw-mt-item{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:8px;background:var(--bg);border:1px solid var(--border-light)}
-.inv-nw-mt-l{font-size:11px;color:var(--text-muted);font-weight:600}
-.inv-nw-mt-v{font-size:13px;font-weight:800;color:var(--text)}
+/* 节点指标展开面板 */
+.inv-nw-metrics{padding:12px 16px 14px;margin-top:8px;border-top:1px solid var(--border-light);background:var(--bg);border-radius:0 0 12px 12px}
+.inv-nw-mt-head{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-sec);padding:4px 10px;margin-bottom:10px;flex-wrap:wrap}
+.inv-nw-mt-head b{color:var(--text);font-size:14px}
+.inv-nw-mt-icon{font-size:16px}
+.inv-nw-mt-amount{padding:2px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-weight:700;color:var(--text)}
+.inv-nw-rd{color:var(--danger);font-weight:700;background:var(--danger-bg);padding:2px 10px;border-radius:10px}
+.inv-nw-ok{color:var(--success);font-weight:700;background:var(--success-bg);padding:2px 10px;border-radius:10px}
+.inv-nw-jump{margin-left:auto;padding:4px 12px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:var(--transition)}
+.inv-nw-jump:hover{background:var(--primary);color:#fff}
+.inv-nw-mt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.inv-nw-mt-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--card);border:1px solid var(--border-light)}
+.inv-nw-mt-ico{font-size:18px}
+.inv-nw-mt-l{display:block;font-size:10px;color:var(--text-muted);font-weight:600;margin-bottom:2px}
+.inv-nw-mt-v{display:block;font-size:14px;font-weight:800;color:var(--text)}
+.inv-nw-mt-extra{display:flex;gap:16px;flex-wrap:wrap}
+.inv-nw-mt-tags,.inv-nw-mt-levels{flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:var(--card);border:1px solid var(--border-light);border-radius:10px;min-width:300px}
+.inv-nw-mt-section{font-size:10px;color:var(--text-muted);font-weight:700;margin-right:4px}
+.inv-nw-mt-release{margin-left:auto;font-size:11px;color:var(--text-sec)}
+.inv-nw-mt-release b{color:var(--success);font-size:13px}
 .inv-pill.purple{background:#f2f1fb;border-color:#ddd6ee;color:#7d79a8}
 .inv-pill.yellow{background:#fff9e8;border-color:#ecd99b;color:#caa33f}
 .inv-pill.blue{background:#edf4f8;border-color:#bed0db;color:#537d92}
