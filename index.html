@@ -204,15 +204,29 @@
 
     <!-- ====== 2.项目进度跟踪 ====== -->
     <section class="page" id="page-progress">
-      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="progressProjectSelect" onchange="renderProgressPage()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">5大阶段 · 30个核心节点 · SCOR模型加权评估</span></div>
-      <div class="sc-hero" id="prgHero"><span class="sc-hero-name" id="prgHeroName">--</span><div class="sc-hero-pills" id="prgHeroPills"></div></div>
-      <div class="prg-overview-grid" id="prgOverview"></div>
-      <div class="prg-dashboard-layout" id="prgDashboard">
-        <div class="prg-phases-col" id="prgPhasesCol"></div>
-        <div class="prg-right-sidebar">
-          <div class="prg-score-ring-card"><div class="prg-ring-wrap"><canvas id="prgScoreRing" width="120" height="120"></canvas><div class="prg-ring-center"><div class="prg-ring-score" id="prgRingScore">--</div><div class="prg-ring-label">综合评分</div></div></div><div class="prg-score-grid"><div class="prg-score-item"><div class="prg-sdi-label">正常节点</div><div class="prg-sdi-value g" id="prgRingG">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">预警节点</div><div class="prg-sdi-value y" id="prgRingY">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">异常节点</div><div class="prg-sdi-value r" id="prgRingR">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">待处理</div><div class="prg-sdi-value b" id="prgRingAlerts">--</div></div></div></div>
-          <div class="prg-alert-card"><div class="prg-alert-title">异常事项汇总 <span id="prgAlertCount" class="prg-alert-badge">0</span></div><div class="prg-alert-list" id="prgAlertList"></div></div>
+      <!-- Tab 页签 -->
+      <div style="display:flex;gap:4px;margin-bottom:0;border-bottom:2px solid var(--border);padding-bottom:0">
+        <button class="prg-tab active" data-prgtab="scor" type="button" style="padding:8px 20px;font-size:13px;font-weight:700;border:0;background:transparent;color:var(--primary);cursor:pointer;border-bottom:3px solid var(--primary);margin-bottom:-2px;border-radius:6px 6px 0 0" onclick="window._prgSwitchTab('scor')">SCOR履约跟踪</button>
+        <button class="prg-tab" data-prgtab="npi" type="button" style="padding:8px 20px;font-size:13px;font-weight:700;border:0;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:6px 6px 0 0" onclick="window._prgSwitchTab('npi')">NPI物料导入</button>
+      </div>
+
+      <!-- SCOR履约跟踪 Tab -->
+      <div id="prg-tab-scor" class="prg-tab-panel" style="display:block">
+        <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="progressProjectSelect" onchange="renderProgressPage()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">5大阶段 · 30个核心节点 · SCOR模型加权评估</span></div>
+        <div class="sc-hero" id="prgHero"><span class="sc-hero-name" id="prgHeroName">--</span><div class="sc-hero-pills" id="prgHeroPills"></div></div>
+        <div class="prg-overview-grid" id="prgOverview"></div>
+        <div class="prg-dashboard-layout" id="prgDashboard">
+          <div class="prg-phases-col" id="prgPhasesCol"></div>
+          <div class="prg-right-sidebar">
+            <div class="prg-score-ring-card"><div class="prg-ring-wrap"><canvas id="prgScoreRing" width="120" height="120"></canvas><div class="prg-ring-center"><div class="prg-ring-score" id="prgRingScore">--</div><div class="prg-ring-label">综合评分</div></div></div><div class="prg-score-grid"><div class="prg-score-item"><div class="prg-sdi-label">正常节点</div><div class="prg-sdi-value g" id="prgRingG">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">预警节点</div><div class="prg-sdi-value y" id="prgRingY">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">异常节点</div><div class="prg-sdi-value r" id="prgRingR">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">待处理</div><div class="prg-sdi-value b" id="prgRingAlerts">--</div></div></div></div>
+            <div class="prg-alert-card"><div class="prg-alert-title">异常事项汇总 <span id="prgAlertCount" class="prg-alert-badge">0</span></div><div class="prg-alert-list" id="prgAlertList"></div></div>
+          </div>
         </div>
+      </div>
+
+      <!-- NPI物料导入 Tab -->
+      <div id="prg-tab-npi" class="prg-tab-panel" style="display:none">
+        <div id="prg-npi-container"></div>
       </div>
     </section>
 
@@ -300,25 +314,7 @@
     <section class="page" id="page-cost"></section>
 
     <!-- ====== 6.物料导入状态 ====== -->
-    <section class="page" id="page-material">
-      <!-- 项目选择器 + 信息（合并一行） -->
-      <div class="filter-bar" style="gap:0">
-        <div class="filter-group"><label>项目:</label><select id="materialProjectSelect" onchange="initPage_material()"></select></div>
-        <span id="npiInfoInline" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:14px"></span>
-      </div>
-
-      <!-- 6汇总卡片 -->
-      <div class="npi-cards" id="npiCards"></div>
-
-      <!-- 项目物料进度百分比 -->
-      <div class="npi-pipeline-panel"><div class="npi-stage-head"><span class="npi-pipeline-panel-title">项目物料进度百分比</span></div><div class="npi-pipeline" id="npiPipeline"></div></div>
-
-      <!-- 风险标签命中分布 -->
-      <div class="npi-risk-panel"><div class="npi-risk-panel-header"><span class="npi-risk-panel-title">风险标签命中分布</span><span id="npiDistFilterHint" style="font-size:11px;color:var(--primary);display:none;">已筛选 · 点击标签取消</span></div><div class="npi-risk-categories" id="npiRiskDist"></div></div>
-
-      <!-- 物料链路明细 -->
-      <div class="npi-table-panel"><div class="npi-table-head"><span class="npi-table-title">物料全链路明细状态</span><span id="npiTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="npi-table-wrap"><table><thead id="npiTHead"></thead><tbody id="npiTBody"></tbody></table></div></div>
-    </section>
+    <!-- ====== 6.物料导入状态 (已合并到履约跟踪NPI Tab) ====== -->
 
     <!-- ====== 7.供方协同 ====== -->
     <!-- ====== 7.供方深度协同 ====== -->
@@ -470,6 +466,7 @@
 <script src="js/modules/benchmark.js"></script>
 <script src="js/modules/sandtable.js"></script>
 <script src="js/modules/progress.js"></script>
+<script src="js/modules/material.js"></script>
 <script src="js/modules/cycle.js"></script>
 <script src="js/modules/inventory.js"></script>
 <script src="js/modules/cost.js"></script>

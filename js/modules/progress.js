@@ -413,7 +413,51 @@ window._prgTogglePhase = function(ph){
   }
 };
 
+
 window.renderProgressPage = renderProgressPage;
 window.initPage_progress = renderProgressPage;
+
+// ===== Tab 切换逻辑 =====
+window._prgSwitchTab = function(tabId){
+  var panels = document.querySelectorAll('.prg-tab-panel');
+  var tabs = document.querySelectorAll('.prg-tab');
+  panels.forEach(function(p){ p.style.display = 'none'; });
+  tabs.forEach(function(t){
+    t.classList.remove('active');
+    t.style.color = 'var(--text-muted)';
+    t.style.borderBottomColor = 'transparent';
+  });
+  var panel = document.getElementById('prg-tab-'+tabId);
+  if(panel) panel.style.display = 'block';
+  var activeTab = document.querySelector('.prg-tab[data-prgtab="'+tabId+'"]');
+  if(activeTab){
+    activeTab.classList.add('active');
+    activeTab.style.color = 'var(--primary)';
+    activeTab.style.borderBottomColor = 'var(--primary)';
+  }
+  // NPI Tab 首次激活时初始化 material 模块
+  if(tabId === 'npi' && !window._prgNpiInited){
+    window._prgNpiInited = true;
+    var npiContainer = document.getElementById('prg-npi-container');
+    if(npiContainer){
+      // 注入 material 模块所需的 HTML 结构（与原 page-material 一致）
+      npiContainer.innerHTML =
+        '<div class="filter-bar" style="gap:0">'
+        + '<div class="filter-group"><label>项目:</label><select id="materialProjectSelect" onchange="initPage_material()"></select></div>'
+        + '<span id="npiInfoInline" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:14px"></span>'
+        + '</div>'
+        + '<div class="npi-cards" id="npiCards"></div>'
+        + '<div class="npi-pipeline-panel"><div class="npi-stage-head"><span class="npi-pipeline-panel-title">项目物料进度百分比</span></div><div class="npi-pipeline" id="npiPipeline"></div></div>'
+        + '<div class="npi-risk-panel"><div class="npi-risk-panel-header"><span class="npi-risk-panel-title">风险标签命中分布</span><span id="npiDistFilterHint" style="font-size:11px;color:var(--primary);display:none;">已筛选 · 点击标签取消</span></div><div class="npi-risk-categories" id="npiRiskDist"></div></div>'
+        + '<div class="npi-table-panel"><div class="npi-table-head"><span class="npi-table-title">物料全链路明细状态</span><span id="npiTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="npi-table-wrap"><table><thead id="npiTHead"></thead><tbody id="npiTBody"></tbody></table></div></div>';
+      // 调用 material 模块初始化（它用 getElementById 查找全局元素）
+      if(typeof initPage_material === 'function'){
+        setTimeout(function(){ initPage_material(); }, 50);
+      } else {
+        npiContainer.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted)">NPI物料导入模块加载中...</div>';
+      }
+    }
+  }
+};
 })();
 registerModule('progress', renderProgressPage);

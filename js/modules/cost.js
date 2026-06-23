@@ -88,13 +88,18 @@ function dValue(metric,value){
 }
 
 function filteredProjects(){
-  var keyword=els.keyword.value.trim().toLowerCase();
+  var projId = els.project.value;
   return projects.filter(function(p){
-    if(els.bg.value&&p.bg!==els.bg.value)return false;
-    if(els.bu.value&&p.bu!==els.bu.value)return false;
+    if(projId && p.id !== projId) return false;
+    // 全局筛选条件（BG/BU/客户/产品）- 使用 App.filter
+    var gf = (typeof App!=='undefined' && App.filter) ? App.filter : {};
+    if(gf.bg && p.bg !== gf.bg) return false;
+    if(gf.bu && p.bu !== gf.bu) return false;
+    if(gf.customer && p.customer !== gf.customer) return false;
+    if(gf.product && p.productLine !== gf.product) return false;
+    // 本地筛选条件
     if(els.stage.value&&p.stage!==els.stage.value)return false;
     if(els.status.value&&projectStatus(p)!==els.status.value)return false;
-    if(keyword){var text=(p.id+" "+p.name+" "+p.customer+" "+p.owner+" "+p.bg+" "+p.bu).toLowerCase();if(text.indexOf(keyword)<0)return false;}
     return true;
   });
 }
@@ -410,20 +415,18 @@ function initPage_cost(){
   container.innerHTML='<div class="v56-page">'+
     '<div class="v56-toolbar">'+
     '<div class="v56-field"><label>统计范围</label><select id="v56-periodFilter"><option value="day">今日发生</option><option value="week">本周累计</option><option value="month">本月累计</option></select></div>'+
-    '<div class="v56-field"><label>BG</label><select id="v56-bgFilter"><option value="">全部BG</option></select></div>'+
-    '<div class="v56-field"><label>BU</label><select id="v56-buFilter"><option value="">全部BU</option></select></div>'+
     '<div class="v56-field"><label>项目阶段</label><select id="v56-stageFilter"><option value="">全部阶段</option></select></div>'+
     '<div class="v56-field"><label>成本状态</label><select id="v56-statusFilter"><option value="">全部状态</option><option value="red">红色异常</option><option value="amber">黄色关注</option><option value="green">正常可控</option></select></div>'+
-    '<div class="v56-field"><label>项目 / 客户 / 责任人</label><input id="v56-keywordFilter" type="search" placeholder="输入关键词定位项目" /></div>'+
-    '<button class="v56-btn" id="v56-resetFilter" type="button">重置</button>'+
+    '<div class="v56-field" style="min-width:220px"><label>项目</label><select id="v56-projectFilter"><option value="">全部项目</option></select></div>'+
+    '<button class="v56-btn" id="v56-resetFilter" type="button" style="padding:6px 14px;font-size:12px;height:32px;margin-top:18px">重置</button>'+
     '</div>'+
     '<nav class="v56-nav">'+
     '<button class="v56-tab active" data-view="overview" type="button">管理总览</button>'+
-    '<button class="v56-tab" data-view="cCost" type="button">C类运营成本</button>'+
+    '<button class="v56-tab" data-view="cCost" type="button">C运营成本</button>'+
     '<button class="v56-tab" data-view="loss" type="button">L损失专项</button>'+
-    '<button class="v56-tab" data-view="pInvest" type="button">P类前瞻投入</button>'+
-    '<button class="v56-tab" data-view="diagnosis" type="button">D类诊断矩阵</button>'+
-    '<button class="v56-tab" data-view="drill" type="button">单项目下钻</button>'+
+    '<button class="v56-tab" data-view="pInvest" type="button">P前瞻投入</button>'+
+    '<button class="v56-tab" data-view="diagnosis" type="button">D诊断矩阵</button>'+
+    '<button class="v56-tab" data-view="drill" type="button">项目分析</button>'+
     '</nav>'+
 
     '<section id="v56-view-overview" class="v56-view active">'+
@@ -485,21 +488,20 @@ function initPage_cost(){
 
   els={
     period:document.getElementById("v56-periodFilter"),
-    bg:document.getElementById("v56-bgFilter"),
-    bu:document.getElementById("v56-buFilter"),
     stage:document.getElementById("v56-stageFilter"),
     status:document.getElementById("v56-statusFilter"),
-    keyword:document.getElementById("v56-keywordFilter")
+    project:document.getElementById("v56-projectFilter")
   };
 
-  fillSelect(els.bg,uniqueValues("bg"),"全部BG");
-  fillSelect(els.bu,uniqueValues("bu"),"全部BU");
   fillSelect(els.stage,uniqueValues("stage"),"全部阶段");
+  // 项目下拉框
+  var projOpts = projects.map(function(p){return '<option value="'+p.id+'">'+p.name+' ('+p.id+')</option>';});
+  els.project.innerHTML = '<option value="">全部项目</option>' + projOpts.join('');
 
   document.querySelectorAll("#page-cost .v56-tab").forEach(function(tab){tab.addEventListener("click",function(){switchView(tab.dataset.view);});});
   Object.values(els).forEach(function(el){el.addEventListener("input",renderCurrent);});
   document.getElementById("v56-resetFilter").addEventListener("click",function(){
-    els.period.value="day";els.bg.value="";els.bu.value="";els.stage.value="";els.status.value="";els.keyword.value="";
+    els.period.value="day";els.stage.value="";els.status.value="";els.project.value="";
     renderCurrent();
   });
   document.getElementById("v56-backToOverview").addEventListener("click",function(){switchView("overview");});

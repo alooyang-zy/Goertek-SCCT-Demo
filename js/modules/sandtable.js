@@ -1,577 +1,489 @@
-// Module: sandtable — 项目全景沙盘（歌尔SCCT全链路全景）
-// 参考《沙盘demo》全流程项目沙盘，改造为歌尔供应链控制塔项目全链路全景
+// Module: sandtable v2 — 履约经营版·浅色（基于沙盘全景-新.html）
+// 融合全局筛选 App.filter，IIFE模块化
 (function(){
 "use strict";
 
-/* ════════════════════════════════════════════════
-   1. 沙盘流程配置（5阶段·30节点·全链路供应链）
-   ════════════════════════════════════════════════ */
-const stageTitles = [
-  "1 需求→订单",
-  "2 计划→备料",
-  "3 采购→入库",
-  "4 生产→成品",
-  "5 物流→客户"
+var RAIL_W=150, GUT=16, LANE_W=322, LANE_GAP=12;
+var LANES_X0=RAIL_W+GUT;
+function laneLeft(i){return LANES_X0+i*(LANE_W+LANE_GAP);}
+function laneCx(i){return laneLeft(i)+LANE_W/2;}
+var HEAD_H=50, ROW_Y0=HEAD_H+40, ROW_GAP=94;
+function rowY(r){return ROW_Y0+r*ROW_GAP;}
+var NODE_W=164, NODE_H=54, WH_W=74, WH_H=80;
+var CANVAS_W=laneLeft(4)+LANE_W+6;
+var CANVAS_H=rowY(5)+NODE_H+22;
+var FACTOR=1.0;
+var refreshTimer=null;
+var clockTimer=null;
+
+function trendHtml(m){
+  var map={flow:["↑","st-up"],slowflow:["↑","st-up"],drain:["↓","st-down"],slow:["↑","st-up"],fixed:["–","st-flat"],stock:["–","st-flat"]};
+  var t=map[m]||map.stock;
+  return '<u class="st-tr '+t[1]+'">'+t[0]+'</u>';
+}
+
+var KPI=[["需求总量","12,544","件","","fixed"],["订单总量","11,200","件","","slowflow"],["未交付","4,000","件","st-warn","drain"],
+  ["成品可发","1,920","件","st-ok","stock"],["承诺缺口","1,340","件","st-alert","drain"],["超期订单","680","件","st-alert","slow"]];
+
+var LANES=[
+  {code:"1",name:"需求→订单",main:[
+    {id:"1.1",name:"客户预测",m:["客户预测数量","12,544","件"]},
+    {id:"1.2",name:"客户订单",m:["客户PO数量","11,200","件"]},
+    {id:"1.3",name:"交期承诺",m:["已承诺SO数量","9,860","件"]},
+    {id:"1.4",name:"内部SO",m:["SO下达数量","11,200","件"]}],side:[]},
+  {code:"2",name:"计划→备料",main:[
+    {id:"2.1",name:"S&OP计划",m:["S&OP计划产量","12,544","件"]},
+    {id:"2.2",name:"主需求计划",m:["成品需求计划","12,293","件"]},
+    {id:"2.3",name:"主生产计划",m:["MPS计划产量","9,860","件"]},
+    {id:"2.4",name:"物料计划",m:["PR创建数量","8,640","单"]},
+    {id:"2.5",name:"物料齐套",m:["工单齐套率","82","%"],risk:"red"}],side:[]},
+  {code:"3",name:"采购→入库",main:[
+    {id:"3.1",name:"采购下单",m:["采购PO数量","35,840","件"]},
+    {id:"3.2",name:"供应商协同",m:["准时交货率","79","%"],risk:"warn"},
+    {id:"3.4",name:"送货计划",m:["ASN送货数量","13,440","件"]},
+    {id:"3.5",name:"到料收货",m:["收货数量","12,096","件"]},
+    {id:"3.6",name:"检验入库",m:["待检验数量","536","件"]},
+    {id:"3.7",name:"材料库存",m:["在库数量","7,420","件"],wh:true}],
+    side:[{id:"3.3",name:"供应商库存",m:["供应商库存","6,480","件"],wh:true,dir:"right",row:2}]},
+  {code:"4",name:"生产→成品",main:[
+    {id:"4.1",name:"生产排程",m:["排程计划数量","11,200","件"]},
+    {id:"4.2",name:"物料配送",m:["已配送数量","740","件"]},
+    {id:"4.3",name:"生产制造",m:["在制工单数","860","单"]},
+    {id:"4.5",name:"成品入库",m:["工单入库数量","1,920","件"]},
+    {id:"4.6",name:"质量检验",m:["入库待检量","240","件"]},
+    {id:"4.7",name:"成品库存",m:["可用库存量","1,920","件"],wh:true}],
+    side:[{id:"4.4",name:"半成品库存",m:["半成品库存","1,260","件"],wh:true,dir:"left",row:3}]},
+  {code:"5",name:"物流→客户",main:[
+    {id:"5.1",name:"发货指令",m:["发货计划数量","4,000","件"]},
+    {id:"5.2",name:"出货拣配",m:["拣配差异","0","件"]},
+    {id:"5.3",name:"报关订舱",m:["待报关票数","1","票"]},
+    {id:"5.4",name:"发运离厂",m:["已发运数量","7,200","件"]},
+    {id:"5.6",name:"交付签收",m:["OTD准时率","88","%"],risk:"red"},
+    {id:"5.7",name:"售后退换",m:["RMA数量","12","单"]}],
+    side:[{id:"5.5",name:"在途库存",m:["在途库存","3,180","件"],wh:true,dir:"left",row:3.5}]}
 ];
 
-const nodes = [
-  { id:"n11", col:1, row:1, label:"1.1 客户预测", metric:"预测准确率 91.2%" },
-  { id:"n12", col:1, row:2, label:"1.2 交期承诺", metric:"ATP达成 94.5%" },
-  { id:"n13", col:1, row:4, label:"1.3 客户PO", metric:"今日：2,012单", current:true },
-  { id:"n14", col:1, row:5, label:"1.4 销售SO", metric:"登记：3,048单", current:true },
-
-  { id:"n21", col:2, row:1, label:"2.1 S&OP计划", metric:"计划达成率 92.6%" },
-  { id:"n22", col:2, row:2, label:"2.2 主生产计划", metric:"MPS达成 90.3%" },
-  { id:"n23", col:2, row:3, label:"2.3 MDS主需求", metric:"需求变动 8.4%" },
-  { id:"n24", col:2, row:5, label:"2.4 物料计划", metric:"MRP建议 588条" },
-  { id:"n25", col:2, row:6, label:"2.5 齐套检查", metric:"齐套率 82.4%", current:true },
-
-  { id:"n31", col:3, row:1, label:"3.1 采购订单", metric:"逾期PO 18单" },
-  { id:"n32", col:3, row:2, label:"3.2 供方协同", metric:"供方回复 74/91" },
-  { id:"n33", col:3, row:3, label:"3.3 供方库存", metric:"供应缺口 4,800pcs", variant:"stock", x:74 },
-  { id:"n34", col:3, row:3, label:"3.4 要货计划", metric:"ASN响应 86.0%" },
-  { id:"n35", col:3, row:4, label:"3.5 到货接收", metric:"待收 31批次" },
-  { id:"n36", col:3, row:5, label:"3.6 检验入库", metric:"IQC超期 6批" },
-  { id:"n37", col:3, row:6, label:"3.7 材料在库", metric:"安全缺口 4,800pcs", variant:"inventory" },
-
-  { id:"n41", col:4, row:1, label:"4.1 生产工单", metric:"未关闭 26单" },
-  { id:"n42", col:4, row:2, label:"4.2 物料配送", metric:"缺料配送 14单" },
-  { id:"n43", col:4, row:3, label:"4.3 生产在制", metric:"WIP超期 9单" },
-  { id:"n44", col:4, row:4, label:"4.4 半成品库存", metric:"半成品积压 820pcs", variant:"stock", x:-82 },
-  { id:"n45", col:4, row:4, label:"4.5 质量检验", metric:"FQC待检 12批", x:22 },
-  { id:"n46", col:4, row:5, label:"4.6 完工入库", metric:"完工：2,880pcs" },
-  { id:"n47", col:4, row:6, label:"4.7 成品在库", metric:"库存：3,000pcs", variant:"inventory" },
-
-  { id:"n51", col:5, row:1, label:"5.1 发货指令", metric:"发放：2,835pcs" },
-  { id:"n52", col:5, row:2, label:"5.2 出货拣配", metric:"拣配未完 21单" },
-  { id:"n53", col:5, row:3, label:"5.3 报关/订舱", metric:"订舱及时率 88.5%" },
-  { id:"n54", col:5, row:4, label:"5.4 发运离厂", metric:"出库：2,750pcs" },
-  { id:"n55", col:5, row:4, label:"5.5 在途库存", metric:"在途：800pcs", variant:"stock", x:-86 },
-  { id:"n56", col:5, row:5, label:"5.6 客户签收", metric:"签收：2,500pcs" },
-  { id:"n57", col:5, row:6, label:"5.7 售后退换", metric:"RMA关闭 96.4%" }
+var CYC={"1":["2.0","2.2","↑"],"2":["2.5","3.3","↑"],"3":["4.0","4.6","↑"],"4":["3.5","3.9","↑"],"5":["2.0","2.0","→"]};
+var CONN=[
+  ["1.1","1.2","v"],["1.3","1.4","v"],
+  ["2.1","2.2","v"],["2.2","2.3","v"],["2.3","2.4","v"],["2.4","2.5","v"],
+  ["3.1","3.2","v"],["3.2","3.4","v"],["3.4","3.5","v"],["3.5","3.6","v"],["3.6","3.7","v"],
+  ["4.1","4.2","v"],["4.2","4.3","v"],["4.3","4.5","v"],["4.5","4.6","v"],["4.6","4.7","v"],
+  ["5.1","5.2","v"],["5.2","5.3","v"],["5.3","5.4","v"],["5.4","5.6","v"],["5.6","5.7","v"],
+  ["1.1","2.1","x"],["2.4","3.1","x"],["2.2","4.1","topR"],["2.5","3.4","x"],["3.7","4.2","x"],["4.7","5.2","x"],
+  ["3.2","3.3","wh"],["3.3","3.5","whO"],["4.3","4.4","wh"],["4.4","4.6","whO"],["5.4","5.5","wh"],["5.5","5.6","whO"],
+  ["1.4","5.1","loop"]
 ];
 
-const metricsByNodeId = {
-  n11:[{label:"客户预测总量",value:"18,420"},{label:"预测准确率",value:"91.2%"},{label:"预测波动率",value:"7.6%"}],
-  n12:[{label:"已承诺需求数量",value:"1,486"},{label:"ATP答复及时率",value:"96.1%"},{label:"ATP承诺达成率",value:"94.5%"}],
-  n13:[{label:"客户PO总数量",value:"2,012"},{label:"客户PO落单率",value:"98.6%"}],
-  n14:[{label:"销售SO总数量",value:"3,048"},{label:"超期未关SO数量",value:"37"},{label:"SO积压率",value:"3.8%"}],
-  n21:[{label:"S&OP计划产量",value:"19,800"},{label:"S&OP计划达成率",value:"92.6%"}],
-  n22:[{label:"MPS计划产量",value:"18,960"},{label:"MPS达成率",value:"90.3%"},{label:"MPS计划波动率",value:"6.8%"}],
-  n23:[{label:"MDS总需求量",value:"21,240"},{label:"MDS需求变动率",value:"8.4%"},{label:"预测冲销异常率",value:"2.7%"}],
-  n24:[{label:"长交期关键料缺口数",value:"4,800"},{label:"MRP建议执行率",value:"88.7%"},{label:"PR转PO及时率",value:"86.9%"}],
-  n25:[{label:"工单齐套率",value:"82.4%"},{label:"欠料平均等待天数",value:"3.6d"},{label:"紧急采购单占比",value:"14.8%"}],
-  n31:[{label:"超期未下达PO数",value:"18"},{label:"采购订单下达及时率",value:"88.4%"},{label:"供应商交期确认率",value:"74.2%"}],
-  n32:[{label:"逾期未到货PO数量",value:"21"},{label:"供应商准时交货率",value:"86.5%"},{label:"供应商LT达成率",value:"83.7%"}],
-  n34:[{label:"要货计划总数量",value:"1,276"},{label:"ASN创建数量",value:"1,084"},{label:"送货计划平均响应时效",value:"4.2h"}],
-  n35:[{label:"到料批次数总数",value:"318"},{label:"逾期未到货批次数",value:"31"},{label:"收货及时率",value:"89.6%"}],
-  n36:[{label:"IQC待检批数",value:"46"},{label:"超期未检批数",value:"6"},{label:"IQC检验及时率",value:"91.8%"}],
-  n37:[{label:"安全库存缺口数",value:"4,800"},{label:"材料库存周转天数",value:"18.6d"},{label:"呆滞物料占比",value:"6.4%"}],
-  n41:[{label:"未关闭工单数量",value:"26"},{label:"日生产排程达成率",value:"91.5%"}],
-  n42:[{label:"计划配送总单数",value:"412"},{label:"缺料未配送积压单数",value:"14"},{label:"物料配送及时率",value:"89.2%"},{label:"配送准确率",value:"96.8%"}],
-  n43:[{label:"在制工单总数量",value:"522"},{label:"工单准时完工率",value:"87.4%"},{label:"在制品周转天数",value:"4.8d"},{label:"WIP停留超期率",value:"9.1%"}],
-  n45:[{label:"FQC完工待检总量",value:"128"},{label:"不合格数量",value:"9"},{label:"超期未检积压量",value:"12"},{label:"返工/返修率",value:"3.2%"}],
-  n46:[{label:"当日完工数量",value:"2,880"},{label:"已入库数量",value:"2,740"},{label:"超期未入库积压量",value:"140"}],
-  n47:[{label:"工单关闭率",value:"94.8%"},{label:"成品库存总量",value:"3,000"},{label:"成品库存周转天数",value:"9.5d"},{label:"成品呆滞率",value:"2.1%"},{label:"可发成品占比",value:"83.4%"}],
-  n51:[{label:"发货计划总数量",value:"2,835"},{label:"超期未确认发货单数",value:"17"},{label:"发货计划达成率",value:"93.2%"}],
-  n52:[{label:"拣配平均完成时效",value:"5.6h"},{label:"拣货准确率",value:"97.4%"},{label:"出货及时率",value:"91.1%"}],
-  n53:[{label:"报关平均时效",value:"10.4h"},{label:"报关及时率",value:"90.6%"},{label:"订舱及时率",value:"88.5%"}],
-  n54:[{label:"计划发运总数量",value:"2,750"},{label:"当日未完成发运数量",value:"48"}],
-  n56:[{label:"已签收单数",value:"2,500"},{label:"超期未签收单数",value:"36"}],
-  n57:[{label:"RMA申请数量",value:"42"},{label:"已接收待处理数量",value:"11"},{label:"RMA及时关闭率",value:"96.4%"}]
-};
-
-const nodesWithMetrics = nodes.map(function(n){ return Object.assign({}, n, { metrics: metricsByNodeId[n.id] || [] }); });
-
-const links = [
-  {from:"n11",to:"n12",status:"normal"},{from:"n11",to:"n21",status:"normal"},
-  {from:"n13",to:"n14",status:"normal"},{from:"n14",to:"n57",status:"normal"},
-  {from:"n21",to:"n22",status:"normal"},{from:"n22",to:"n23",status:"normal"},
-  {from:"n23",to:"n24",status:"normal"},{from:"n24",to:"n25",status:"alert"},
-  {from:"n21",to:"n31",status:"normal"},{from:"n25",to:"n34",status:"alert"},
-  {from:"n31",to:"n32",status:"alert"},{from:"n31",to:"n41",status:"normal"},
-  {from:"n32",to:"n33",status:"alert"},{from:"n32",to:"n34",status:"normal"},
-  {from:"n33",to:"n35",status:"alert"},{from:"n34",to:"n35",status:"alert"},
-  {from:"n35",to:"n36",status:"alert"},{from:"n36",to:"n37",status:"alert"},
-  {from:"n37",to:"n47",status:"normal"},{from:"n41",to:"n42",status:"normal"},
-  {from:"n42",to:"n43",status:"alert"},{from:"n42",to:"n52",status:"normal"},
-  {from:"n43",to:"n44",status:"alert"},{from:"n43",to:"n45",status:"normal"},
-  {from:"n44",to:"n46",status:"alert"},{from:"n45",to:"n46",status:"normal"},
-  {from:"n46",to:"n47",status:"normal"},{from:"n47",to:"n52",status:"normal"},
-  {from:"n51",to:"n52",status:"normal"},{from:"n52",to:"n53",status:"alert"},
-  {from:"n53",to:"n54",status:"normal"},{from:"n53",to:"n55",status:"alert"},
-  {from:"n54",to:"n56",status:"normal"},{from:"n55",to:"n56",status:"alert"},
-  {from:"n56",to:"n57",status:"alert"}
-];
-
-const nodeIconById = {
-  n11:"trend",n12:"clock",n13:"doc",n14:"doc",
-  n21:"calendar",n22:"calendar",n23:"list",n24:"box",n25:"shield",
-  n31:"cart",n32:"users",n33:"warehouse",n34:"calendar",n35:"inbox",n36:"shield",n37:"warehouse",
-  n41:"doc",n42:"truck",n43:"gear",n44:"warehouse",n45:"shield",n46:"inbox",n47:"warehouse",
-  n51:"doc",n52:"box",n53:"doc",n54:"truck",n55:"truck",n56:"check",n57:"check"
-};
-
-const riskNodeIds = new Set(["n25","n31","n32","n33","n34","n35","n36","n37","n42","n43","n44","n52","n53","n55","n56","n57"]);
-const riskKpiIds = new Set(["ots","plan","purchase","storage","production","settle"]);
-
-const iconDefs = {
-  trend:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M4 17h16"/><path d="M6 14l4-4 4 3 4-7"/><path d="M18 6h-4"/></svg>',
-  clock:'<svg class="st-node-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg>',
-  doc:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M7 4h7l3 3v13H7z"/><path d="M14 4v4h4"/><path d="M9 12h6M9 16h5"/></svg>',
-  calendar:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M5 6h14v13H5z"/><path d="M8 4v4M16 4v4M5 10h14"/></svg>',
-  list:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M8 7h11M8 12h11M8 17h11"/><path d="M5 7h.1M5 12h.1M5 17h.1"/></svg>',
-  box:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M5 8l7-4 7 4v8l-7 4-7-4z"/><path d="M5 8l7 4 7-4M12 12v8"/></svg>',
-  cart:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M5 5h2l2 10h8l2-6H8"/><circle cx="10" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>',
-  users:'<svg class="st-node-icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="16" cy="10" r="2.5"/><path d="M4 19c1-4 8-4 10 0"/><path d="M13 18c1-3 5-3 7 0"/></svg>',
-  inbox:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M5 13h4l2 3h2l2-3h4"/></svg>',
-  shield:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M12 4l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V7z"/><path d="M9 12l2 2 4-5"/></svg>',
-  gear:'<svg class="st-node-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3M6.5 6.5l2.1 2.1M15.4 15.4l2.1 2.1M17.5 6.5l-2.1 2.1M8.6 15.4l-2.1 2.1"/></svg>',
-  truck:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M4 7h10v8H4z"/><path d="M14 10h4l2 3v2h-6z"/><circle cx="8" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/></svg>',
-  check:'<svg class="st-node-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8 12l3 3 5-6"/></svg>',
-  warehouse:'<svg class="st-node-icon" viewBox="0 0 24 24"><path d="M4 10l8-5 8 5"/><path d="M6 10v9h12v-9"/><path d="M9 19v-5h6v5"/><path d="M8 12h8"/></svg>'
-};
-
-/* ════════════════════════════════════════════════
-   2. 状态
-   ════════════════════════════════════════════════ */
-let stState = {
-  pid: null,
-  riskActive: false,
-  rush: 42, sub: 35, overtime: 6
-};
-
-/* ════════════════════════════════════════════════
-   3. KPI 配置（根据项目动态生成实际值）
-   ════════════════════════════════════════════════ */
-function buildKpis(d){
-  // d = DS.get(pid) 返回的项目数据
-  if(!d) return getDefaultKpis();
-  var otsActual = (d.otsTotal||40) + '天';
-  var otsTarget = (d.otsTarget||28) + '天';
-  var otsGap = ((d.otsTotal||40) - (d.otsTarget||28));
-  return [
-    {id:"ots",title:"OTS周期",rank:"0",target:otsTarget,actual:otsActual,trend:"目标偏差 "+(otsGap>0?"+":"")+otsGap.toFixed(1)+"天"},
-    {id:"sales",title:"销售",rank:"1",target:"98.5%",actual:(d.otd||95)+"%",trend:"订单承诺偏差 "+Math.abs((d.otd||95)-98.5).toFixed(1)+"%"},
-    {id:"plan",title:"计划",rank:"2",target:"220h",actual:(220+Math.round(otsGap*2))+"h",trend:"MPS延迟 "+(otsGap*2).toFixed(1)+"h"},
-    {id:"purchase",title:"采购",rank:"3",target:"96.0%",actual:(d.kitRate||88)+"%",trend:"PO逾期 "+Math.round((100-(d.kitRate||88))*0.4)+"单"},
-    {id:"storage",title:"仓储",rank:"4",target:"72h",actual:(72+Math.round(otsGap*1.5))+"h",trend:"周转增加 "+(otsGap*1.5).toFixed(1)+"h"},
-    {id:"production",title:"生产",rank:"5",target:"12h",actual:(12+Math.round(otsGap*0.2))+"h",trend:"在制等待 "+(otsGap*0.2).toFixed(1)+"h"},
-    {id:"logistics",title:"物流",rank:"6",target:"72h",actual:"66.5h",trend:"运输提前 3.0h"},
-    {id:"settle",title:"结算",rank:"7",target:"3.5d",actual:(3.5+Math.round(otsGap*0.08))+"d",trend:"签收回传延迟 "+(otsGap*0.08).toFixed(1)+"d"}
-  ];
-}
-function getDefaultKpis(){
-  return [
-    {id:"ots",title:"OTS周期",rank:"0",target:"14.0天",actual:"16.0天",trend:"月环比增加 2.0天"},
-    {id:"sales",title:"销售",rank:"1",target:"98.5%",actual:"96.8%",trend:"订单承诺偏差 1.7%"},
-    {id:"plan",title:"计划",rank:"2",target:"220h",actual:"240.8h",trend:"MPS延迟 12.2h"},
-    {id:"purchase",title:"采购",rank:"3",target:"96.0%",actual:"88.4%",trend:"PO逾期 18单"},
-    {id:"storage",title:"仓储",rank:"4",target:"72h",actual:"86.5h",trend:"周转增加 8.5h"},
-    {id:"production",title:"生产",rank:"5",target:"12h",actual:"12.5h",trend:"在制等待 0.5h"},
-    {id:"logistics",title:"物流",rank:"6",target:"72h",actual:"66.5h",trend:"运输提前 3.0h"},
-    {id:"settle",title:"结算",rank:"7",target:"3.5d",actual:"4.1d",trend:"签收回传延迟 0.6d"}
-  ];
-}
-
-/* ════════════════════════════════════════════════
-   4. 推演计算
-   ════════════════════════════════════════════════ */
-function getSimulation(){
-  var rush = stState.rush, sub = stState.sub, overtime = stState.overtime;
-  var otsGain = rush*0.026 + sub*0.018 + overtime*0.11;
-  var kitGain = rush*0.035 + sub*0.082;
-  var deliveryGain = rush*0.067 + sub*0.025;
-  var signGain = rush*0.03 + overtime*0.07;
-  return {
-    rush:rush, sub:sub, overtime:overtime,
-    ots: Math.max(10.8, 16.8 - otsGain), otsGain: otsGain,
-    kit: Math.min(98.6, 82.4 + kitGain), kitGain: kitGain,
-    delivery: Math.min(98.8, 88.4 + deliveryGain), deliveryGain: deliveryGain,
-    sign: Math.min(99.2, 91.2 + signGain), signGain: signGain,
-    score: Math.min(99, Math.round(64 + rush*0.16 + sub*0.13 + overtime*0.6))
-  };
-}
-
-function getAdjustedActual(kpi, plan){
-  if(!stState.riskActive) return kpi.actual;
-  var map = {
-    ots: plan.ots.toFixed(1)+"天",
-    plan: Math.max(220, 240.8 - plan.overtime*1.8).toFixed(1)+"h",
-    purchase: plan.delivery.toFixed(1)+"%",
-    storage: Math.max(72, 86.5 - plan.rush*0.09).toFixed(1)+"h",
-    production: Math.max(11.2, 12.5 - plan.overtime*0.035).toFixed(1)+"h",
-    settle: Math.max(3.2, 4.1 - plan.signGain*0.035).toFixed(1)+"d"
-  };
-  return map[kpi.id] || kpi.actual;
-}
-
-function getRiskTrend(kpi){
-  var map = {
-    ots:"红色预警：关键路径仍超目标",
-    sales:"客户需求锁定，订单口径稳定",
-    plan:"推演后计划等待下降",
-    purchase:"加急采购正在回收风险",
-    storage:"入库与配送节拍需压缩",
-    production:"加班窗口可覆盖短缺批次",
-    logistics:"干线运输保持可控",
-    settle:"签收回传仍影响关闭"
-  };
-  return map[kpi.id];
-}
-
-/* ════════════════════════════════════════════════
-   5. 渲染
-   ════════════════════════════════════════════════ */
-function renderAll(container){
-  var d = stState.pid ? (window.DS ? DS.get(stState.pid) : null) : null;
-  var kpis = buildKpis(d);
-  var plan = getSimulation();
-  renderKpis(container, kpis, plan);
-  renderNodes(container);
-  renderAlertSummary(container, d);
-  renderWarnings(container);
-  renderChangedMetrics(container, plan);
-  requestAnimationFrame(function(){ drawConnectors(container); });
-}
-
-function renderKpis(container, kpis, plan){
-  var html = kpis.map(function(kpi){
-    var alert = stState.riskActive && riskKpiIds.has(kpi.id) ? " alert" : "";
-    var actual = getAdjustedActual(kpi, plan);
-    var trend = stState.riskActive ? getRiskTrend(kpi) : kpi.trend;
-    return '<article class="st-kpi-card'+alert+'">'
-      + '<div class="st-kpi-head"><strong>'+kpi.title+'</strong><span class="st-kpi-rank">'+kpi.rank+'</span></div>'
-      + '<div class="st-kpi-body"><span>目标 <b>'+kpi.target+'</b></span><span>实际 <b>'+actual+'</b></span></div>'
-      + '<div class="st-kpi-trend">'+trend+'</div>'
-      + '</article>';
-  }).join("");
-  var el = container.querySelector("#stKpiStrip");
-  if(el) el.innerHTML = html;
-}
-
-function renderNodes(container){
-  var hasProject = !!stState.pid;
-  var html = nodesWithMetrics.map(function(node){
-    var cls = [
-      node.variant ? "variant-"+node.variant : "",
-      node.current ? "current" : "",
-      hasProject && node.metrics.length ? "with-metrics" : "",
-      stState.riskActive && riskNodeIds.has(node.id) ? "alert" : ""
-    ].filter(Boolean).join(" ");
-    var x = Number(node.x||0), y = Number(node.y||0);
-    var metrics = hasProject ? node.metrics.map(function(m){
-      return '<span class="st-node-metric-line"><em>'+m.label+'</em><strong>'+m.value+'</strong></span>';
-    }).join("") : "";
-    return '<button class="st-flow-node '+cls+'" data-node-id="'+node.id+'" data-col="'+node.col+'" data-row="'+node.row+'" type="button" '
-      + 'style="grid-column:'+node.col+';grid-row:'+node.row+';--node-x:'+x+'px;--node-y:'+y+'px;">'
-      + (iconDefs[nodeIconById[node.id]] || iconDefs.list)
-      + '<span class="st-node-label">'+node.label+'</span>'
-      + (metrics ? '<span class="st-node-metrics-popover">'+metrics+'</span>' : '')
-      + '</button>';
-  }).join("");
-  var el = container.querySelector("#stMapGrid");
-  if(el) el.innerHTML = html;
-}
-
-function drawConnectors(container){
-  var panel = container.querySelector(".st-map-panel");
-  var layer = container.querySelector("#stConnectorLayer");
-  if(!panel || !layer) return;
-  var pr = panel.getBoundingClientRect();
-  if(pr.width === 0) return;
-  layer.setAttribute("viewBox", "0 0 "+pr.width+" "+pr.height);
-  layer.innerHTML = '<defs>'
-    + '<marker id="stArrowNormal" markerWidth="8" markerHeight="8" refX="7.2" refY="4" orient="auto" markerUnits="userSpaceOnUse">'
-    + '<path d="M0,0 L8,4 L0,8 Z" fill="rgba(64,207,255,.95)"></path></marker>'
-    + '<marker id="stArrowAlert" markerWidth="8" markerHeight="8" refX="7.2" refY="4" orient="auto" markerUnits="userSpaceOnUse">'
-    + '<path d="M0,0 L8,4 L0,8 Z" fill="rgba(255,83,118,.98)"></path></marker>'
-    + '</defs>';
-
-  links.forEach(function(link){
-    var from = container.querySelector('[data-node-id="'+link.from+'"]');
-    var to = container.querySelector('[data-node-id="'+link.to+'"]');
-    if(!from || !to) return;
-    var fr = from.getBoundingClientRect(), tr = to.getBoundingClientRect();
-    var fc = { x: fr.left+fr.width/2-pr.left, y: fr.top+fr.height/2-pr.top };
-    var tc = { x: tr.left+tr.width/2-pr.left, y: tr.top+tr.height/2-pr.top };
-    var vertical = Math.abs(fc.x-tc.x) < 18;
-    var path;
-    if(vertical){
-      var sy = fr.bottom-pr.top+2, ey = tr.top-pr.top-3;
-      path = "M "+fc.x+" "+sy+" L "+tc.x+" "+ey;
-    } else {
-      var forward = tc.x > fc.x;
-      var sx = (forward?fr.right:fr.left)-pr.left+(forward?3:-3);
-      var ex = (forward?tr.left:tr.right)-pr.left+(forward?-3:3);
-      var mx = (sx+ex)/2;
-      path = "M "+sx+" "+fc.y+" L "+mx+" "+fc.y+" L "+mx+" "+tc.y+" L "+ex+" "+tc.y;
-    }
-    var alert = stState.riskActive && link.status === "alert" ? " alert" : "";
-    var el = document.createElementNS("http://www.w3.org/2000/svg","path");
-    el.setAttribute("class","st-connector-path"+alert);
-    el.setAttribute("d", path);
-    layer.appendChild(el);
+function makePOS(){
+  var pos={};
+  LANES.forEach(function(L,i){
+    L.main.forEach(function(n,r){
+      if(n.wh) pos[n.id]={x:laneCx(i)-WH_W/2,y:rowY(r)+(NODE_H-WH_H)/2,w:WH_W,h:WH_H};
+      else pos[n.id]={x:laneCx(i)-NODE_W/2,y:rowY(r),w:NODE_W,h:NODE_H};
+    });
+    L.side.forEach(function(s){
+      var x=s.dir==="right"? laneLeft(i)+LANE_W-WH_W+12 : laneLeft(i)-12;
+      pos[s.id]={x:x,y:rowY(s.row)+(NODE_H-WH_H)/2,w:WH_W,h:WH_H,side:true};
+    });
   });
+  return pos;
+}
+function boxFor(id,pos){var p=pos[id];return {cx:p.x+p.w/2,cy:p.y+p.h/2,left:p.x,right:p.x+p.w,top:p.y,bottom:p.y+p.h};}
+function pathFor(a,b,pos,off){
+  off=off||0;var A=boxFor(a,pos),B=boxFor(b,pos);
+  if(Math.abs(A.cx-B.cx)<6){var y1=A.cy<B.cy?A.bottom:A.top,y2=A.cy<B.cy?B.top-1:B.bottom+1;return "M "+A.cx+" "+y1+" L "+B.cx+" "+y2;}
+  var goRight=B.cx>A.cx, sx=goRight?A.right:A.left, tx=goRight?B.left-1:B.right+1, midX=(sx+tx)/2+off;
+  return "M "+sx+" "+A.cy+" H "+midX+" V "+B.cy+" H "+tx;
 }
 
-function renderAlertSummary(container, d){
-  var el = container.querySelector("#stAlertSummary");
-  if(!el) return;
-  var code = stState.pid || "未选择项目";
-  var projName = d && d.proj ? d.proj.name : code;
-  if(!stState.riskActive){
-    el.innerHTML = '<div class="st-alert-state"><h2>项目监控</h2><span>蓝色运行</span></div>'
-      + '<p>'+projName+' 当前处于常规监控态，业务链路按计划节奏滚动。</p>'
-      + '<div class="st-impact-grid"><div><small>风险等级</small><strong>低</strong></div>'
-      + '<div><small>影响订单</small><strong>0</strong></div>'
-      + '<div><small>OTS偏差</small><strong>+0.0d</strong></div></div>';
-    return;
-  }
-  var impactOrders = d ? Math.round((100-(d.otd||95))*1.5) : 148;
-  el.innerHTML = '<div class="st-alert-state"><h2>红色预警</h2><span class="red">'+projName+'</span></div>'
-    + '<p>项目主材到货、齐套检查、物料配送和客户签收形成串联风险，预计影响 '
-    + (d ? d.proj.engStage : 'MP') +' 交付窗口。</p>'
-    + '<div class="st-impact-grid"><div><small>风险等级</small><strong>高</strong></div>'
-    + '<div><small>影响订单</small><strong>'+impactOrders+'</strong></div>'
-    + '<div><small>OTS偏差</small><strong>+6.2d</strong></div></div>';
+var pktColor={v:"#2563eb",x:"#3b82f6",wh:"#0d9488"};
+var yTop=rowY(0)-18;
+function loopPath(a,b,pos){var A=boxFor(a,pos),B=boxFor(b,pos),yBot=CANVAS_H-8,xR=laneLeft(4)+LANE_W-8;return "M "+A.cx+" "+A.bottom+" V "+yBot+" H "+xR+" V "+B.cy+" H "+(B.right+1);}
+function topRight(a,b,pos){var A=boxFor(a,pos),B=boxFor(b,pos);return "M "+A.right+" "+A.cy+" H "+(A.right+20)+" V "+yTop+" H "+B.cx+" V "+(B.top-1);}
+function whOut(a,b,pos){var W=boxFor(a,pos),T=boxFor(b,pos);var side=W.cx>T.cx?(T.right+1):(T.left-1);return "M "+W.cx+" "+W.bottom+" V "+T.cy+" H "+side;}
+function whIn(a,b,pos){var S=boxFor(a,pos),W=boxFor(b,pos);var sx=W.cx<S.cx?S.left:S.right;var mx=sx+(W.cx<S.cx?-16:16);var yH=Math.min(S.cy,W.top-20);return "M "+sx+" "+S.cy+" H "+mx+" V "+yH+" H "+W.cx+" V "+(W.top-1);}
+
+var special={loop:loopPath,topR:topRight};
+var xOff={"2.4>3.1":-12,"2.5>3.4":12};
+
+var BEH={
+  "1.1":"fixed","1.2":"slowflow","1.3":"slowflow","1.4":"slowflow",
+  "2.1":"fixed","2.2":"fixed","2.3":"fixed","2.4":"fixed","2.5":"stock",
+  "3.1":"flow","3.2":"stock","3.4":"flow","3.5":"flow","3.6":"stock","3.7":"stock","3.3":"stock",
+  "4.1":"fixed","4.2":"flow","4.3":"stock","4.5":"flow","4.6":"stock","4.7":"stock","4.4":"stock",
+  "5.1":"drain","5.2":"fixed","5.3":"stock","5.4":"flow","5.6":"stock","5.7":"slow","5.5":"stock"
+};
+
+var COUNT_UNIT=/件|单|票|行|条|个/;
+var NUMS=[];
+var FRAMES=8, FRAME=0;
+function fmt(n){return Math.round(n).toLocaleString("zh-CN");}
+function deltaFor(base){var d=base*0.012;if(base>=2000)d=Math.round(d/10)*10;else if(base>=200)d=Math.round(d/5)*5;else d=Math.round(d);return Math.max(1,d);}
+function targetFor(o,f){if(f===0)return o.base;var b=o.base,d=o.delta;switch(o.mode){case"fixed":return b;case"flow":return b+d*f;case"slowflow":return b+Math.max(1,Math.round(d*0.4))*f;case"drain":return Math.max(Math.round(b*0.35),b-d*f);case"slow":return b+Math.max(1,Math.round(d*0.25))*Math.floor(f/2);default:return b;}}
+function animateTo(o,to,dur){
+  var from=o.cur, t0=performance.now();
+  function step(t){var p=Math.min((t-t0)/dur,1),e=1-Math.pow(1-p,3),v=from+(to-from)*e;o.cur=v;o.el.firstChild.nodeValue=fmt(v);if(p<1)requestAnimationFrame(step);else{o.cur=to;o.el.firstChild.nodeValue=fmt(to);}}
+  requestAnimationFrame(step);
 }
 
-function renderWarnings(container){
-  var el = container.querySelector("#stWarningList");
-  var cnt = container.querySelector("#stWarningCount");
-  if(!el) return;
-  var warnings = stState.riskActive ? [
-    ["red","3.1 采购订单","超期未下达PO 18单，供应商交期确认率低于阈值。"],
-    ["red","2.5 齐套检查","长交期关键料缺口4,800pcs，齐套率降至82.4%。"],
-    ["red","4.2 物料配送","缺料配送14单，预计拉长在制等待。"],
-    ["amber","5.3 报关/订舱","订舱及时率88.5%，需锁定备选舱位。"],
-    ["amber","5.6 客户签收","签收回传延迟0.6天，影响结算关闭。"]
-  ] : [
-    ["amber","计划滚动","重点项目按日刷新，当前未触发红色预警。"],
-    ["amber","物流回传","海外签收回传仍需保持跟踪。"]
-  ];
-  if(cnt) cnt.textContent = warnings.length+" 条";
-  el.innerHTML = warnings.map(function(w){
-    return '<article class="st-warning-item '+w[0]+'"><strong>'+w[1]+'</strong><span>'+w[2]+'</span></article>';
-  }).join("");
+var DETAIL={
+"1.1":{s:"需求→订单",qty:[["客户预测数量","12,544","件"]],tim:[],wrn:[["预测准确率","92.4","%","目标≥85%"]],j:"预测准确率 92.4%，需求计划质量正常。",o:"OC",l:"肖坤"},
+"1.2":{s:"需求→订单",qty:[["客户PO数量","11,200","件"]],tim:[["PO平均回复时效","0.8","天"]],wrn:[["项目料号关联完整率","100","%","目标100%"]],j:"PO 回复 0.8 天，料号关联完整率 100%。",o:"OC",l:"肖坤"},
+"1.3":{s:"需求→订单",qty:[["已承诺客户PO数量","11,200","件"],["已承诺预测数量","9,860","件"]],tim:[["ATP平均答复时效","3.2","小时"]],wrn:[["ATP承诺达成率","92","%","目标≥90%"]],j:"ATP 答复 3.2 小时，承诺达成率 92%。",o:"OC",l:"肖坤"},
+"1.4":{s:"需求→订单",qty:[["SO下达数量","11,200","件"],["SO未结数量","4,000","件"]],tim:[],wrn:[["料号关联缺失","0","条"]],j:"SO 未结积压 4,000 件。",o:"OC",l:"肖坤"},
+"2.1":{s:"计划→备料",qty:[["S&OP计划产量","12,544","件"]],tim:[],wrn:[],j:"与销售预测偏差 2%，S&OP 评审正常。",o:"PC",l:"王菲/李阳"},
+"2.2":{s:"计划→备料",qty:[["成品需求计划量","12,293","件"]],tim:[],wrn:[],j:"主需求计划已发布，版本完整。",o:"计划专员",l:"计划拉通"},
+"2.3":{s:"计划→备料",qty:[["MPS计划产量","9,860","件"],["MPS转工单数","9,400","单"]],tim:[],wrn:[["MPS达成率","96","%","目标≥95%"]],j:"MPS 达成率 96%，计划执行正常。",o:"PC",l:"王菲/李阳"},
+"2.4":{s:"计划→备料",qty:[["PR创建数量","8,640","单"],["PR积压数量","120","单"]],tim:[],wrn:[],j:"PR 积压 120 单，物料计划正常推进。",o:"物控",l:"OPO"},
+"2.5":{s:"计划→备料",qty:[["缺料工单数","18","单"],["缺料料号数","3","个"],["齐套工单数","842","单"]],tim:[["缺料工单平均等待","2.6","天"]],wrn:[["工单齐套率","82","%","红线<85%"],["计划单齐套率","76.5","%","红线<80%"]],j:"缺料影响 2 单承诺交期；工单齐套率 82% 低于 85% 红线，需缺料专项拉动。",im:"2 单 / 缺料料号 3 个 / 1,340 件缺口",o:"MC",l:"OPO",a:"缺料专项拉动+紧急采购",due:"2026-05-29"},
+"3.1":{s:"采购→入库",qty:[["采购PO数量","35,840","件"],["未结PO数量","6,200","件"]],tim:[],wrn:[["供应商交期确认率","96.2","%","目标≥90%"]],j:"交期确认率 96.2%，采购下单正常。",o:"Buyer",l:"CEP"},
+"3.2":{s:"采购→入库",qty:[["逾期未到货PO","8","行"],["PO确认数量","3,710","行"]],tim:[["供应商平均交期延误","1.8","天"]],wrn:[["供应商准时交货率","78.6","%","红线<90%"]],j:"供应商要货计划未及时回复、晚于需求1天；准时交货率 78.6% 低于 90%，需重排承诺交期。",im:"1,340 件承诺缺口",o:"Buyer",l:"CEP",a:"供应商提醒+绩效改善",due:"2026-05-30"},
+"3.3":{s:"采购→入库",qty:[["供应商库存数量","6,480","件"]],tim:[["供应商库存平均库龄","12","天"]],wrn:[["供应商库存覆盖天数","8.2","天","≥安全阈值"]],j:"覆盖 8.2 天，供应端备货充足。",o:"采购专员",l:"采购拉通"},
+"3.4":{s:"采购→入库",qty:[["ASN送货数量","13,440","件"]],tim:[["送货计划平均响应","6.5","小时"]],wrn:[["ASN提交及时率","91.5","%","目标≥85%"]],j:"ASN 及时率 91.5%，送货计划响应正常。",o:"Buyer",l:"CEP"},
+"3.5":{s:"采购→入库",qty:[["收货数量","12,096","件"],["到料数量","12,200","件"]],tim:[["到料平均延误天数","1.2","天"]],wrn:[],j:"到料延误 1.2 天，收货差异 0。",o:"Buyer",l:"CEP"},
+"3.6":{s:"采购→入库",qty:[["待检验数量","536","件"],["已检验数量","11,560","件"]],tim:[["IQC平均检验时效","6.4","小时"]],wrn:[["IQC检验及时率","90","%","目标≥90%"],["入库及时率","94","%","目标≥95%"]],j:"IQC 待检 536 件，检验及时率 90%，备料节奏正常受控。",o:"Buyer",l:"CEP"},
+"3.7":{s:"采购→入库",qty:[["在库库存数量","7,420","件"],["在途库存数量","3,180","件"],["VMI库存数量","6,480","件"]],tim:[],wrn:[["呆滞库存占比","4.3","%","关注阈值"]],j:"无需求 PO 420 件、超期 OPO 160 件需处置；呆滞占比 4.3%。",o:"物控",l:"OPO"},
+"4.1":{s:"生产→成品",qty:[["排程计划数量","11,200","件"],["工单下达数量","11,000","单"]],tim:[],wrn:[["排程达成率","100","%","目标100%"]],j:"排程覆盖完整，达成率 100%。",o:"PC",l:"王菲/李阳"},
+"4.2":{s:"生产→成品",qty:[["已配送数量","740","件"],["缺料未配送积压","12","单"]],tim:[],wrn:[["物料配送及时率","98.4","%","目标≥95%"]],j:"配送及时率 98.4%，少量缺料待补。",o:"物控",l:"OPO"},
+"4.3":{s:"生产→成品",qty:[["在制工单总数","860","单"],["工单完工数量","740","单"]],tim:[["超计划平均延误","2.6","天"]],wrn:[["工单准时完工率","94","%","目标≥95%"]],j:"准时完工率 94%，36 单超计划需关注。",o:"PC",l:"王菲/李阳"},
+"4.4":{s:"生产→成品",qty:[["半成品库存数量","1,260","件"]],tim:[["半成品平均滞留","3.1","天"]],wrn:[["半成品滞留占比","6.0","%","关注阈值"]],j:"半成品滞留 3.1 天，占比 6%。",o:"生产计划员",l:"生产拉通"},
+"4.5":{s:"生产→成品",qty:[["工单入库数量","1,920","件"]],tim:[["成品平均入库时效","1.6","小时"]],wrn:[["成品入库及时率","95.8","%","目标≥95%"]],j:"入库及时率 95.8%，完工未入库 80 件。",o:"OC",l:"肖坤"},
+"4.6":{s:"生产→成品",qty:[["入库待检总量","240","件"]],tim:[["FQC平均检验时效","5.2","小时"]],wrn:[["FQC检验及时率","92.5","%","目标≥95%"]],j:"FQC 待检 240 件，检验及时率 92.5%，成品入库节奏正常。",o:"QC",l:"SQE"},
+"4.7":{s:"生产→成品",qty:[["可用库存量","1,920","件"],["成品库存总量","2,100","件"],["承诺交付缺口","1,340","件"]],tim:[["成品Hold平均冻结","3.4","天"]],wrn:[["成品可发率","91.4","%","目标≥95%"]],j:"承诺交付缺口 1,340 件、可发率 91.4%。",im:"承诺缺口 1,340 件",o:"OC",l:"肖坤"},
+"5.1":{s:"物流→客户",qty:[["发货计划总数量","4,000","件"]],tim:[["发货指令平均确认","2.0","小时"]],wrn:[],j:"发货指令确认 2 小时，无超期未确认。",o:"OC",l:"肖坤"},
+"5.2":{s:"物流→客户",qty:[["拣配差异异常数量","0","件"]],tim:[["拣配平均完成时效","3.2","小时"]],wrn:[["拣货准确率","100","%","目标100%"]],j:"拣货准确率 100%，无拣配差异。",o:"WH",l:"央仓"},
+"5.3":{s:"物流→客户",qty:[["计划报关总票数","6","票"]],tim:[["报关平均时效","1.2","天"]],wrn:[["报关及时率","83.3","%","目标≥95%"]],j:"1 票报关超期，报关及时率 83.3%。",o:"关务",l:"关务"},
+"5.4":{s:"物流→客户",qty:[["已发运数量","7,200","件"]],tim:[["发运平均延误时效","2.4","小时"]],wrn:[["发运及时率","98.4","%","目标≥98%"]],j:"发运及时率 98.4%，当日待发 120 件。",o:"物流",l:"物流"},
+"5.5":{s:"物流→客户",qty:[["在途库存量","3,180","件"]],tim:[["在途平均停留天数","4.2","天"]],wrn:[["在途库存超期占比","5.0","%","关注阈值"]],j:"在途停留 4.2 天，超期占比 5%。",o:"物流",l:"物流"},
+"5.6":{s:"物流→客户",qty:[["超期订单数量","680","件"],["已签收单数","42","单"]],tim:[["超期订单平均超期","3.4","天"]],wrn:[["客户准时交货率OTD","88.4","%","目标≥95%"]],j:"有效承诺交期超期 680 件，OTD 88.4% 低于目标，需交付专项推进。",im:"超期订单 680 件·影响履约信誉",o:"OC",l:"肖坤",a:"POD回传+延期关闭闭环",due:"2026-05-30"},
+"5.7":{s:"物流→客户",qty:[["RMA数量","12","单"]],tim:[["退换货平均处理周期","6","天"]],wrn:[["退换货闭环率","83","%","目标≥90%"]],j:"退换闭环率 83%，12 单 RMA 处理中。",o:"售后",l:"售后"}
+};
+var PERIODS=["W18","W19","W20","W21","W22","W23","W24","当周"];
+
+function nodeOf(id){for(var i=0;i<LANES.length;i++){var L=LANES[i];for(var j=0;j<L.main.length;j++){if(L.main[j].id===id)return L.main[j];}for(var k=0;k<L.side.length;k++){if(L.side[k].id===id)return L.side[k];}}return null;}
+
+function sparkSVG(base,mode,seed,thr){
+  var st=seed||1;function rnd(){st=(st*9301+49297)%233280;return st/233280;}
+  var dir=mode==='down'?-1:(mode==='up'?1:0);var pts=[];var v=base||100;
+  for(var i=0;i<8;i++){pts.push(v);v=v*(1+dir*0.015+(rnd()-0.5)*0.05);}pts.reverse();
+  var mn=Math.min.apply(null,pts),mx=Math.max.apply(null,pts);if(thr!=null){mn=Math.min(mn,thr);mx=Math.max(mx,thr);}
+  var pad=(mn===mx?Math.abs(mn)*0.1+1:(mx-mn)*0.18);mn-=pad;mx+=pad;
+  var w=520,h=92,px=8,py=10;function xs(i){return px+i*(w-2*px)/7;}function ys(p){return h-py-((p-mn)/((mx-mn)||1))*(h-2*py);}
+  var dl=pts.map(function(p,i){return (i?'L':'M')+' '+xs(i).toFixed(1)+' '+ys(p).toFixed(1);}).join(' ');
+  var area=dl+' L '+(w-px).toFixed(1)+' '+(h-py).toFixed(1)+' L '+px+' '+(h-py).toFixed(1)+' Z';
+  var tl='';if(thr!=null){var ty=ys(thr).toFixed(1);tl='<line x1="'+px+'" y1="'+ty+'" x2="'+(w-px)+'" y2="'+ty+'" stroke="#e11d48" stroke-width="1" stroke-dasharray="4 3" opacity="0.75"/><text x="'+(w-px).toFixed(1)+'" y="'+(ys(thr)-3).toFixed(1)+'" text-anchor="end" font-size="9" fill="#e11d48">阈值 '+thr+'</text>';}
+  var dots=pts.map(function(p,i){return '<circle cx="'+xs(i).toFixed(1)+'" cy="'+ys(p).toFixed(1)+'" r="'+(i===7?3.2:2)+'" fill="'+(i===7?'#1f6bff':'#9bbcf5')+'"/>';}).join('');
+  return '<svg class="st-nd-spark" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><path d="'+area+'" fill="rgba(31,107,255,0.10)" stroke="none"/><path d="'+dl+'" fill="none" stroke="#1f6bff" stroke-width="2"/>'+tl+dots+'</svg>';
 }
 
-function renderChangedMetrics(container, plan){
-  var el = container.querySelector("#stChangedMetrics");
-  var stamp = container.querySelector("#stMetricStamp");
-  var badge = container.querySelector("#stScoreBadge");
-  if(!el) return;
-  if(stamp) stamp.textContent = stState.riskActive ? "实时推演" : "基线";
-  if(badge) badge.textContent = plan.score;
-  var rushOut = container.querySelector("#stRushOutput");
-  var subOut = container.querySelector("#stSubOutput");
-  var otOut = container.querySelector("#stOtOutput");
-  if(rushOut) rushOut.textContent = plan.rush+"%";
-  if(subOut) subOut.textContent = plan.sub+"%";
-  if(otOut) otOut.textContent = plan.overtime+"h";
+function modeFor(it,nd){if(it.cat==='wrn'&&(nd.risk==='red'||nd.risk==='warn'))return'down';if(it.cat==='qty'&&/数量|收货|发运|配送|入库|PO|签收|下达/.test(it.name))return'up';return'osc';}
 
-  var rows = stState.riskActive ? [
-    ["OTS周期", plan.ots.toFixed(1)+"天", "缩短 "+plan.otsGain.toFixed(1)+"天"],
-    ["齐套率", plan.kit.toFixed(1)+"%", "提升 "+plan.kitGain.toFixed(1)+"%"],
-    ["采购到货及时率", plan.delivery.toFixed(1)+"%", "提升 "+plan.deliveryGain.toFixed(1)+"%"],
-    ["客户准时签收", plan.sign.toFixed(1)+"%", "提升 "+plan.signGain.toFixed(1)+"%"]
-  ] : [
-    ["OTS周期","16.0天","基线"],
-    ["齐套率","91.8%","基线"],
-    ["采购到货及时率","94.2%","基线"],
-    ["客户准时签收","96.4%","基线"]
-  ];
-  el.innerHTML = rows.map(function(r){
-    return '<div class="st-metric-row"><div><small>'+r[0]+'</small><strong>'+r[1]+'</strong></div><em>'+r[2]+'</em></div>';
-  }).join("");
+function renderTrend(){
+  var st=window._nd;if(!st)return;var it=st.items[st.sel];var base=parseFloat(String(it.val).replace(/,/g,''))||100;
+  var thrP=it.thr?parseFloat(String(it.thr).match(/-?\d+(\.\d+)?/)?.[0]):null;var mode=modeFor(it,st.nd);
+  var ok=(thrP==null||it.unit!=='%')?null:(/红线|目标|≥/.test(it.thr||'')?base>=thrP:base<=thrP);
+  var interp=document.getElementById('st-nd-interp');
+  if(interp)interp.innerHTML='<span class="st-ii-n">'+it.name+'</span><span class="st-ii-v">'+it.val+'<i>'+(it.unit||'')+'</i></span>'+(it.thr?'<span class="st-ii-t">阈值 '+it.thr+'</span>':'')+(ok===null?'':'<span class="st-ii-b '+(ok?'st-good':'st-bad')+'">'+(ok?'达标':'未达标')+'</span>');
+  var tt=document.getElementById('st-nd-trend-t');if(tt)tt.textContent='近期趋势 · '+it.name;
+  var ts=document.getElementById('st-nd-trend-svg');if(ts)ts.innerHTML=sparkSVG(base,mode,st.seed+st.sel*13,thrP);
+  var tx=document.getElementById('st-nd-trend-x');if(tx)tx.innerHTML=PERIODS.map(function(p){return'<span>'+p+'</span>';}).join('');
+  var its=document.querySelectorAll('.st-nd-it[data-i]');
+  for(var i=0;i<its.length;i++){var isel=+its[i].getAttribute('data-i')===st.sel;its[i].classList.toggle('st-sel',isel);}
+}
+window.stSelectInd=function(i){if(!window._nd)return;window._nd.sel=i;renderTrend();};
+
+function grp(cls,title,arr,off){
+  var ck=arr.length?'onclick="stSelectInd('+off+')"':'';
+  var html='<div class="st-nd-grp'+(arr.length?' st-clk':'')+'" '+ck+'><div class="st-gt '+cls+'">'+title+'</div>';
+  if(arr.length){
+    html+=arr.map(function(it,k){return'<div class="st-nd-it" data-i="'+(off+k)+'" onclick="event.stopPropagation();stSelectInd('+(off+k)+')"><span class="st-n">'+it[0]+'</span><span class="st-v">'+it[1]+'<i>'+(it[2]||'')+'</i>'+(it[3]?'<span class="st-thr">'+it[3]+'</span>':'')+'</span></div>';}).join('');
+  }else{html+='<div class="st-nd-it"><span class="st-n">本节点无此类指标</span></div>';}
+  return html+'</div>';
 }
 
-/* ════════════════════════════════════════════════
-   6. 初始化
-   ════════════════════════════════════════════════ */
-function initPage_sandtable(container){
-  container = container || document.getElementById('page-sandtable');
-  if(!container) return;
+function openNode(id){
+  var d=DETAIL[id],nd=nodeOf(id);if(!d||!nd)return;
+  var badge=nd.risk==='red'?'st-red':nd.risk==='warn'?'st-warn':'st-ok';
+  var blab=nd.risk==='red'?'红风险':nd.risk==='warn'?'黄风险':'正常';
+  function sc(row){if(COUNT_UNIT.test(row[2]||'')){var nn=parseFloat(String(row[1]).replace(/,/g,''));if(!isNaN(nn))return[row[0],Math.round(nn*FACTOR).toLocaleString('zh-CN'),row[2],row[3]];}return row;}
+  var SQ=d.qty.map(sc),ST=d.tim.map(sc),SW=d.wrn.map(sc);
+  var items=[];SQ.forEach(function(x){items.push({cat:'qty',name:x[0],val:x[1],unit:x[2],thr:x[3]});});
+  ST.forEach(function(x){items.push({cat:'tim',name:x[0],val:x[1],unit:x[2],thr:x[3]});});
+  SW.forEach(function(x){items.push({cat:'wrn',name:x[0],val:x[1],unit:x[2],thr:x[3]});});
+  var sel=items.findIndex(function(x){return x.cat==='wrn';});if(sel<0)sel=items.findIndex(function(x){return x.cat==='tim';});if(sel<0)sel=0;
+  window._nd={id:id,nd:nd,items:items,sel:sel,seed:id.charCodeAt(0)*7+id.charCodeAt(2)};
+  var acts=[];if(d.im)acts.push(['影响范围',d.im]);acts.push(['责任岗位',d.o||'—'],['拉通负责人',d.l||'—']);if(d.a)acts.push(['处理动作',d.a]);if(d.due)acts.push(['要求完成',d.due]);
+  var oT=SQ.length,oW=SQ.length+ST.length;
+  var html='<button class="st-nd-x" onclick="stCloseNode()">×</button>'+
+    '<div class="st-nd-head"><span class="st-nd-id">'+id+'</span><h3>'+nd.name+'</h3><span class="st-nd-badge '+badge+'">'+blab+'</span><span class="st-nd-st">'+d.s+' · 经营体检</span></div>'+
+    '<div class="st-nd-body">'+
+    '<div class="st-nd-sec"><h5>节点体检<em class="st-nd-st" style="margin-left:8px">点击任一指标，下方解读与趋势联动</em></h5><div class="st-nd-groups">'+grp('st-q','数量·看进度',SQ,0)+grp('st-t','时效·看堵点',ST,oT)+grp('st-w','预警·看风险',SW,oW)+'</div></div>'+
+    '<div class="st-nd-interp" id="st-nd-interp"></div>'+
+    '<div class="st-nd-sec"><h5>经营判断 / 卡点</h5><p class="st-nd-judge">'+d.j+'</p></div>'+
+    '<div class="st-nd-sec"><h5>影响与去向</h5><div class="st-nd-act">'+acts.map(function(c){return'<div class="st-ac"><small>'+c[0]+'</small><b>'+c[1]+'</b></div>';}).join('')+'</div></div>'+
+    '<div class="st-nd-sec"><h5 id="st-nd-trend-t">近期趋势</h5><div id="st-nd-trend-svg"></div><div class="st-nd-xaxis" id="st-nd-trend-x"></div></div>'+
+    '<div class="st-nd-foot">本视图面向经营决策；单据级执行明细（要货计划 / PO / 工单 / ASN 等）由计划、采购、生产在业务系统中下钻查看。</div>'+
+    '</div>';
+  var m=document.getElementById('stNdModal');m.querySelector('.st-nd-card').innerHTML=html;m.classList.add('st-open');renderTrend();
+}
+function closeNode(){var m=document.getElementById('stNdModal');if(m)m.classList.remove('st-open');}
+window.stCloseNode=closeNode;
 
-  // 优先使用顶部全局筛选选中的项目，否则取第一个项目
-  var defaultPid = (typeof App !== 'undefined' && App.drillDown && App.drillDown.projectId) ? App.drillDown.projectId
-    : (typeof projects !== 'undefined' && projects.length ? projects[0].id : null);
-  stState.pid = defaultPid;
-  // 根据项目健康状态自动决定是否进入风险态
-  if(defaultPid && window.DS){
-    var d = DS.get(defaultPid);
-    if(d && d.health === 'r') stState.riskActive = true;
-  }
+function cycleChart(act,tgt,labels){
+  var w=640,h=200,pl=34,pr=12,pt=14,pb=26;var all=act.concat([tgt]);var mn=Math.floor(Math.min.apply(null,all)-1),mx=Math.ceil(Math.max.apply(null,all)+1);
+  function xs(i){return pl+i*(w-pl-pr)/(act.length-1);}function ys(v){return h-pb-((v-mn)/((mx-mn)||1))*(h-pt-pb);}
+  var grid='';for(var i=0;i<=4;i++){var val=mn+(mx-mn)*i/4,y=ys(val).toFixed(1);grid+='<line x1="'+pl+'" y1="'+y+'" x2="'+(w-pr)+'" y2="'+y+'" stroke="rgba(30,90,180,0.10)" stroke-width="1"/><text x="'+(pl-6)+'" y="'+(+y+3).toFixed(1)+'" text-anchor="end" font-size="9" fill="#7790ac">'+val.toFixed(0)+'</text>';}
+  var dAct=act.map(function(v,i){return (i?'L':'M')+' '+xs(i).toFixed(1)+' '+ys(v).toFixed(1);}).join(' ');
+  var yT=ys(tgt).toFixed(1);var tgtLine='<line x1="'+pl+'" y1="'+yT+'" x2="'+(w-pr)+'" y2="'+yT+'" stroke="#0aa2c0" stroke-width="2"/>';
+  var dots=act.map(function(v,i){return'<circle cx="'+xs(i).toFixed(1)+'" cy="'+ys(v).toFixed(1)+'" r="'+(i===act.length-1?3.5:2.5)+'" fill="#f5803e"/>';}).join('');
+  var xl=labels.map(function(l,i){return'<text x="'+xs(i).toFixed(1)+'" y="'+(h-9)+'" text-anchor="middle" font-size="9" fill="#7790ac">'+l+'</text>';}).join('');
+  return '<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:200px"><rect x="'+pl+'" y="'+pt+'" width="'+(w-pl-pr)+'" height="'+(h-pt-pb)+'" fill="rgba(31,107,255,0.03)"/>'+grid+tgtLine+'<path d="'+dAct+'" fill="none" stroke="#f5803e" stroke-width="2.5"/>'+dots+xl+'</svg>';
+}
+function openCycle(){
+  var ST=[["需求→订单",2.2,2.0],["计划→备料",3.3,2.5],["采购→入库",4.6,4.0],["生产→成品",3.9,3.5],["物流→客户",2.0,2.0]];
+  var cards=ST.map(function(x){var ov=x[1]>x[2];return'<div class="st-cyc-stage'+(ov?' st-over':'')+'"><div class="st-cs-n">'+x[0]+'</div><div class="st-cs-v">'+x[1].toFixed(1)+'<small>d</small></div><div class="st-cs-t">目标 '+x[2].toFixed(1)+'d '+(ov?'<span class="st-cs-d">+'+(x[1]-x[2]).toFixed(1)+'</span>':'<span class="st-cs-ok">达标</span>')+'</div></div>';}).join('<span class="st-cyc-plus">+</span>');
+  var series=[14.5,15.2,16.8,15.0,14.2,15.5,16.2,16.0],labels=["04-09","04-16","04-23","04-30","05-07","05-14","05-21","05-28"];
+  var html='<button class="st-nd-x" onclick="stCloseNode()">×</button>'+
+    '<div class="st-nd-head"><span class="st-nd-id">周期</span><h3>履约周期分析</h3><span class="st-nd-badge st-red">实际 16d / 目标 14d · 超 2d</span><span class="st-nd-st">OTS · 端到端</span></div>'+
+    '<div class="st-nd-body">'+
+    '<div class="st-nd-sec"><h5>周期构成 · 各阶段拆解</h5><div class="st-cyc-eq"><div class="st-cyc-total"><div class="st-cs-n">履约周期</div><div class="st-cs-v">16.0<small>d</small></div><div class="st-cs-t">目标 14.0d</div></div><span class="st-cyc-eqs">=</span>'+cards+'</div></div>'+
+    '<div class="st-nd-sec"><h5>历史趋势 · 履约周期（天）</h5><div class="st-cyc-legend"><span class="st-lg-a">实际</span><span class="st-lg-t">目标线 14d</span></div>'+cycleChart(series,14,labels)+'</div>'+
+    '<div class="st-nd-sec"><h5>经营结论</h5><p class="st-nd-judge">履约周期 16 天、超目标 2 天；主要拖累为 <b>计划→备料（+0.8d，缺料齐套）</b> 与 <b>采购→入库（+0.6d，供应商交期）</b>。压缩这两段是缩短整体交期的关键。</p></div>'+
+    '</div>';
+  var m=document.getElementById('stNdModal');m.querySelector('.st-nd-card').innerHTML=html;m.classList.add('st-open');
+}
 
-  // 构建项目下拉
-  var projOpts = "";
-  if(typeof projects !== 'undefined'){
-    projOpts = projects.map(function(p){
-      var sel = p.id === stState.pid ? " selected" : "";
-      return '<option value="'+p.id+'"'+sel+'>'+p.name+' · '+p.customer+' · '+p.productLine+'</option>';
-    }).join("");
-  }
+function refreshSweep(container){
+  FRAME=(FRAME+1)%FRAMES;
+  var kcs=container.querySelectorAll(".st-kc");
+  for(var i=0;i<kcs.length;i++){(function(c,j){setTimeout(function(){c.classList.remove("st-flash");void c.offsetWidth;c.classList.add("st-flash");},j*50);})(kcs[i],i);}
+  NUMS.forEach(function(o,i){setTimeout(function(){animateTo(o,targetFor(o,FRAME),650);},(i%6)*50);});
+}
 
-  // 阶段条
-  var stageHtml = stageTitles.map(function(t){ return '<div>'+t+'</div>'; }).join("");
+function setRail(container){
+  var g=container.querySelector('#st-rk-gap');if(g)g.firstChild.nodeValue=Math.round(1340*FACTOR).toLocaleString('zh-CN');
+  var r=container.querySelector('#st-rk-risk');if(r)r.firstChild.nodeValue=Math.round(32*FACTOR);
+}
 
-  container.innerHTML = `
-    <div class="sandtable-shell">
-      <div class="st-topbar">
-        <div class="st-brand">
-          <div class="st-brand-mark">G</div>
-          <div><span>G-SCT</span><small>项目全景沙盘</small></div>
-        </div>
-        <h1 class="st-title">歌尔供应链控制塔 · 项目全链路全景沙盘</h1>
-        <div class="st-status-box">
-          <span class="st-status-dot ${stState.riskActive ? 'alert' : ''}" id="stStatusDot"></span>
-          <span id="stStatusText">${stState.riskActive ? '红色预警' : '常规监控'}</span>
-        </div>
-      </div>
+function buildAll(container){
+  container.innerHTML='';
+  var gf=(typeof App!=='undefined'&&App.filter)?App.filter:{};
+  var gHint='<b>全局筛选</b>';
+  gHint+=' BG:<span class="st-val">'+(gf.bg||'全部')+'</span>';
+  gHint+=' BU:<span class="st-val">'+(gf.bu||'全部')+'</span>';
+  gHint+=' 客户:<span class="st-val">'+(gf.customer||'全部')+'</span>';
+  gHint+=' 产品:<span class="st-val">'+(gf.product||'全部')+'</span>';
 
-      <div class="st-query-panel">
-        <label><span>项目</span>
-          <select id="stProjectSelect">${projOpts}</select>
-        </label>
-        <label><span>BG</span>
-          <select id="stFilterBg"><option>全部BG</option><option>A01 声学BG</option><option>CEP 消费电子BG</option><option>SAC 微电子BG</option></select>
-        </label>
-        <label><span>客户</span>
-          <select id="stFilterCustomer"><option>全部客户</option></select>
-        </label>
-        <label><span>产品线</span>
-          <select id="stFilterProduct"><option>全部产品线</option></select>
-        </label>
-        <label class="st-project-field"><span>项目号</span>
-          <input id="stProjectInput" value="${stState.pid || 'G-SCT-MP-2406'}" autocomplete="off" />
-        </label>
-        <label><span>项目阶段</span>
-          <select id="stFilterStage"><option>MP</option><option>PVT</option><option>DVT</option><option>EVT</option></select>
-        </label>
-        <button id="stDiagnoseBtn" class="st-diagnose-btn" type="button">🔍 项目诊断</button>
-        <button id="stResetBtn" class="st-diagnose-btn reset" type="button">↺ 重置</button>
-      </div>
+  var stageHtml=LANES.map(function(L,i){
+    return'<div class="st-lane-col c'+i+'" style="left:'+laneLeft(i)+'px;top:'+(HEAD_H+6)+'px;width:'+LANE_W+'px;height:'+(CANVAS_H-HEAD_H-12)+'px;"></div>';
+  }).join('');
+  var headsHtml=LANES.map(function(L,i){
+    return'<div class="st-lane-head" style="left:'+laneLeft(i)+'px;top:0;width:'+LANE_W+'px;height:'+HEAD_H+'px;"><div class="st-lh"><span class="st-num">'+L.code+'</span><strong>'+L.name+'</strong></div><span class="st-sub">目标 '+CYC[L.code][0]+'d · 实际 '+CYC[L.code][1]+'d</span></div>';
+  }).join('');
 
-      <div class="st-kpi-strip" id="stKpiStrip"></div>
+  var POS=makePOS();
+  var whSvg='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 9.5l9-5 9 5V20H3z"/><rect x="9" y="13" width="6" height="7"/></svg>';
+  function whboxMarkup(id,name,m,p){return'<button class="st-node st-whbox" data-id="'+id+'" style="left:'+p.x+'px;top:'+p.y+'px;width:'+p.w+'px;height:'+p.h+'px;"><span class="st-barL"></span><span class="st-whico">'+whSvg+'</span><span class="st-nid">'+id+'</span><span class="st-nnm">'+name+'</span><span class="st-mv" data-num="'+m[1]+'" data-mode="'+(BEH[id]||'stock')+'">0<i>'+m[2]+'</i></span></button>';}
 
-      <div class="st-stage-ribbon" id="stStageRibbon">${stageHtml}</div>
+  var nodesHtml='';
+  LANES.forEach(function(L){
+    L.main.forEach(function(n,r){
+      var p=POS[n.id];
+      if(n.wh){nodesHtml+=whboxMarkup(n.id,n.name,n.m,p);return;}
+      var st=n.risk||"ok";
+      nodesHtml+='<button class="st-node st-s-'+st+'" data-id="'+n.id+'" style="left:'+p.x+'px;top:'+p.y+'px;width:'+p.w+'px;height:'+p.h+'px;--st-d:'+(r*0.12).toFixed(2)+'s"><span class="st-barL"></span><span class="st-nh"><span class="st-led"></span><span class="st-nid">'+n.id+'</span><span class="st-nnm">'+n.name+'</span></span><span class="st-nb"><span class="st-ml">'+n.m[0]+'</span><span class="st-mv" data-num="'+n.m[1]+'" data-mode="'+(BEH[n.id]||'stock')+'">0<i>'+n.m[2]+'</i>'+trendHtml(BEH[n.id]||'stock')+'</span></span></button>';
+    });
+    L.side.forEach(function(s){nodesHtml+=whboxMarkup(s.id,s.name,s.m,POS[s.id]);});
+  });
 
-      <div class="st-workspace">
-        <div class="st-map-panel">
-          <svg class="st-connector-layer" id="stConnectorLayer"></svg>
-          <div class="st-map-grid" id="stMapGrid"></div>
-        </div>
+  // 构建SVG连线
+  var paths='',pkts='';
+  CONN.forEach(function(c){
+    var isWh=(c[2]==="wh"||c[2]==="whO");
+    var cls=isWh?"st-wh":(special[c[2]]?"st-x":"st-"+c[2]);
+    var d;
+    if(c[2]==="wh")d=whIn(c[0],c[1],POS);else if(c[2]==="whO")d=whOut(c[0],c[1],POS);else if(special[c[2]])d=special[c[2]](c[0],c[1],POS);else d=pathFor(c[0],c[1],POS,xOff[c[0]+">"+c[1]]||0);
+    var mk=isWh?"st-arwW":"st-arw";
+    paths+='<path class="st-lnk '+cls+'" d="'+d+'" marker-end="url(#'+mk+')"/>';
+    var dur=(c[2]==="loop"?4.5:(1.5+Math.random()*1.2)).toFixed(2),beg=(-Math.random()*2.5).toFixed(2),col=pktColor[isWh?"wh":c[2]]||pktColor.x,r=isWh?3.5:2.5;
+    pkts+='<circle class="st-pkt" r="'+r+'" fill="'+col+'" style="color:'+col+'"><animateMotion dur="'+dur+'s" begin="'+beg+'s" repeatCount="indefinite" path="'+d+'"/></circle>';
+  });
+  var svgHtml='<svg class="st-links" width="'+CANVAS_W+'" height="'+CANVAS_H+'" viewBox="0 0 '+CANVAS_W+' '+CANVAS_H+'"><defs><marker id="st-arw" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1f6bff"/></marker><marker id="st-arwW" markerWidth="12" markerHeight="12" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#0d9488"/></marker></defs>'+paths+pkts+'</svg>';
 
-        <aside class="st-inspector">
-          <section class="st-alert-summary" id="stAlertSummary"></section>
+  var railHtml='<div class="st-rail" style="width:'+RAIL_W+'px;">'+
+    '<div class="st-rail-ots" id="st-cyc-cell" style="height:'+HEAD_H+'px;cursor:pointer;"><span class="st-rt">履约周期</span><span class="st-nums"><span>目标<b>14</b></span><span>实际<b class="st-act">16</b></span></span></div>'+
+    '<div class="st-rail-card"><h4>履约总览</h4>'+
+    '<div class="st-hp-row"><span>OTD准时率</span><b class="st-bad">88%</b></div>'+
+    '<div class="st-hp-row"><span>承诺缺口</span><b class="st-bad" id="st-rk-gap">1,340<i>件</i></b></div>'+
+    '<div class="st-hp-row"><span>风险订单</span><b class="st-bad" id="st-rk-risk">32<i>单</i></b></div></div>'+
+    '<div class="st-rail-card"><h4>风险分布</h4>'+
+    '<div class="st-dist"><span class="st-seg-r" style="flex:2"></span><span class="st-seg-y" style="flex:1"></span><span class="st-seg-g" style="flex:27"></span></div>'+
+    '<div class="st-warnrail"><div class="st-wr"><span class="st-led2 st-led-r"></span>红风险 · 2</div><div class="st-wr"><span class="st-led2 st-led-y"></span>黄风险 · 1</div><div class="st-wr"><span class="st-led2 st-led-g"></span>正常 · 27</div></div></div>'+
+    '<div class="st-rail-card"><h4>TOP 风险卡点</h4>'+
+    '<div class="st-top3" data-go="2.5"><span class="st-d st-d-r"></span><span class="st-t3"><b>2.5 物料齐套</b><em>缺料 2 单 · MC</em></span></div>'+
+    '<div class="st-top3" data-go="5.6"><span class="st-d st-d-r"></span><span class="st-t3"><b>5.6 交付签收</b><em>超期 680 · OC</em></span></div>'+
+    '<div class="st-top3" data-go="3.2"><span class="st-d st-d-y"></span><span class="st-t3"><b>3.2 供应商协同</b><em>准时 78.6% · Buyer</em></span></div></div>'+
+    '<div class="st-rail-card"><h4>风险闭环</h4>'+
+    '<div class="st-hp-row"><span>未关闭重大风险</span><b>2<i>项</i></b></div>'+
+    '<div class="st-hp-row"><span>平均关闭周期</span><b>4.6<i>天</i></b></div>'+
+    '<div class="st-hp-row"><span>关闭及时率</span><b>66.7%</b></div></div>'+
+    '</div>';
 
-          <section class="st-metric-editor">
-            <div class="st-section-title"><span>方案推演</span><strong id="stScoreBadge">86</strong></div>
-            <label><span>加急采购覆盖</span><input id="stRushSlider" type="range" min="0" max="100" value="${stState.rush}" /><output id="stRushOutput">${stState.rush}%</output></label>
-            <label><span>替代料覆盖</span><input id="stSubSlider" type="range" min="0" max="100" value="${stState.sub}" /><output id="stSubOutput">${stState.sub}%</output></label>
-            <label><span>产线加班小时</span><input id="stOtSlider" type="range" min="0" max="24" value="${stState.overtime}" /><output id="stOtOutput">${stState.overtime}h</output></label>
-          </section>
+  container.innerHTML='<div class="st-wrap">'+
+    '<div class="st-global-hint">'+gHint+'</div>'+
+    '<div class="st-kribbon" id="stKribbon">'+KPI.map(function(k){return'<div class="st-kc '+(k[3]||'')+'"><span class="st-sheen"></span><label>'+k[0]+'</label><b data-num="'+k[1]+'" data-mode="'+k[4]+'">0<i>'+k[2]+'</i>'+trendHtml(k[4])+'</b></div>';}).join("")+'</div>'+
+    '<div class="st-board st-brk">'+
+    '<span class="st-c st-tl"></span><span class="st-c st-tr"></span><span class="st-c st-bl"></span><span class="st-c st-br"></span>'+
+    '<div class="st-board-head"><div class="st-bt"><i></i>端到端履约节点拓扑<em>A01 智能整机项目 · 点击任意节点查看经营体检</em></div>'+
+    '<div class="st-legend"><span class="st-lg st-ok"><i></i>正常级</span><span class="st-lg st-warn"><i></i>次高风险</span><span class="st-lg st-red"><i></i>极端风险</span><span class="st-lg st-wh"><i></i>仓储节点</span></div></div>'+
+    '<div class="st-canvas-wrap"><div class="st-canvas" id="stCanvas" style="width:'+CANVAS_W+'px;height:'+CANVAS_H+'px"><span class="st-beam"></span>'+stageHtml+svgHtml+headsHtml+railHtml+nodesHtml+'</div></div>'+
+    '</div>'+
+    '<div class="st-foot"><div class="st-pills"><span class="st-pill">履约节点: 30</span><span class="st-pill">缓冲库: 3</span><span class="st-pill" style="border-color:var(--st-red);color:var(--st-red)">红风险: 2</span><span class="st-pill" style="border-color:var(--st-warn);color:var(--st-warn)">黄风险: 1</span></div><span>Data Node Stream Alignment Matrix · Virtual Simulation Demo Data</span></div>'+
+    '</div>';
 
-          <section class="st-changed-metrics">
-            <div class="st-section-title"><span>调整后指标</span><small id="stMetricStamp">未应用</small></div>
-            <div id="stChangedMetrics"></div>
-          </section>
+  // 弹窗容器
+  var modal=document.getElementById('stNdModal');
+  if(!modal){modal=document.createElement('div');modal.id='stNdModal';modal.className='st-nd-modal';modal.innerHTML='<div class="st-nd-card"></div>';document.body.appendChild(modal);modal.addEventListener('click',function(e){if(e.target.id==='stNdModal')closeNode();});}
+  else{modal.querySelector('.st-nd-card').innerHTML='';modal.classList.remove('st-open');}
+}
 
-          <section class="st-warning-feed">
-            <div class="st-section-title"><span>异常明细</span><small id="stWarningCount">0 条</small></div>
-            <div class="st-warning-list" id="stWarningList"></div>
-          </section>
-        </aside>
-      </div>
-    </div>`;
-
-  // 绑定事件
-  bindEvents(container);
-  // 首次渲染
-  renderAll(container);
+function initMetrics(container){
+  NUMS=[].slice.call(container.querySelectorAll("[data-num]")).map(function(el){
+    return{el:el,base:parseFloat(el.dataset.num.replace(/,/g,""))||0,mode:el.dataset.mode||"stock",cur:0,seed:Math.random()*6.28};
+  }).map(function(o){o.delta=deltaFor(o.base);o.base0=o.base;o.unit=((o.el.querySelector("i")||{}).textContent)||"";o.scalable=COUNT_UNIT.test(o.unit);return o;});
+  NUMS.forEach(function(o){animateTo(o,o.base,950);});
 }
 
 function bindEvents(container){
-  var projSel = container.querySelector("#stProjectSelect");
-  if(projSel){
-    projSel.addEventListener("change", function(){
-      stState.pid = this.value || null;
-      var inp = container.querySelector("#stProjectInput");
-      if(inp) inp.value = stState.pid || "";
-      // 根据健康状态重置风险态
-      if(stState.pid && window.DS){
-        var d = DS.get(stState.pid);
-        stState.riskActive = (d && d.health === 'r');
-      } else {
-        stState.riskActive = false;
-      }
-      updateStatusBox(container);
-      renderAll(container);
-    });
-  }
-
-  var inp = container.querySelector("#stProjectInput");
-  if(inp){
-    inp.addEventListener("keydown", function(e){
-      if(e.key === "Enter"){ setRiskActive(container, true); }
-    });
-    inp.addEventListener("input", function(){
-      if(!this.value.trim()){
-        stState.pid = null;
-        setRiskActive(container, false);
-      }
-    });
-  }
-
-  var diagBtn = container.querySelector("#stDiagnoseBtn");
-  if(diagBtn){
-    diagBtn.addEventListener("click", function(){ setRiskActive(container, true); });
-  }
-  var resetBtn = container.querySelector("#stResetBtn");
-  if(resetBtn){
-    resetBtn.addEventListener("click", function(){
-      stState.rush = 42; stState.sub = 35; stState.overtime = 6;
-      var rs = container.querySelector("#stRushSlider"); if(rs) rs.value = 42;
-      var ss = container.querySelector("#stSubSlider"); if(ss) ss.value = 35;
-      var os = container.querySelector("#stOtSlider"); if(os) os.value = 6;
-      setRiskActive(container, false);
-    });
-  }
-
-  ["#stRushSlider","#stSubSlider","#stOtSlider"].forEach(function(sel){
-    var sl = container.querySelector(sel);
-    if(!sl) return;
-    sl.addEventListener("input", function(){
-      if(sel === "#stRushSlider") stState.rush = Number(this.value);
-      else if(sel === "#stSubSlider") stState.sub = Number(this.value);
-      else stState.overtime = Number(this.value);
-      if(!stState.riskActive) stState.riskActive = true;
-      updateStatusBox(container);
-      renderAll(container);
-    });
+  container.addEventListener('click',function(e){
+    var n=e.target.closest('.st-node');
+    if(n&&n.dataset.id){openNode(n.dataset.id);return;}
+    var go= e.target.closest('[data-go]');
+    if(go)openNode(go.getAttribute('data-go'));
   });
-
-  // 窗口resize重绘连接线
-  var resizeHandler = function(){ requestAnimationFrame(function(){ drawConnectors(container); }); };
-  window.addEventListener("resize", resizeHandler);
-  // 容器销毁时清理（简易处理）
-  container._stResizeHandler = resizeHandler;
+  var cc=container.querySelector('#st-cyc-cell');
+  if(cc)cc.addEventListener('click',openCycle);
 }
 
-function setRiskActive(container, next){
-  stState.riskActive = next;
-  updateStatusBox(container);
-  renderAll(container);
+function fit(container){
+  var wrap=container.querySelector(".st-canvas-wrap");
+  var canvas=container.querySelector(".st-canvas");
+  if(!wrap||!canvas)return;
+  var s=Math.min(1,wrap.clientWidth/CANVAS_W);
+  canvas.style.transform="scale("+s+")";
+  wrap.style.height=(CANVAS_H*s)+"px";
 }
 
-function updateStatusBox(container){
-  var dot = container.querySelector("#stStatusDot");
-  var txt = container.querySelector("#stStatusText");
-  if(dot){ dot.className = "st-status-dot"+(stState.riskActive ? " alert" : ""); }
-  if(txt){ txt.textContent = stState.riskActive ? "红色预警" : "常规监控"; }
+function tick(){var el=document.getElementById("stClock");if(el){var d=new Date(),p=function(x){return String(x).padStart(2,"0");};el.textContent=p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());}}
+
+function initPage_sandtable(container){
+  container=container||document.getElementById('page-sandtable');
+  if(!container)return;
+  container.innerHTML='';
+
+  // 构建全局筛选提示
+  var gf=(typeof App!=='undefined'&&App.filter)?App.filter:{};
+
+  container.innerHTML=
+    '<div class="sandtable-shell">'+
+    '<div class="st-wrap">'+
+    '<div class="st-topbar st-brk">'+
+    '<span class="st-c st-tl"></span><span class="st-c st-tr"></span><span class="st-c st-bl"></span><span class="st-c st-br"></span>'+
+    '<div class="st-brand"><div class="st-logo">G</div><div><h1>歌尔供应链控制塔</h1><p>SUPPLY CHAIN CONTROL TOWER · 端到端节点泳道图</p></div></div>'+
+    '<div class="st-top-meta"><div class="st-run"><span class="st-gear"></span>SYSTEM RUNNING</div>'+
+    '<div class="st-chip">REFRESH · 2026-06-22</div>'+
+    '<div class="st-chip st-chip-live"><span class="st-dot-live"></span><span id="stClock">LIVE</span></div></div>'+
+    '</div>'+
+    '<div class="st-global-hint">'+
+    '<b>全局筛选</b> BG:<span class="st-val">'+(gf.bg||'全部')+'</span> BU:<span class="st-val">'+(gf.bu||'全部')+'</span> 客户:<span class="st-val">'+(gf.customer||'全部')+'</span> 产品:<span class="st-val">'+(gf.product||'全部')+'</span>'+
+    ' <span style="margin-left:auto;font-size:10px;color:var(--st-txt3)">筛选条件由顶部▾控制</span>'+
+    '</div>'+
+    '<div class="st-kribbon" id="stKribbon">'+KPI.map(function(k){return'<div class="st-kc '+(k[3]||'')+'"><span class="st-sheen"></span><label>'+k[0]+'</label><b data-num="'+k[1]+'" data-mode="'+k[4]+'">0<i>'+k[2]+'</i>'+trendHtml(k[4])+'</b></div>';}).join("")+'</div>'+
+    '<div class="st-board st-brk">'+
+    '<span class="st-c st-tl"></span><span class="st-c st-tr"></span><span class="st-c st-bl"></span><span class="st-c st-br"></span>'+
+    '<div class="st-board-head"><div class="st-bt"><i></i>端到端履约节点拓扑<em>A01 智能整机项目 · 点击任意节点查看经营体检</em></div>'+
+    '<div class="st-legend"><span class="st-lg st-ok"><i></i>正常级</span><span class="st-lg st-warn"><i></i>次高风险</span><span class="st-lg st-red"><i></i>极端风险</span><span class="st-lg st-wh"><i></i>仓储节点</span></div></div>'+
+    '<div class="st-canvas-wrap"><div class="st-canvas" id="stCanvas" style="width:'+CANVAS_W+'px;height:'+CANVAS_H+'px"><span class="st-beam"></span>'+
+    LANES.map(function(L,i){return'<div class="st-lane-col c'+i+'" style="left:'+laneLeft(i)+'px;top:'+(HEAD_H+6)+'px;width:'+LANE_W+'px;height:'+(CANVAS_H-HEAD_H-12)+'px;"></div>';}).join('')+
+    '<svg class="st-links" width="'+CANVAS_W+'" height="'+CANVAS_H+'" viewBox="0 0 '+CANVAS_W+' '+CANVAS_H+'"><defs><marker id="st-arw" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1f6bff"/></marker><marker id="st-arwW" markerWidth="12" markerHeight="12" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#0d9488"/></marker></defs></svg>'+
+    LANES.map(function(L,i){return'<div class="st-lane-head" style="left:'+laneLeft(i)+'px;top:0;width:'+LANE_W+'px;height:'+HEAD_H+'px;"><div class="st-lh"><span class="st-num">'+L.code+'</span><strong>'+L.name+'</strong></div><span class="st-sub">目标 '+CYC[L.code][0]+'d · 实际 '+CYC[L.code][1]+'d</span></div>';}).join('')+
+    '<div class="st-rail" style="width:'+RAIL_W+'px;">'+
+    '<div class="st-rail-ots" id="st-cyc-cell" style="height:'+HEAD_H+'px;cursor:pointer;"><span class="st-rt">履约周期</span><span class="st-nums"><span>目标<b>14</b></span><span>实际<b class="st-act">16</b></span></span></div>'+
+    '<div class="st-rail-card"><h4>履约总览</h4><div class="st-hp-row"><span>OTD准时率</span><b class="st-bad">88%</b></div><div class="st-hp-row"><span>承诺缺口</span><b class="st-bad" id="st-rk-gap">1,340<i>件</i></b></div><div class="st-hp-row"><span>风险订单</span><b class="st-bad" id="st-rk-risk">32<i>单</i></b></div></div>'+
+    '<div class="st-rail-card"><h4>风险分布</h4><div class="st-dist"><span class="st-seg-r" style="flex:2"></span><span class="st-seg-y" style="flex:1"></span><span class="st-seg-g" style="flex:27"></span></div><div class="st-warnrail"><div class="st-wr"><span class="st-led2 st-led-r"></span>红风险 · 2</div><div class="st-wr"><span class="st-led2 st-led-y"></span>黄风险 · 1</div><div class="st-wr"><span class="st-led2 st-led-g"></span>正常 · 27</div></div></div>'+
+    '<div class="st-rail-card"><h4>TOP 风险卡点</h4><div class="st-top3" data-go="2.5"><span class="st-d st-d-r"></span><span class="st-t3"><b>2.5 物料齐套</b><em>缺料 2 单 · MC</em></span></div><div class="st-top3" data-go="5.6"><span class="st-d st-d-r"></span><span class="st-t3"><b>5.6 交付签收</b><em>超期 680 · OC</em></span></div><div class="st-top3" data-go="3.2"><span class="st-d st-d-y"></span><span class="st-t3"><b>3.2 供应商协同</b><em>准时 78.6% · Buyer</em></span></div></div>'+
+    '<div class="st-rail-card"><h4>风险闭环</h4><div class="st-hp-row"><span>未关闭重大风险</span><b>2<i>项</i></b></div><div class="st-hp-row"><span>平均关闭周期</span><b>4.6<i>天</i></b></div><div class="st-hp-row"><span>关闭及时率</span><b>66.7%</b></div></div>'+
+    '</div>'+
+    buildNodesHTML()+
+    '</div></div>'+
+    '</div>'+
+    '<div class="st-foot"><div class="st-pills"><span class="st-pill">履约节点: 30</span><span class="st-pill">缓冲库: 3</span><span class="st-pill" style="border-color:var(--st-red);color:var(--st-red)">红风险: 2</span><span class="st-pill" style="border-color:var(--st-warn);color:var(--st-warn)">黄风险: 1</span></div><span>Data Node Stream Alignment Matrix · Virtual Simulation Demo Data</span></div>'+
+    '</div></div>';
+
+  setupSVGLinks(container);
+  initMetrics(container);
+  bindEvents(container);
+
+  // 初始渲染数据
+  NUMS.forEach(function(o){animateTo(o,o.base,950);});
+  fit(container);
+  window.addEventListener("resize",function(){fit(container);});
+  // 5秒刷新
+  if(refreshTimer)clearInterval(refreshTimer);
+  refreshTimer=setInterval(function(){refreshSweep(container);},5000);
+  // 时钟
+  tick();
+  if(clockTimer)clearInterval(clockTimer);
+  clockTimer=setInterval(tick,1000);
+
+  // 存储清理引用
+  container._stRefresh=refreshTimer;
+  container._stClock=clockTimer;
 }
 
-window.initPage_sandtable = initPage_sandtable;
+function buildNodesHTML(){
+  var POS=makePOS();
+  var whSvg='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 9.5l9-5 9 5V20H3z"/><rect x="9" y="13" width="6" height="7"/></svg>';
+  function whbox(id,name,m,p){return'<button class="st-node st-whbox" data-id="'+id+'" style="left:'+p.x+'px;top:'+p.y+'px;width:'+p.w+'px;height:'+p.h+'px;"><span class="st-barL"></span><span class="st-whico">'+whSvg+'</span><span class="st-nid">'+id+'</span><span class="st-nnm">'+name+'</span><span class="st-mv" data-num="'+m[1]+'" data-mode="'+(BEH[id]||'stock')+'">0<i>'+m[2]+'</i></span></button>';}
+  var h='';
+  LANES.forEach(function(L){
+    L.main.forEach(function(n,r){
+      var p=POS[n.id];
+      if(n.wh){h+=whbox(n.id,n.name,n.m,p);return;}
+      var st=n.risk||"ok";
+      h+='<button class="st-node st-s-'+st+'" data-id="'+n.id+'" style="left:'+p.x+'px;top:'+p.y+'px;width:'+p.w+'px;height:'+p.h+'px;--st-d:'+(r*0.12).toFixed(2)+'s"><span class="st-barL"></span><span class="st-nh"><span class="st-led"></span><span class="st-nid">'+n.id+'</span><span class="st-nnm">'+n.name+'</span></span><span class="st-nb"><span class="st-ml">'+n.m[0]+'</span><span class="st-mv" data-num="'+n.m[1]+'" data-mode="'+(BEH[n.id]||'stock')+'">0<i>'+n.m[2]+'</i>'+trendHtml(BEH[n.id]||'stock')+'</span></span></button>';
+    });
+    L.side.forEach(function(s){h+=whbox(s.id,s.name,s.m,POS[s.id]);});
+  });
+  return h;
+}
+
+function setupSVGLinks(container){
+  var POS=makePOS();
+  var svg=container.querySelector('.st-links');
+  if(!svg)return;
+  var paths='',pkts='';
+  CONN.forEach(function(c){
+    var isWh=(c[2]==="wh"||c[2]==="whO");
+    var cls=isWh?"st-wh":(special[c[2]]?"st-x":"st-"+c[2]);
+    var d;
+    if(c[2]==="wh")d=whIn(c[0],c[1],POS);else if(c[2]==="whO")d=whOut(c[0],c[1],POS);else if(special[c[2]])d=special[c[2]](c[0],c[1],POS);else d=pathFor(c[0],c[1],POS,xOff[c[0]+">"+c[1]]||0);
+    var mk=isWh?"st-arwW":"st-arw";
+    paths+='<path class="st-lnk '+cls+'" d="'+d+'" marker-end="url(#'+mk+')"/>';
+    var dur=(c[2]==="loop"?4.5:(1.5+Math.random()*1.2)).toFixed(2),beg=(-Math.random()*2.5).toFixed(2),col=pktColor[isWh?"wh":c[2]]||pktColor.x,r=isWh?3.5:2.5;
+    pkts+='<circle class="st-pkt" r="'+r+'" fill="'+col+'" style="color:'+col+'"><animateMotion dur="'+dur+'s" begin="'+beg+'s" repeatCount="indefinite" path="'+d+'"/></circle>';
+  });
+  svg.innerHTML+=paths+pkts;
+}
+
+// 确保弹窗存在
+(function ensureModal(){
+  var m=document.getElementById('stNdModal');
+  if(!m){m=document.createElement('div');m.id='stNdModal';m.className='st-nd-modal';m.innerHTML='<div class="st-nd-card"></div>';document.body.appendChild(m);m.addEventListener('click',function(e){if(e.target.id==='stNdModal')closeNode();});}
+})();
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeNode();});
+
+window.initPage_sandtable=initPage_sandtable;
 })();
 registerModule('sandtable', initPage_sandtable);
