@@ -85,6 +85,9 @@
   <div class="page-container">
     <!-- ====== 1.全局总览 ====== -->
     <section class="page active" id="page-overview">
+      <!-- ⓪ 全局筛选联动提示条 -->
+      <div class="ov-global-hint" id="ovGlobalHint"></div>
+
       <!-- ① 筛选条件（主维度BG/BU/客户/产品已在顶部联动，此处为补充筛选） -->
       <div class="ov-filter-bar">
         <div class="ov-filter-group">
@@ -120,19 +123,27 @@
       <!-- ③ 图表第一行：BG×生命周期堆叠柱状图 + SCOR五维健康雷达 -->
       <div class="chart-row">
         <div class="chart-card">
-          <div class="card-header"><h3><i class="fas fa-diagram-project"></i> 各 BG 项目生命周期分布</h3><span class="ov-chart-sub" id="ovChart1Total"></span></div>
+          <div class="card-header"><h3><i class="fas fa-diagram-project"></i> 各 BG 项目生命周期分布</h3><div class="ov-chart-actions"><button class="ov-chart-btn" onclick="ovExportChart('lifecycle','PNG')" title="导出PNG">📷</button><button class="ov-chart-btn" onclick="ovExportChart('lifecycle','CSV')" title="导出CSV">📄</button><span class="ov-chart-sub" id="ovChart1Total"></span></div></div>
           <div class="card-body"><div class="chart-wrap" style="height:300px"><canvas id="ovChartLifecycle"></canvas></div></div>
         </div>
         <div class="chart-card">
-          <div class="card-header"><h3><i class="fas fa-chart-pie"></i> SCOR 五维健康雷达</h3><div id="ovRadarLegend" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
+          <div class="card-header"><h3><i class="fas fa-chart-pie"></i> SCOR 五维健康雷达</h3><div class="ov-chart-actions"><button class="ov-chart-btn" onclick="ovExportChart('radar','PNG')" title="导出PNG">📷</button><div id="ovRadarLegend" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div></div>
           <div class="card-body"><div class="chart-wrap" style="height:300px"><canvas id="ovChartRadar"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- ③b 图表行：工厂地理分布地图 -->
+      <div class="chart-row">
+        <div class="chart-card" style="grid-column:1/-1">
+          <div class="card-header"><h3><i class="fas fa-globe"></i> 项目工厂地理分布</h3><span class="ov-chart-sub">气泡大小=项目规模 · 颜色=健康状态</span></div>
+          <div class="card-body"><div id="ovFactoryMap" class="ov-factory-map"></div></div>
         </div>
       </div>
 
       <!-- ④ 图表第二行：客户分布 + NPI漏斗 + 重大项目红绿灯 -->
       <div class="chart-row ov-row-3">
         <div class="chart-card">
-          <div class="card-header"><h3><i class="fas fa-building"></i> 客户项目数量分布</h3></div>
+          <div class="card-header"><h3><i class="fas fa-building"></i> 客户项目数量分布</h3><div class="ov-chart-actions"><button class="ov-chart-btn" onclick="ovExportChart('customer','PNG')" title="导出PNG">📷</button></div></div>
           <div class="card-body"><div class="chart-wrap" style="height:280px"><canvas id="ovChartCustomer"></canvas></div></div>
         </div>
         <div class="chart-card">
@@ -156,34 +167,18 @@
         <div class="ov-table-header">
           <div style="font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;"><i class="fas fa-list" style="color:var(--primary-light)"></i> 项目全量数据表 <span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:4px;" id="ovTableTitleCount"></span></div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <span style="font-size:11px;color:var(--text-muted);">每页显示</span>
+            <button class="ov-mode-btn active" id="ovModeCompact" onclick="ovSetMode('compact')" title="紧凑模式：核心列">紧凑</button>
+            <button class="ov-mode-btn" id="ovModeDetail" onclick="ovSetMode('detail')" title="详细模式：含SCOR五维">详细</button>
+            <button class="ov-mode-btn" id="ovMomToggle" onclick="ovToggleMom()" title="显示环比变化">环比</button>
+            <span style="font-size:11px;color:var(--text-muted);">每页</span>
             <select class="ov-page-size-select" id="ovPageSize" onchange="ovChangePageSize()">
               <option value="15">15 条</option><option value="20">20 条</option><option value="30">30 条</option><option value="50">50 条</option>
             </select>
           </div>
         </div>
         <div style="overflow-x:auto;">
-          <table class="ov-proj-table">
-            <thead>
-              <tr>
-                <th onclick="ovSortTable('key')" id="ovThKey">⭐ <span class="ov-sort-icon">↕</span></th>
-                <th onclick="ovSortTable('bg')" id="ovThBg">BG <span class="ov-sort-icon">↕</span></th>
-                <th onclick="ovSortTable('bu')" id="ovThBu">BU <span class="ov-sort-icon">↕</span></th>
-                <th onclick="ovSortTable('customer')" id="ovThCustomer">客户 <span class="ov-sort-icon">↕</span></th>
-                <th onclick="ovSortTable('product')" id="ovThProduct">产品 <span class="ov-sort-icon">↕</span></th>
-                <th onclick="ovSortTable('name')" id="ovThName">项目名称 <span class="ov-sort-icon">↕</span></th>
-                <th onclick="ovSortTable('stage')" id="ovThStage">工程阶段 <span class="ov-sort-icon">↕</span></th>
-                <th onclick="ovSortTable('lifecycle')" id="ovThLifecycle">生命周期 <span class="ov-sort-icon">↕</span></th>
-                <th title="交付可靠性" style="cursor:help">① 可靠</th>
-                <th title="响应速度" style="cursor:help">② 响应</th>
-                <th title="盈利能力" style="cursor:help">③ 成本</th>
-                <th title="资产效率" style="cursor:help">④ 资产</th>
-                <th title="敏捷韧性" style="cursor:help">⑤ 韧性</th>
-                <th onclick="ovSortTable('score')" id="ovThScore">综合评分 <span class="ov-sort-icon">↕</span></th>
-                <th onclick="ovSortTable('health')" id="ovThHealth">健康状态 <span class="ov-sort-icon">↕</span></th>
-                <th style="width:36px;text-align:center;" title="点击行跳转详情">→</th>
-              </tr>
-            </thead>
+          <table class="ov-proj-table" id="ovProjTable">
+            <thead id="ovProjThead"></thead>
             <tbody id="ovProjTbody"></tbody>
           </table>
           <div id="ovTableEmpty" style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;display:none;">

@@ -1335,3 +1335,40 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 
 /* ── 8. 统一选项卡风格 ── */
 .st-tab-bar{border:1px solid var(--border-light);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+/* ═══ overview v9.0 新增样式 ═══ */
+/* 全局筛选提示条 */
+.ov-global-hint{display:flex;align-items:center;gap:8px;padding:8px 16px;margin-bottom:12px;background:var(--primary-bg);border:1px solid var(--primary-light);border-radius:8px;font-size:12px;color:var(--text-sec);flex-wrap:wrap}
+.ov-global-hint i{color:var(--primary)}
+.ov-global-hint b{color:var(--text);font-weight:700}
+.ov-gh-val{color:var(--primary);font-weight:600;padding:2px 8px;background:var(--card);border-radius:4px;border:1px solid var(--border-light)}
+
+/* KPI环比箭头 */
+.ov-mom{font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px}
+.ov-mom.up{color:var(--success);background:var(--success-bg)}
+.ov-mom.down{color:var(--danger);background:var(--danger-bg)}
+.ov-mom.flat{color:var(--text-muted);background:var(--border-light)}
+
+/* 图表操作按钮 */
+.ov-chart-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.ov-chart-btn{width:24px;height:24px;border:1px solid var(--border);background:var(--card);border-radius:4px;cursor:pointer;font-size:11px;display:grid;place-items:center;transition:var(--transition)}
+.ov-chart-btn:hover{border-color:var(--primary);background:var(--primary-bg)}
+
+/* 工厂地图 */
+.ov-factory-map{padding:0}
+.ov-factory-map svg{display:block}
+
+/* 表格模式切换按钮 */
+.ov-mode-btn{padding:4px 10px;border:1px solid var(--border);background:var(--card);color:var(--text-sec);font-size:11px;font-weight:600;border-radius:4px;cursor:pointer;transition:var(--transition)}
+.ov-mode-btn:hover{border-color:var(--primary);color:var(--primary)}
+.ov-mode-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* 排序箭头激活态 */
+.ov-sort-icon.active{color:var(--primary);opacity:1;font-weight:700}
+
+/* 分页跳转输入框 */
+.ov-pagination input[type=number]{margin-left:6px}
+
+/* 重大项目预警文字 */
+.ov-kp-item{cursor:pointer;transition:background .15s}
+.ov-kp-item:hover{background:var(--primary-bg)}
