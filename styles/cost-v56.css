@@ -108,6 +108,19 @@
 #page-cost .v56-kpi-card.warn .v56-value { color: var(--v56-amber); }
 #page-cost .v56-kpi-card .v56-sub { font-size: 11px; color: var(--v56-muted); display: flex; justify-content: space-between; align-items: center; }
 
+/* KPI卡片可点击 + 折叠区 */
+#page-cost .v56-kpi-toggle { cursor: pointer; transition: all .2s; user-select: none; }
+#page-cost .v56-kpi-toggle:hover { box-shadow: 0 4px 12px rgba(0,0,0,.10); transform: translateY(-1px); }
+#page-cost .v56-kpi-toggle.active { border-color: var(--v56-blue); box-shadow: 0 0 0 2px var(--v56-blue-soft); }
+#page-cost .v56-kpi-arrow { font-size: 10px; color: var(--v56-muted); margin-left: 4px; }
+#page-cost .v56-collapse-section { margin-bottom: 16px; }
+#page-cost .v56-collapse-toggle { cursor: pointer; user-select: none; transition: background .15s; }
+#page-cost .v56-collapse-toggle:hover { background: var(--v56-blue-soft); }
+#page-cost .v56-collapse-icon { font-size: 12px; color: var(--v56-muted); transition: transform .3s; }
+#page-cost .v56-collapse-section:not(.collapsed) .v56-collapse-icon { transform: rotate(180deg); }
+#page-cost .v56-collapse-body { padding: 16px; }
+#page-cost .v56-collapse-section.collapsed .v56-collapse-body { display: none; }
+
 #page-cost .v56-legend { display: flex; gap: 12px; font-size: 11px; color: var(--v56-muted); flex-wrap: wrap; }
 #page-cost .v56-legend span { display: inline-flex; gap: 5px; align-items: center; }
 #page-cost .v56-dot { width: 9px; height: 9px; border-radius: 99px; display: inline-block; }
