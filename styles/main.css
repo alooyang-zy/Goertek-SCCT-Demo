@@ -493,42 +493,48 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .inv-pill.orange{background:#fbf4e8;border-color:#ecdcb5;color:#c69352}
 .inv-pill.red{background:#fdf1f1;border-color:#efcdcd;color:#c86767}
 
-/* ═══ 全链路库存拓扑地图 ═══ */
-.inv-topo-board{padding:8px 12px 12px;overflow-x:auto}
-.inv-topo-flow{display:flex;align-items:flex-start;gap:0;min-width:1100px}
-.inv-topo-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;padding:0 4px}
-.inv-topo-col:last-child{flex:0.9}
+/* ═══ 全链路库存网络拓扑图 ═══ */
+.inv-topo-board{padding:8px 0 0;overflow-x:auto}
+.inv-nw-canvas{position:relative;min-width:1100px;margin:0 auto;overflow:visible}
+.inv-nw-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.inv-nw-svg path{fill:none;stroke-width:2;stroke-linecap:round}
+.inv-nw-main{stroke:#cbd5e1;stroke-width:3;stroke-dasharray:8 3}
+.inv-nw-branch{stroke:#e2e8f0;stroke-width:1.5;stroke-dasharray:4 3;opacity:0.7}
+.inv-nw-pkt{filter:url(#inv-glow)}
+.inv-nw-pkt-0{fill:#2f6fa9;animation:pktPulse 2s infinite}
+.inv-nw-pkt-1{fill:#4f8f64;animation:pktPulse 2s 0.5s infinite}
+.inv-nw-pkt-2{fill:#b78434;animation:pktPulse 2s 1s infinite}
+.inv-nw-pkt-3{fill:#9a6b2f;animation:pktPulse 2s 1.5s infinite}
+.inv-nw-pkt-b{fill:#94a3b8;animation:pktPulse 3s infinite}
+@keyframes pktPulse{0%,100%{opacity:.85}50%{opacity:.25}}
 
-/* L1 节点卡片 */
-.inv-topo-l1{width:100%;padding:16px 12px 12px;border-radius:16px;border:2px solid #e0e8ef;
-  background:linear-gradient(180deg,#fff 0%,#f9fbfd 100%);cursor:pointer;transition:all .2s;
-  position:relative;overflow:hidden;text-align:center;
-  box-shadow:0 4px 16px rgba(18,45,74,0.06)}
-.inv-topo-l1::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--tc,#2f6fa9)}
-.inv-topo-l1:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(18,45,74,0.1);border-color:var(--tc,#2f6fa9)}
-.inv-topo-l1.selected{border-color:var(--tc);box-shadow:0 12px 32px rgba(18,45,74,0.14),0 0 0 3px rgba(31,111,171,0.06)}
-.inv-topo-l1-label{font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px}
-.inv-topo-l1-val{font-size:26px;font-weight:900;color:var(--tc,#2f6fa9);line-height:1.1}
-.inv-topo-l1-meta{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:6px}
-.inv-topo-l1-meta span{font-size:10px;color:var(--text-sec);background:rgba(0,0,0,0.03);padding:2px 8px;border-radius:10px;font-weight:600}
-.inv-topo-l1-tags{font-size:9px;color:var(--text-muted);margin-top:4px;line-height:1.3}
+/* 节点卡片 */
+.inv-nw-node{position:absolute;border-radius:14px;border:2px solid #e2e8f0;
+  background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);cursor:pointer;
+  transition:all .2s ease;box-shadow:0 4px 16px rgba(18,45,74,0.06);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:visible}
+.inv-nw-node:hover{transform:scale(1.08);z-index:10;box-shadow:0 8px 28px rgba(18,45,74,0.14)}
+.inv-nw-node.selected{border-color:var(--nc);box-shadow:0 12px 32px rgba(18,45,74,0.16),0 0 0 4px rgba(var(--nc-rgb),.1)}
+.inv-nw-l1{border-top:4px solid var(--nc);border-radius:12px 12px 14px 14px}
+.inv-nw-l2{border-radius:10px}
+.inv-nw-ico{width:22px;height:22px;border-radius:6px;color:#fff;font-size:11px;font-weight:900;display:grid;place-items:center;margin-bottom:3px}
+.inv-nw-title{font-size:12px;font-weight:800;color:#1e293b;text-align:center;line-height:1.2}
+.inv-nw-val{font-size:16px;font-weight:900;color:var(--nc)}
+.inv-nw-l2-name{font-size:11px;font-weight:700;color:#334155;text-align:center;line-height:1.1;margin-bottom:1px}
+.inv-nw-l2-val{font-size:13px;font-weight:800;color:var(--nc)}
+.inv-nw-risk{font-size:9px;color:var(--danger);background:var(--danger-bg);padding:1px 5px;border-radius:6px;font-weight:700}
+.inv-nw-label{position:absolute;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.7;text-align:center;width:72px}
 
-/* L2 子节点列表 */
-.inv-topo-l2-list{width:100%;display:flex;flex-direction:column;gap:4px;margin-top:2px}
-.inv-topo-l2{width:100%;padding:8px 10px;border-radius:10px;border:1px solid #e8eef4;
-  background:#fff;cursor:pointer;transition:all .15s;position:relative;
-  border-left:3px solid var(--tc,#2f6fa9)}
-.inv-topo-l2:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(18,45,74,0.06);border-color:var(--tc)}
-.inv-topo-l2.selected{background:#f2f9fc;border-color:var(--tc);box-shadow:0 6px 18px rgba(18,45,74,0.08)}
-.inv-topo-l2-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px}
-.inv-topo-l2-val{font-size:14px;font-weight:800;color:var(--tc,#2f6fa9)}
-.inv-topo-l2-meta{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:10px;color:var(--text-sec)}
-.inv-topo-risk{color:var(--danger);font-weight:700;background:var(--danger-bg);padding:1px 6px;border-radius:8px;font-size:9px}
-
-/* 流程箭头 */
-.inv-topo-arrow{position:absolute;right:-10px;top:50%;transform:translateY(-50%);
-  font-size:20px;color:#b8ccd8;font-weight:900;z-index:1;line-height:1;
-  filter:drop-shadow(0 1px 2px rgba(18,45,74,0.1))}
+/* 节点指标面板 */
+.inv-nw-metrics{padding:8px 16px 12px;margin-top:4px;border-top:1px solid var(--border-light)}
+.inv-nw-mt-head{font-size:12px;color:var(--text-sec);margin-bottom:8px}
+.inv-nw-mt-head b{color:var(--text)}
+.inv-nw-rd{color:var(--danger);font-weight:700}
+.inv-nw-mt-grid{display:flex;gap:16px;flex-wrap:wrap}
+.inv-nw-mt-item{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:8px;background:var(--bg);border:1px solid var(--border-light)}
+.inv-nw-mt-l{font-size:11px;color:var(--text-muted);font-weight:600}
+.inv-nw-mt-v{font-size:13px;font-weight:800;color:var(--text)}
 .inv-pill.purple{background:#f2f1fb;border-color:#ddd6ee;color:#7d79a8}
 .inv-pill.yellow{background:#fff9e8;border-color:#ecd99b;color:#caa33f}
 .inv-pill.blue{background:#edf4f8;border-color:#bed0db;color:#537d92}

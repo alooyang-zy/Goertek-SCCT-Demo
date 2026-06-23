@@ -310,9 +310,24 @@ function buildChainForProject(p){
   return { l1Ids:l1Ids, nodesById:nodesById };
 }
 
-// ═══════════════ 拓扑地图渲染 ═══════════════
+// ═══════════════ 网络拓扑图渲染 (SVG连线+动态粒子流) ═══════════════
 var _topoColors = {
   supplier:'#2f6fa9', raw:'#4f8f64', wip:'#b78434', finished:'#9a6b2f'
+};
+var _TOPO_W = 1260, _TOPO_H = 360;
+// L1节点圆心位置 (x, y) — 4列均匀分布
+var _L1_POS = [
+  {x:155, y:120},   // supplier
+  {x:475, y:120},   // raw
+  {x:795, y:120},   // wip
+  {x:1115, y:120}   // finished
+];
+// L2子节点偏移布局 (相对于L1中心, dx偏移, y起始)
+var _L2_OFFSETS = {
+  2: [{dx:0,dy:95}],   // 2个子节点
+  3: [{dx:-70,dy:95},{dx:70,dy:95},{dx:0,dy:155}],
+  4: [{dx:-80,dy:95},{dx:80,dy:95},{dx:-40,dy:160},{dx:40,dy:160}],
+  5: [{dx:-90,dy:95},{dx:90,dy:95},{dx:-60,dy:160},{dx:60,dy:160},{dx:0,dy:220}]
 };
 
 function invRenderChain(p){
@@ -321,57 +336,78 @@ function invRenderChain(p){
   var layout = document.getElementById('invChainLayout');
   if(!layout) return;
 
-  // 5个L1节点按供应链顺序排列
   var l1Order = ['supplier','raw','wip','finished'];
   var selectedParentId = selectedNode.level==='L1' ? selectedNode.id : selectedNode.parentId;
 
-  var cols = l1Order.map(function(pid, colIdx){
+  // ── 生成所有节点数据 ──
+  var allNodes = [];
+  l1Order.forEach(function(pid, colIdx){
     var parent = chain.nodesById[pid];
-    var l1Sel = selectedParentId===pid;
-    var color = _topoColors[pid] || '#2f6fa9';
+    var l1p = _L1_POS[colIdx];
+    allNodes.push({type:'L1', id:parent.id, x:l1p.x, y:l1p.y, parent:parent, color:_topoColors[pid], sel:selectedParentId===pid});
     var children = parent.children.map(function(cid){return chain.nodesById[cid];});
+    var offsets = _L2_OFFSETS[children.length] || _L2_OFFSETS[4];
+    children.forEach(function(child, i){
+      var off = offsets[i] || offsets[0];
+      allNodes.push({type:'L2', id:child.id, x:l1p.x+off.dx, y:l1p.y+off.dy, parent:child, color:_topoColors[pid], sel:_selectedNodeId===child.id, l1x:l1p.x, l1y:l1p.y, l1id:pid});
+    });
+  });
 
-    // L1 卡片
-    var l1Html = '<div class="inv-topo-l1 '+(l1Sel?'selected':'')+'" data-inv-node="'+parent.id+'" style="--tc:'+color+'">'
-      +'<div class="inv-topo-l1-label">'+parent.title+'</div>'
-      +'<div class="inv-topo-l1-val">'+formatWan(parent.amount)+' 万</div>'
-      +'<div class="inv-topo-l1-meta">'
-        +'<span>'+metricValueForNode(parent.qtyLabel, parent.amount, parent.materials)+'</span>'
-        +'<span>'+metricValueForNode(parent.timeLabel, parent.amount, parent.materials)+'</span>'
-        +'<span>'+metricValueForNode(parent.riskLabel, parent.amount, parent.materials)+'</span>'
-      +'</div>'
-      +'<div class="inv-topo-l1-tags">'+parent.qtyLabel+' | '+parent.timeLabel+' | '+parent.riskLabel+'</div>'
-      +'</div>';
+  // ── SVG连线 (L1之间主干流 + L1→L2分支) ──
+  var svgPaths = '';
+  var particles = '';
+  // L1→L1 主干流线
+  for(var i=0; i<_L1_POS.length-1; i++){
+    var aL = _L1_POS[i], aR = _L1_POS[i+1];
+    var d = 'M'+(aL.x+52)+','+aL.y+' C'+(aL.x+180)+','+aL.y+' '+(aR.x-180)+','+aR.y+' '+(aR.x-52)+','+aR.y;
+    svgPaths += '<path d="'+d+'" class="inv-nw-main"/>';
+    // 4个粒子
+    for(var p=0; p<4; p++){
+      particles += '<circle r="3" class="inv-nw-pkt inv-nw-pkt-'+(i%4)+'"><animateMotion dur="'+(2.5+Math.random())+'s" begin="'+(p*0.7)+'s" repeatCount="indefinite" path="'+d+'"/></circle>';
+    }
+  }
+  // L1→L2 分支线
+  allNodes.forEach(function(n){
+    if(n.type==='L2'){
+      var d2 = 'M'+n.l1x+','+(n.l1y+32)+' Q'+n.l1x+','+(n.y-20)+' '+n.x+','+(n.y-22);
+      svgPaths += '<path d="'+d2+'" class="inv-nw-branch"/>';
+      particles += '<circle r="2" class="inv-nw-pkt inv-nw-pkt-b"><animateMotion dur="2s" begin="'+Math.random()+'s" repeatCount="indefinite" path="'+d2+'"/></circle>';
+    }
+  });
 
-    // L2 子卡片
-    var l2Html = children.map(function(child){
-      var sel = _selectedNodeId===child.id;
-      var riskCount = child.materials.filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});}).length;
-      return '<div class="inv-topo-l2 '+(sel?'selected':'')+'" data-inv-node="'+child.id+'" style="--tc:'+color+'">'
-        +'<div class="inv-topo-l2-name">'+child.title+'</div>'
-        +'<div class="inv-topo-l2-val">'+formatWan(child.amount)+' 万</div>'
-        +'<div class="inv-topo-l2-meta">'
-          +(riskCount>0?'<span class="inv-topo-risk">⚠'+riskCount+'</span>':'')
-          +'<span>'+metricValueForNode(child.timeLabel, child.amount, child.materials)+'</span>'
-        +'</div>'
+  // ── HTML 节点 ──
+  var nodesHtml = allNodes.map(function(n, ni){
+    var cls = 'inv-nw-node '+(n.type==='L1'?'inv-nw-l1':'inv-nw-l2')+(n.sel?' selected':'');
+    var pad = n.type==='L1'?14:8, w = n.type==='L1'?104:90, h = n.type==='L1'?64:40;
+    var l = n.x-w/2, t = n.y-h/2;
+    var inner;
+    if(n.type==='L1'){
+      inner = '<div class="inv-nw-ico" style="background:'+n.color+'">'+n.parent.id.charAt(0).toUpperCase()+'</div>'
+        +'<div class="inv-nw-title">'+n.parent.title+'</div>'
+        +'<div class="inv-nw-val">'+formatWan(n.parent.amount)+'万</div>';
+    } else {
+      var riskCount = n.parent.materials.filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});}).length;
+      inner = '<div class="inv-nw-l2-name">'+n.parent.title+'</div>'
+        +'<div class="inv-nw-l2-val">'+formatWan(n.parent.amount)+'万'
+          +(riskCount>0?' <span class="inv-nw-risk">⚠'+riskCount+'</span>':'')
         +'</div>';
-    }).join('');
-
-    // 流程箭头（最后一列不需要）
-    var arrow = colIdx < l1Order.length-1
-      ? '<div class="inv-topo-arrow">→</div>'
-      : '';
-
-    return '<div class="inv-topo-col">'
-      + l1Html
-      + '<div class="inv-topo-l2-list">' + l2Html + '</div>'
-      + arrow
-      + '</div>';
+    }
+    return '<div class="'+cls+'" data-inv-node="'+n.id+'" style="left:'+l+'px;top:'+t+'px;width:'+w+'px;height:'+h+'px;--nc:'+n.color+'">'+inner+'</div>';
   }).join('');
 
-  layout.innerHTML = '<div class="inv-topo-flow">' + cols + '</div>';
+  // ── 标签 ──
+  var labelsHtml = _L1_POS.map(function(pos, i){
+    return '<div class="inv-nw-label" style="left:'+(pos.x-36)+'px;top:'+(pos.y+38)+'px;color:'+_topoColors[l1Order[i]]+'">'+l1Order[i]+'</div>';
+  }).join('');
 
-  // 绑定点击事件
+  layout.innerHTML = '<div class="inv-nw-canvas" style="width:'+_TOPO_W+'px;height:'+_TOPO_H+'px;">'
+    +'<svg class="inv-nw-svg" viewBox="0 0 '+_TOPO_W+' '+_TOPO_H+'"><defs><filter id="inv-glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
+    +svgPaths+particles+'</svg>'
+    +nodesHtml+labelsHtml
+    +'</div>'
+    +'<div class="inv-nw-metrics" id="invNwMetrics"></div>';
+
+  // 点击事件
   layout.querySelectorAll('[data-inv-node]').forEach(function(el){
     el.onclick = function(){
       _selectedNodeId = el.dataset.invNode;
@@ -379,6 +415,25 @@ function invRenderChain(p){
       invRenderMaterials(p);
     };
   });
+
+  // 更新指标面板
+  updateNwMetrics(chain, selectedNode);
+}
+
+function updateNwMetrics(chain, node){
+  var el = document.getElementById('invNwMetrics');
+  if(!el) return;
+  var metrics = [
+    {label:node.qtyLabel||node.title, value:metricValueForNode(node.qtyLabel||e.amountLabel, node.amount, node.materials||[])},
+    {label:node.timeLabel||'金额', value:metricValueForNode(node.timeLabel||'锁定金额合计', node.amount, node.materials||[])},
+    {label:node.riskLabel||'风险指标', value:metricValueForNode(node.riskLabel||'锁定量覆盖率', node.amount, node.materials||[])}
+  ];
+  var riskCount = (node.materials||[]).filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});}).length;
+  var totalCount = (node.materials||[]).length;
+  el.innerHTML = '<div class=\"inv-nw-mt-head\">📊 当前节点：<b>'+node.title+'</b> · '+formatWan(node.amount)+' 万 · '+(riskCount>0?'<span class=\"inv-nw-rd\">⚠'+riskCount+'条高风险</span>':'✓ 无高风险物料')+'</div>'
+    +'<div class=\"inv-nw-mt-grid\">'
+    +metrics.map(function(m){return'<div class=\"inv-nw-mt-item\"><span class=\"inv-nw-mt-l\">'+m.label+'</span><span class=\"inv-nw-mt-v\">'+m.value+'</span></div>';}).join('')
+    +'</div>';
 }
 
 function invRenderMaterials(p){
