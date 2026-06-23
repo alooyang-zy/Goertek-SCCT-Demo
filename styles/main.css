@@ -1216,6 +1216,54 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .rr-ed-value.aux{font-size:9px;line-height:1.6}
 .rr-ed-value.health{color:var(--warning);font-size:9px}
 
+/* ── 敏捷韧性作战指挥面板 (方案一·三区) ── */
+.rr-command-panel{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;background:linear-gradient(180deg,var(--card),var(--border-light))}
+.rr-cp-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(90deg,var(--primary-bg),transparent);font-size:13px;font-weight:700;color:var(--primary);border-bottom:1px solid var(--border)}
+.rr-cp-header i{font-size:14px}
+.rr-cp-header-sub{font-size:10px;font-weight:400;color:var(--text-muted);margin-left:auto}
+.rr-cp-top{display:grid;grid-template-columns:340px 1fr;gap:0;border-bottom:1px solid var(--border)}
+@media(max-width:1100px){.rr-cp-top{grid-template-columns:1fr}}
+.rr-cp-radar-wrap{padding:12px 16px;border-right:1px solid var(--border)}
+@media(max-width:1100px){.rr-cp-radar-wrap{border-right:none;border-bottom:1px solid var(--border)}}
+.rr-cp-subtitle{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px}
+.rr-cp-subtitle i{color:var(--primary)}
+.rr-cp-radar-canvas{position:relative;height:230px;width:100%}
+.rr-cp-summary{display:flex;align-items:center;gap:14px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.rr-cp-ov{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.rr-cp-ov-val{font-size:30px;font-weight:800;line-height:1}
+.rr-cp-ov-lbl{font-size:9px;color:var(--text-muted);margin-top:2px}
+.rr-cp-ov-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;margin-top:4px}
+.rr-cp-split{flex:1;display:flex;flex-direction:column;gap:8px}
+.rr-cp-split>div{display:flex;flex-direction:column;gap:3px}
+.rr-cp-split>div>span{font-size:11px;font-weight:600}
+.rr-cp-mini-bar{height:6px;background:var(--border-light);border-radius:3px;overflow:hidden}
+.rr-cp-mini-bar>span{display:block;height:100%;border-radius:3px;transition:width .6s}
+.rr-cp-res-wrap{padding:12px 16px}
+.rr-cp-res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:768px){.rr-cp-res-grid{grid-template-columns:repeat(2,1fr)}}
+.rr-cp-res-card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius-sm);text-align:center}
+.rr-cp-res-card:hover{border-color:var(--primary-light);box-shadow:var(--shadow)}
+.rr-cp-res-icon{font-size:18px}
+.rr-cp-res-val{font-size:17px;font-weight:800;line-height:1.2}
+.rr-cp-res-lbl{font-size:10px;font-weight:600;color:var(--text-sec)}
+.rr-cp-res-sub{font-size:9px;color:var(--text-muted)}
+.rr-cp-rto{display:flex;align-items:center;gap:8px;margin-top:10px;padding:6px 10px;background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius-sm)}
+.rr-cp-rto-bar{flex:1;height:8px;background:var(--border-light);border-radius:4px;overflow:hidden}
+.rr-cp-rto-bar>span{display:block;height:100%;border-radius:4px;transition:width .6s}
+.rr-cp-tl-wrap{padding:12px 16px}
+.rr-cp-sla{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:auto}
+.rr-cp-tl-bar{display:flex;gap:2px;height:54px;border-radius:var(--radius-sm);overflow:hidden;background:var(--border-light)}
+.rr-cp-tl-seg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--card);border-right:1px solid var(--border-light);min-width:0;padding:4px 2px;transition:flex .3s}
+.rr-cp-tl-seg:last-child{border-right:none}
+.rr-cp-tl-seg-icon{font-size:13px}
+.rr-cp-tl-seg-name{font-size:10px;font-weight:700;color:var(--text);white-space:nowrap}
+.rr-cp-tl-seg-time{font-size:11px;font-weight:800}
+.rr-cp-tl-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text-muted);font-weight:600}
+.rr-cp-tl-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.rr-cp-tl-leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-sec)}
+.rr-cp-tl-leg .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rr-archive-sep{display:flex;align-items:center;gap:8px;padding:8px 14px;margin:4px 0 8px;background:var(--border-light);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--text-sec);border-left:3px solid var(--primary)}
+
 /* ════════════════════════════════════════════════
    12. ClosedLoop — 事件闭环管理 (六步流程·工单追踪)
    ════════════════════════════════════════════════ */

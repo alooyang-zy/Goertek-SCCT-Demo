@@ -82,6 +82,36 @@ var RISK_STUB = function(code,title,domain,cat,level,desc,impact){
   var lastDates=['2026-05-22','2026-05-18','2026-05-10','2026-04-28','2026-04-15','2026-03-20'];
   var lastResults=['正常关闭','升级处置','仍在跟进','正常关闭','正常关闭','升级处置'];
 
+  // 敏捷韧性量化 (Agility & Resilience) — 基于风险等级差异化生成
+  var _lvlF = level==='极高'?0.62:level==='高'?0.78:0.92;
+  var agility = {
+    mttd:       Math.min(100, Math.round((62 + _rng(31)*26) * (level==='极高'?0.82:1.0))),
+    decision:   Math.min(100, Math.round((48 + _rng(32)*32) * _lvlF + 12)),
+    execution:  Math.min(100, Math.round((46 + _rng(33)*30) * _lvlF + 14)),
+    buffer:     Math.min(100, Math.round((34 + _rng(34)*38) * _lvlF + 8)),
+    absorption: Math.min(100, Math.round((40 + _rng(35)*35) * _lvlF + 10)),
+    recovery:   Math.min(100, Math.round((46 + _rng(36)*32) * _lvlF + 16))
+  };
+  // 响应时间线 (累计小时): 检测→评估→决策→执行→恢复→复盘
+  var tlBase = level==='极高'?[0.5,2,4,8,20,56]:level==='高'?[1,3,6,12,28,72]:[2,4,8,18,48,96];
+  var timeline = {
+    detect: tlBase[0], assess: tlBase[1], decide: tlBase[2],
+    execute: tlBase[3], recover: tlBase[4], review: tlBase[5],
+    slaHours: level==='极高'?24:level==='高'?48:96
+  };
+  // 韧性资源池
+  var resilience = {
+    altSuppliers: 1+Math.floor(_rng(37)*4),
+    altLogistics: 1+Math.floor(_rng(38)*3),
+    safetyStockDays: 7+Math.floor(_rng(39)*22),
+    capacityElasticity: 8+Math.floor(_rng(40)*32),
+    trigger12m: triggerCount,
+    successCount: Math.max(1, Math.round(triggerCount*(0.55+_rng(41)*0.35))),
+    avgRecoveryH: 10+Math.floor(_rng(42)*38),
+    rtoTarget: level==='极高'?'24h':level==='高'?'48h':'72h',
+    rtoAchieve: Math.round(72+_rng(43)*23)
+  };
+
   return {
     code:code,title:title,domain:domain,cat:cat,level:level,desc:desc,impact:impact,
     // 量化评估
@@ -117,6 +147,8 @@ var RISK_STUB = function(code,title,domain,cat,level,desc,impact){
     lastUpdate:'2026-0'+(Math.floor(_rng(24)*5)+1)+'-'+String(Math.floor(_rng(25)*28)+1).padStart(2,'0'),
     nextReview:'2026-0'+(Math.floor(_rng(26)*6)+6)+'-'+String(Math.floor(_rng(27)*28)+1).padStart(2,'0'),
     riskStatus:'生效',
+    // 敏捷韧性
+    agility:agility, timeline:timeline, resilience:resilience,
 
     // 事件
     events:events,
@@ -167,6 +199,7 @@ var currentRiskCode='';
 var _rrTab='detail';
 var _expandedEvent=null;
 var _domState={0:true,1:true,2:true},_catState={};
+var _agilityChart=null;
 
 // ===================== Entry =====================
 function initPage_risk(){
@@ -249,6 +282,113 @@ window._rrToggleEvent=function(evtId){
   renderDetail(currentRiskCode);
 };
 
+// ===================== 敏捷韧性作战指挥面板 (方案一·三区) =====================
+function renderCommandPanel(r){
+  var a=r.agility, tl=r.timeline, rs=r.resilience;
+  var avgAgility = Math.round((a.mttd+a.decision+a.execution)/3);
+  var avgResilience = Math.round((a.buffer+a.absorption+a.recovery)/3);
+  var overall = Math.round((avgAgility+avgResilience)/2);
+  var ovColor = overall>=70?'#22c55e':overall>=50?'#f59e0b':'#ef4444';
+  var ovLabel = overall>=75?'卓越':overall>=60?'良好':overall>=45?'待提升':'脆弱';
+
+  // ① 敏捷韧性六维雷达 + 综合总评
+  var radarHtml = '<div class="rr-cp-radar-wrap">'+
+    '<div class="rr-cp-subtitle"><i class="fas fa-tower-broadcast"></i> 敏捷韧性六维雷达</div>'+
+    '<div class="rr-cp-radar-canvas"><canvas id="rrAgilityCanvas"></canvas></div>'+
+    '<div class="rr-cp-summary">'+
+      '<div class="rr-cp-ov"><span class="rr-cp-ov-val" style="color:'+ovColor+'">'+overall+'</span><span class="rr-cp-ov-lbl">综合韧性指数</span><span class="rr-cp-ov-tag" style="background:'+ovColor+'22;color:'+ovColor+'">'+ovLabel+'</span></div>'+
+      '<div class="rr-cp-split"><div><span style="color:#3b82f6">⚡ 敏捷度 '+avgAgility+'</span><div class="rr-cp-mini-bar"><span style="width:'+avgAgility+'%;background:#3b82f6"></span></div></div>'+
+      '<div><span style="color:#22c55e">🛡️ 韧性度 '+avgResilience+'</span><div class="rr-cp-mini-bar"><span style="width:'+avgResilience+'%;background:#22c55e"></span></div></div></div>'+
+    '</div>'+
+  '</div>';
+
+  // ③ 韧性资源面板
+  var resCards=[
+    {icon:'🏭',val:rs.altSuppliers+'家',lbl:'替代供应商',sub:'备选产能池',c:'#3b82f6'},
+    {icon:'🚛',val:rs.altLogistics+'条',lbl:'替代物流路线',sub:'多通道冗余',c:'#06b6d4'},
+    {icon:'📦',val:rs.safetyStockDays+'天',lbl:'安全库存覆盖',sub:'缓冲储备',c:'#22c55e'},
+    {icon:'📈',val:'+'+rs.capacityElasticity+'%',lbl:'产能弹性',sub:'柔性余量',c:'#8b5cf6'},
+    {icon:'🔄',val:rs.successCount+'/'+rs.trigger12m+'次',lbl:'12月恢复记录',sub:'成功率 '+Math.round(rs.successCount/Math.max(1,rs.trigger12m)*100)+'%',c:'#22c55e'},
+    {icon:'⏱️',val:rs.avgRecoveryH+'h',lbl:'平均恢复时长',sub:'RTO目标 '+rs.rtoTarget,c:'#f59e0b'}
+  ];
+  var rtoColor = rs.rtoAchieve>=85?'#22c55e':rs.rtoAchieve>=70?'#f59e0b':'#ef4444';
+  var resHtml = '<div class="rr-cp-res-wrap">'+
+    '<div class="rr-cp-subtitle"><i class="fas fa-boxes-stacked"></i> 韧性资源面板</div>'+
+    '<div class="rr-cp-res-grid">'+resCards.map(function(c){
+      return '<div class="rr-cp-res-card"><span class="rr-cp-res-icon">'+c.icon+'</span>'+
+        '<span class="rr-cp-res-val" style="color:'+c.c+'">'+c.val+'</span>'+
+        '<span class="rr-cp-res-lbl">'+c.lbl+'</span>'+
+        '<span class="rr-cp-res-sub">'+c.sub+'</span></div>';
+    }).join('')+'</div>'+
+    '<div class="rr-cp-rto"><span style="font-size:11px;color:var(--text-muted);white-space:nowrap">RTO达成率</span><div class="rr-cp-rto-bar"><span style="width:'+rs.rtoAchieve+'%;background:'+rtoColor+'"></span></div><span style="color:'+rtoColor+';font-weight:700;font-size:12px">'+rs.rtoAchieve+'%</span></div>'+
+  '</div>';
+
+  // ② 响应时间线
+  var stages=[
+    {n:'检测',dur:tl.detect,icon:'🔍',desc:'MTTD 感知',c:'#3b82f6'},
+    {n:'评估',dur:tl.assess-tl.detect,icon:'📋',desc:'影响研判',c:'#06b6d4'},
+    {n:'决策',dur:tl.decide-tl.assess,icon:'⚡',desc:'启动预案',c:'#f59e0b'},
+    {n:'执行',dur:tl.execute-tl.decide,icon:'🔧',desc:'措施落地',c:'#6366f1'},
+    {n:'恢复',dur:tl.recover-tl.execute,icon:'✅',desc:'业务回稳',c:'#22c55e'},
+    {n:'复盘',dur:tl.review-tl.recover,icon:'📚',desc:'知识入库',c:'#94a3b8'}
+  ];
+  var totalT=tl.review;
+  var slaOk = tl.recover<=tl.slaHours;
+  var timelineHtml = '<div class="rr-cp-tl-wrap">'+
+    '<div class="rr-cp-subtitle"><i class="fas fa-route"></i> 响应时间线 — MTTD → 恢复 → 复盘 '+
+      '<span class="rr-cp-sla" style="background:'+(slaOk?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)')+';color:'+(slaOk?'#22c55e':'#ef4444')+'">SLA '+tl.slaHours+'h '+(slaOk?'达标 ✓':'超时 ✗')+'</span></div>'+
+    '<div class="rr-cp-tl-bar">'+stages.map(function(s,i){
+      var pct=Math.max(6,Math.round(s.dur/totalT*100));
+      return '<div class="rr-cp-tl-seg" style="flex:'+pct+';border-top:3px solid '+s.c+'" title="'+s.n+': '+s.dur+'h">'+
+        '<span class="rr-cp-tl-seg-icon">'+s.icon+'</span>'+
+        '<span class="rr-cp-tl-seg-name">'+s.n+'</span>'+
+        '<span class="rr-cp-tl-seg-time" style="color:'+s.c+'">'+s.dur+'h</span>'+
+      '</div>';
+    }).join('')+'</div>'+
+    '<div class="rr-cp-tl-axis"><span>0h</span><span>'+tl.detect+'h</span><span>'+tl.recover+'h (恢复点)</span><span>'+totalT+'h (闭环)</span></div>'+
+    '<div class="rr-cp-tl-legend">'+stages.map(function(s){
+      return '<span class="rr-cp-tl-leg"><span class="dot" style="background:'+s.c+'"></span>'+s.n+' · '+s.desc+'</span>';
+    }).join('')+'</div>'+
+  '</div>';
+
+  return '<div class="rr-command-panel">'+
+    '<div class="rr-cp-header"><i class="fas fa-shield-halved"></i> 敏捷韧性作战指挥视图 <span class="rr-cp-header-sub">敏捷 = 多快感知与响应 · 韧性 = 多强缓冲与恢复</span></div>'+
+    '<div class="rr-cp-top">'+radarHtml+resHtml+'</div>'+
+    timelineHtml+
+  '</div>';
+}
+
+function drawAgilityRadar(r){
+  var canvas=document.getElementById('rrAgilityCanvas');
+  if(!canvas||typeof Chart==='undefined')return;
+  if(_agilityChart){try{_agilityChart.destroy();}catch(e){}_agilityChart=null;}
+  var a=r.agility;
+  _agilityChart=new Chart(canvas.getContext('2d'),{
+    type:'radar',
+    data:{
+      labels:['感知速度\nMTTD','决策速度','执行速度','缓冲冗余','吸收能力','恢复能力'],
+      datasets:[
+        {label:'行业基准',data:[60,55,50,55,50,58],
+          backgroundColor:'rgba(148,163,184,0.10)',borderColor:'rgba(148,163,184,0.6)',
+          borderWidth:1,borderDash:[4,4],pointRadius:0,fill:true},
+        {label:'当前评分',data:[a.mttd,a.decision,a.execution,a.buffer,a.absorption,a.recovery],
+          backgroundColor:'rgba(59,130,246,0.20)',borderColor:'#3b82f6',
+          borderWidth:2,pointBackgroundColor:'#3b82f6',pointRadius:3,pointHoverRadius:5,fill:true}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{font:{size:10},boxWidth:12,padding:8}}},
+      scales:{r:{
+        min:0,max:100,ticks:{stepSize:25,font:{size:8},backdropColor:'transparent',color:'#94a3b8'},
+        grid:{color:'rgba(148,163,184,0.2)'},
+        angleLines:{color:'rgba(148,163,184,0.2)'},
+        pointLabels:{font:{size:10},color:'#64748b'}
+      }}
+    }
+  });
+}
+
 // ===================== Render Detail =====================
 function renderDetail(code){
   var r=RISKS[code];if(!r)return;
@@ -309,6 +449,10 @@ function renderDetail(code){
       '<div class="rr-hero-item"><span class="rr-hero-label">Owner</span><span class="rr-hero-val">'+r.owner+'</span></div>'+
       '<div class="rr-hero-item"><span class="rr-hero-label">事件预警</span><span class="rr-hero-val" style="font-size:11px"><span style="color:var(--danger)">'+redEmoji+redCnt+'</span> <span style="color:var(--warning)">'+yelEmoji+yelCnt+'</span> <span style="color:var(--success)">'+grnEmoji+grnCnt+'</span></span></div>'+
     '</div>'+
+    // 三区指挥面板 (敏捷韧性作战视图)
+    renderCommandPanel(r)+
+    // 风险档案详情
+    '<div class="rr-archive-sep"><i class="fas fa-folder-open"></i> 风险档案详情 <span style="font-size:10px;color:var(--text-muted);font-weight:400">（基础档案 · 触发监控 · 责任升级 · 应对措施 · 合规维护）</span></div>'+
     // 双列
     '<div class="rr-detail-grid">'+
       '<div class="rr-detail-col">'+
@@ -347,6 +491,7 @@ function renderDetail(code){
         )+
       '</div>'+
     '</div>';
+  drawAgilityRadar(r);
 }
 
 // Tab切换
