@@ -493,6 +493,50 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .inv-pill.orange{background:#fbf4e8;border-color:#ecdcb5;color:#c69352}
 .inv-pill.red{background:#fdf1f1;border-color:#efcdcd;color:#c86767}
 
+/* ═══ 项目meta (融合到筛选栏) ═══ */
+.inv-proj-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--text-sec);margin-left:8px}
+.inv-pm-item{padding:2px 8px;background:var(--card);border:1px solid var(--border-light);border-radius:6px;font-weight:600}
+.inv-pm-item b{color:var(--text);font-weight:800}
+.inv-pm-sep{color:var(--text-muted);opacity:.5}
+.inv-pm-judge{padding:2px 10px;border-radius:10px;font-weight:800;font-size:11px}
+.inv-pm-judge.green{background:var(--success-bg);color:var(--success)}
+.inv-pm-judge.orange{background:var(--warning-bg);color:var(--warning)}
+.inv-pm-judge.red{background:var(--danger-bg);color:var(--danger)}
+
+/* ═══ 风险标签左右布局 ═══ */
+.inv-risk-layout{display:grid;grid-template-columns:260px 1fr;gap:0;min-height:400px}
+.inv-risk-tree{border-right:1px solid var(--border-light);padding:10px 8px;max-height:600px;overflow-y:auto;background:var(--bg)}
+.inv-rt-header{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:4px 8px 8px;border-bottom:1px solid var(--border-light);margin-bottom:6px}
+.inv-rt-all{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text);transition:var(--transition)}
+.inv-rt-all:hover{background:var(--primary-bg)}
+.inv-rt-all.selected{background:var(--primary);color:#fff}
+.inv-rt-all.selected .inv-rt-count{background:rgba(255,255,255,0.3);color:#fff}
+.inv-rt-icon{font-size:14px;flex-shrink:0}
+.inv-rt-name{flex:1}
+.inv-rt-count{padding:1px 8px;background:var(--border-light);border-radius:10px;font-size:10px;font-weight:700;color:var(--text-sec)}
+.inv-rt-cat{margin-top:10px}
+.inv-rt-cat-head{display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:11px;font-weight:800;color:var(--text)}
+.inv-rt-cat-name{flex:1}
+.inv-rt-cat-count{padding:1px 7px;background:var(--border-light);border-radius:8px;font-size:10px;font-weight:700;color:var(--text-sec)}
+.inv-rt-tags{padding-left:6px}
+.inv-rt-tag{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;color:var(--text-sec);transition:var(--transition)}
+.inv-rt-tag:hover{background:var(--card);color:var(--text)}
+.inv-rt-tag.selected{background:var(--primary-bg);color:var(--primary);font-weight:700}
+.inv-rt-tag.selected .inv-rt-tag-count{background:var(--primary);color:#fff}
+.inv-rt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.inv-rt-dot-red{background:#ef4444}
+.inv-rt-dot-purple{background:#7d79a8}
+.inv-rt-dot-orange{background:#d38d3a}
+.inv-rt-dot-cyan{background:#5c9db8}
+.inv-rt-dot-yellow{background:#caa33f}
+.inv-rt-tag-name{flex:1}
+.inv-rt-tag-count{padding:1px 6px;background:var(--border-light);border-radius:8px;font-size:9px;font-weight:700}
+.inv-risk-table{padding:10px 12px;overflow:hidden}
+.inv-risk-table-hint{padding:6px 10px;margin-bottom:8px;background:var(--bg);border:1px solid var(--border-light);border-radius:8px;font-size:11px;color:var(--text-sec)}
+.inv-risk-table-hint b{color:var(--text);font-weight:800}
+.inv-rt-hint-tag{color:var(--primary);font-weight:700}
+.rt-highlight{box-shadow:0 0 0 2px var(--primary);font-weight:800}
+
 /* ═══ 全链路库存网络拓扑图 ═══ */
 .inv-topo-board{padding:8px 0 0;overflow-x:auto}
 .inv-nw-canvas{position:relative;min-width:1100px;margin:0 auto;overflow:visible}
@@ -531,28 +575,7 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .inv-nw-l2-name{font-size:11px;font-weight:700;color:#334155;text-align:center;line-height:1.1;margin-bottom:1px}
 .inv-nw-l2-val{font-size:13px;font-weight:800;color:var(--nc)}
 .inv-nw-risk{font-size:9px;color:var(--danger);background:var(--danger-bg);padding:1px 5px;border-radius:6px;font-weight:700}
-.inv-nw-label{position:absolute;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.7;text-align:center;width:80px}
-
-/* 节点指标展开面板 */
-.inv-nw-metrics{padding:12px 16px 14px;margin-top:8px;border-top:1px solid var(--border-light);background:var(--bg);border-radius:0 0 12px 12px}
-.inv-nw-mt-head{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-sec);padding:4px 10px;margin-bottom:10px;flex-wrap:wrap}
-.inv-nw-mt-head b{color:var(--text);font-size:14px}
-.inv-nw-mt-icon{font-size:16px}
-.inv-nw-mt-amount{padding:2px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-weight:700;color:var(--text)}
-.inv-nw-rd{color:var(--danger);font-weight:700;background:var(--danger-bg);padding:2px 10px;border-radius:10px}
-.inv-nw-ok{color:var(--success);font-weight:700;background:var(--success-bg);padding:2px 10px;border-radius:10px}
-.inv-nw-jump{margin-left:auto;padding:4px 12px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:var(--transition)}
-.inv-nw-jump:hover{background:var(--primary);color:#fff}
-.inv-nw-mt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
-.inv-nw-mt-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--card);border:1px solid var(--border-light)}
-.inv-nw-mt-ico{font-size:18px}
-.inv-nw-mt-l{display:block;font-size:10px;color:var(--text-muted);font-weight:600;margin-bottom:2px}
-.inv-nw-mt-v{display:block;font-size:14px;font-weight:800;color:var(--text)}
-.inv-nw-mt-extra{display:flex;gap:16px;flex-wrap:wrap}
-.inv-nw-mt-tags,.inv-nw-mt-levels{flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:var(--card);border:1px solid var(--border-light);border-radius:10px;min-width:300px}
-.inv-nw-mt-section{font-size:10px;color:var(--text-muted);font-weight:700;margin-right:4px}
-.inv-nw-mt-release{margin-left:auto;font-size:11px;color:var(--text-sec)}
-.inv-nw-mt-release b{color:var(--success);font-size:13px}
+.inv-nw-label{position:absolute;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.7;text-align:center;width:90px}
 .inv-pill.purple{background:#f2f1fb;border-color:#ddd6ee;color:#7d79a8}
 .inv-pill.yellow{background:#fff9e8;border-color:#ecd99b;color:#caa33f}
 .inv-pill.blue{background:#edf4f8;border-color:#bed0db;color:#537d92}

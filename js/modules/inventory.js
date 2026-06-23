@@ -314,20 +314,19 @@ function buildChainForProject(p){
 var _topoColors = {
   supplier:'#2f6fa9', raw:'#4f8f64', wip:'#b78434', finished:'#9a6b2f'
 };
-var _TOPO_W = 1260, _TOPO_H = 360;
-// L1节点圆心位置 (x, y) — 4列均匀分布
+// 拓扑加宽：1260 → 1440，节点框加大
+var _TOPO_W = 1440, _TOPO_H = 380;
 var _L1_POS = [
-  {x:155, y:120},   // supplier
-  {x:475, y:120},   // raw
-  {x:795, y:120},   // wip
-  {x:1115, y:120}   // finished
+  {x:180, y:130},
+  {x:540, y:130},
+  {x:900, y:130},
+  {x:1260, y:130}
 ];
-// L2子节点偏移布局 (相对于L1中心, dx偏移, y起始)
 var _L2_OFFSETS = {
-  2: [{dx:0,dy:95}],   // 2个子节点
-  3: [{dx:-70,dy:95},{dx:70,dy:95},{dx:0,dy:155}],
-  4: [{dx:-80,dy:95},{dx:80,dy:95},{dx:-40,dy:160},{dx:40,dy:160}],
-  5: [{dx:-90,dy:95},{dx:90,dy:95},{dx:-60,dy:160},{dx:60,dy:160},{dx:0,dy:220}]
+  2: [{dx:0,dy:100}],
+  3: [{dx:-80,dy:100},{dx:80,dy:100},{dx:0,dy:165}],
+  4: [{dx:-95,dy:100},{dx:95,dy:100},{dx:-50,dy:170},{dx:50,dy:170}],
+  5: [{dx:-105,dy:100},{dx:105,dy:100},{dx:-70,dy:170},{dx:70,dy:170},{dx:0,dy:235}]
 };
 
 function invRenderChain(p){
@@ -386,7 +385,7 @@ function invRenderChain(p){
   // ── HTML 节点 (L1加呼吸光环，高风险L2加红圈脉冲) ──
   var nodesHtml = allNodes.map(function(n){
     var cls = 'inv-nw-node '+(n.type==='L1'?'inv-nw-l1':'inv-nw-l2')+(n.sel?' selected':'')+(n.riskCount>0?' has-risk':'');
-    var w = n.type==='L1'?108:92, h = n.type==='L1'?66:42;
+    var w = n.type==='L1'?124:104, h = n.type==='L1'?74:48;
     var l = n.x-w/2, t = n.y-h/2;
     var inner;
     if(n.type==='L1'){
@@ -405,7 +404,7 @@ function invRenderChain(p){
 
   // ── L1标签 ──
   var labelsHtml = _L1_POS.map(function(pos, i){
-    return '<div class="inv-nw-label" style="left:'+(pos.x-40)+'px;top:'+(pos.y+40)+'px;color:'+_topoColors[l1Order[i]]+'">'+chain.nodesById[l1Order[i]].title+'</div>';
+    return '<div class="inv-nw-label" style="left:'+(pos.x-45)+'px;top:'+(pos.y+44)+'px;color:'+_topoColors[l1Order[i]]+'">'+chain.nodesById[l1Order[i]].title+'</div>';
   }).join('');
 
   layout.innerHTML = '<div class="inv-nw-canvas" style="width:'+_TOPO_W+'px;height:'+_TOPO_H+'px;">'
@@ -415,81 +414,29 @@ function invRenderChain(p){
     +'</defs>'
     +svgPaths+particles+'</svg>'
     +nodesHtml+labelsHtml
-    +'</div>'
-    +'<div class="inv-nw-metrics" id="invNwMetrics"></div>';
+    +'</div>';
 
-  // 点击事件
+  // 点击事件 — 联动物料风险标签
   layout.querySelectorAll('[data-inv-node]').forEach(function(el){
     el.onclick = function(){
       _selectedNodeId = el.dataset.invNode;
       invRenderChain(p);
       invRenderMaterials(p);
-      // 滚动到物料表
-      var matSection = document.getElementById('invMatTbody');
-      if(matSection && matSection.closest('.inv-section-card')){
-        setTimeout(function(){
-          matSection.closest('.inv-section-card').scrollIntoView({behavior:'smooth', block:'start'});
-        }, 100);
-      }
     };
   });
-
-  // 更新展开指标面板
-  updateNwMetrics(chain, selectedNode);
 }
 
-function updateNwMetrics(chain, node){
-  var el = document.getElementById('invNwMetrics');
-  if(!el) return;
-  var mats = node.materials || [];
-  var riskMats = mats.filter(function(m){return m.tags.some(function(t){return toneForTag(t)==='red';});});
-  var p0Count = mats.filter(function(m){return m.riskLevel==='P0';}).length;
-  var p1Count = mats.filter(function(m){return m.riskLevel==='P1';}).length;
-  var totalRelease = mats.reduce(function(s,m){return s+(m.releaseAmount||0);},0);
-
-  var metrics = [
-    {label:node.qtyLabel||'数量', value:metricValueForNode(node.qtyLabel||node.amountLabel, node.amount, mats), icon:'📦'},
-    {label:node.timeLabel||'时间', value:metricValueForNode(node.timeLabel||'锁定金额合计', node.amount, mats), icon:'⏱'},
-    {label:node.riskLabel||'风险', value:metricValueForNode(node.riskLabel||'锁定量覆盖率', node.amount, mats), icon:'⚠'}
-  ];
-
-  // 收集该节点的所有风险标签
-  var allTags = {};
-  mats.forEach(function(m){m.tags.forEach(function(t){
-    if(!allTags[t]) allTags[t] = {count:0, tone:toneForTag(t)};
-    allTags[t].count++;
-  });});
-  var tagList = Object.keys(allTags).sort(function(a,b){return allTags[b].count-allTags[a].count;}).slice(0,6);
-
-  var headColor = riskMats.length>0 ? 'var(--danger)' : 'var(--primary)';
-  el.innerHTML = '<div class="inv-nw-mt-head" style="border-left:3px solid '+headColor+'">'
-    +'<span class="inv-nw-mt-icon">'+(node.level==='L1'?'🔷':'🔸')+'</span>'
-    +'<b>'+node.title+'</b>'
-    +'<span class="inv-nw-mt-amount">'+formatWan(node.amount)+' 万</span>'
-    +(riskMats.length>0?'<span class="inv-nw-rd">⚠ '+riskMats.length+'条高风险物料</span>':'<span class="inv-nw-ok">✓ 无高风险</span>')
-    +'<button class="inv-nw-jump" onclick="document.getElementById(\'invMatTbody\').closest(\'.inv-section-card\').scrollIntoView({behavior:\'smooth\'})">查看物料清单 ↓</button>'
-    +'</div>'
-    // 关键指标 3列
-    +'<div class="inv-nw-mt-grid">'
-    +metrics.map(function(m){return'<div class="inv-nw-mt-item"><span class="inv-nw-mt-ico">'+m.icon+'</span><div><span class="inv-nw-mt-l">'+m.label+'</span><span class="inv-nw-mt-v">'+m.value+'</span></div></div>';}).join('')
-    +'</div>'
-    // 风险标签 + 风险等级分布
-    +'<div class="inv-nw-mt-extra">'
-    +'<div class="inv-nw-mt-tags">'
-      +'<span class="inv-nw-mt-section">🏷 风险标签</span>'
-      +(tagList.length>tagList.length?tagList:tagList).map(function(t){
-        return '<span class="inv-pill inv-pill-'+allTags[t].tone+'">'+t+' <b>'+allTags[t].count+'</b></span>';
-      }).join('')
-    +'</div>'
-    +'<div class="inv-nw-mt-levels">'
-      +'<span class="inv-nw-mt-section">📊 风险等级</span>'
-      +(p0Count>0?'<span class="inv-pill red">P0 '+p0Count+'</span>':'')
-      +(p1Count>0?'<span class="inv-pill orange">P1 '+p1Count+'</span>':'')
-      +'<span class="inv-pill purple">P2 '+(mats.length-p0Count-p1Count>0?mats.length-p0Count-p1Count:0)+'</span>'
-      +'<span class="inv-nw-mt-release">💰 预计释放 <b>'+formatWan(totalRelease)+'</b> 万</span>'
-    +'</div>'
-    +'</div>';
-}
+// ═══════════════ 物料风险标签目录树 ═══════════════
+// 6大类目录树，结合歌尔库存分类
+var _riskTreeDef = [
+  { id:'supply', name:'供应保障风险', icon:'🚚', tone:'red', tags:['供应缺口风险','供应商交期延误','市场性供应短缺','在途运输延误','清关异常'] },
+  { id:'quality', name:'质量冻结风险', icon:'🔬', tone:'purple', tags:['IQC待检积压','MRB扣押待判','来料高不良率','质量批次追溯'] },
+  { id:'demand', name:'需求计划风险', icon:'📊', tone:'orange', tags:['需求异常波动','预测持续偏差','无需求物料'] },
+  { id:'structure', name:'库存结构风险', icon:'🏭', tone:'cyan', tags:['库存超配','高账龄库存','ECN变更冻结','冻结占比过高'] },
+  { id:'obsolescence', name:'呆滞跌价风险', icon:'💀', tone:'red', tags:['确认呆滞','临期物料','物料停产EOL','市场跌价风险'] },
+  { id:'capital', name:'资金账务风险', icon:'💰', tone:'yellow', tags:['超额资金占用','账实不符'] }
+];
+var _selectedRiskTag = null;  // 当前选中的风险标签
 
 function invRenderMaterials(p){
   var chain = buildChainForProject(p);
@@ -497,16 +444,83 @@ function invRenderMaterials(p){
   var materials = selectedNode.materials || [];
   var pill = document.getElementById('invMaterialPill');
   if(pill) pill.innerHTML = '<i class="fas fa-cubes"></i> '+selectedNode.title+' · <b>'+materials.length+'</b> 条物料';
+
+  // 统计每个风险标签下的物料数
+  var tagCounts = {};
+  materials.forEach(function(m){
+    m.tags.forEach(function(t){ tagCounts[t] = (tagCounts[t]||0)+1; });
+  });
+
+  // 渲染左侧风险标签目录树
+  var tree = document.getElementById('invRiskTree');
+  if(tree){
+    var totalMatched = 0;
+    var treeHtml = '<div class="inv-rt-header">📂 风险标签目录</div>';
+    treeHtml += '<div class="inv-rt-all" data-risk-tag="" id="invRtAll"><span class="inv-rt-icon">📋</span><span class="inv-rt-name">全部物料</span><span class="inv-rt-count">'+materials.length+'</span></div>';
+    _riskTreeDef.forEach(function(cat){
+      var catTotal = cat.tags.reduce(function(s,t){return s+(tagCounts[t]||0);},0);
+      totalMatched += catTotal;
+      treeHtml += '<div class="inv-rt-cat" data-cat="'+cat.id+'">'
+        +'<div class="inv-rt-cat-head"><span class="inv-rt-icon">'+cat.icon+'</span><span class="inv-rt-cat-name">'+cat.name+'</span><span class="inv-rt-cat-count">'+catTotal+'</span></div>'
+        +'<div class="inv-rt-tags">';
+      cat.tags.forEach(function(t){
+        var c = tagCounts[t]||0;
+        var sel = _selectedRiskTag===t ? ' selected' : '';
+        treeHtml += '<div class="inv-rt-tag'+sel+'" data-risk-tag="'+t+'"><span class="inv-rt-dot inv-rt-dot-'+cat.tone+'"></span><span class="inv-rt-tag-name">'+t+'</span><span class="inv-rt-tag-count">'+c+'</span></div>';
+      });
+      treeHtml += '</div></div>';
+    });
+    tree.innerHTML = treeHtml;
+
+    // 默认选中"全部"
+    var allEl = document.getElementById('invRtAll');
+    if(allEl && !_selectedRiskTag) allEl.classList.add('selected');
+
+    // 点击事件
+    tree.querySelectorAll('[data-risk-tag]').forEach(function(el){
+      el.onclick = function(){
+        _selectedRiskTag = el.dataset.riskTag || null;
+        // 更新选中状态
+        tree.querySelectorAll('.inv-rt-tag, .inv-rt-all').forEach(function(x){x.classList.remove('selected');});
+        el.classList.add('selected');
+        renderMaterialTable(p);
+      };
+    });
+  }
+
+  // 渲染右侧表格
+  renderMaterialTable(p);
+}
+
+function renderMaterialTable(p){
+  var chain = buildChainForProject(p);
+  var selectedNode = chain.nodesById[_selectedNodeId] || chain.nodesById.supplier;
+  var allMaterials = selectedNode.materials || [];
+  // 按风险标签过滤
+  var filtered = _selectedRiskTag ? allMaterials.filter(function(m){return m.tags.indexOf(_selectedRiskTag)>=0;}) : allMaterials;
+
+  var hint = document.getElementById('invRiskTableHint');
+  if(hint){
+    if(_selectedRiskTag){
+      hint.innerHTML = '<span class="inv-rt-hint-tag">🏷 '+_selectedRiskTag+'</span> · 匹配 <b>'+filtered.length+'</b> 条物料 / 共 '+allMaterials.length+' 条';
+    } else {
+      hint.innerHTML = '📋 全部物料 · 共 <b>'+filtered.length+'</b> 条';
+    }
+  }
+
   var tbody = document.getElementById('invMatTbody');
   var emptyEl = document.getElementById('invMatEmpty');
   if(!tbody) return;
-  if(!materials.length){
+  if(!filtered.length){
     tbody.innerHTML = '';
-    if(emptyEl) emptyEl.style.display = 'block';
+    if(emptyEl){
+      emptyEl.style.display = 'block';
+      emptyEl.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">📭</div>'+(selectedNode.title)+' · '+(_selectedRiskTag||'全部')+' 下暂无物料数据';
+    }
     return;
   }
   if(emptyEl) emptyEl.style.display = 'none';
-  tbody.innerHTML = materials.map(function(m){
+  tbody.innerHTML = filtered.map(function(m){
     var statusCls = m.status==='可用'?'green':m.status==='超期'||m.status==='确认滞销'?'orange':m.status==='待检'||m.status==='待判'?'purple':m.status==='冻结'?'cyan':'gray';
     var riskCls = m.riskLevel==='P0'?'red':m.riskLevel==='P1'?'orange':m.riskLevel==='P2'?'purple':'blue';
     return '<tr>'
@@ -523,7 +537,7 @@ function invRenderMaterials(p){
       +'<td>'+m.reservedQty.toLocaleString()+'</td>'
       +'<td>'+m.demand30.toLocaleString()+'</td>'
       +'<td><span class="inv-pill '+statusCls+'">'+m.status+'</span></td>'
-      +'<td><div class="inv-tag-group">'+m.tags.map(function(t){return '<span class="inv-pill '+toneForTag(t)+'">'+t+'</span>';}).join('')+'</div></td>'
+      +'<td><div class="inv-tag-group">'+m.tags.map(function(t){var tc=toneForTag(t);return '<span class="inv-pill '+tc+(t===_selectedRiskTag?' rt-highlight':'')+'">'+t+'</span>';}).join('')+'</div></td>'
       +'<td>'+m.owner+'</td>'
       +'<td>'+m.actionPath+'</td>'
       +'<td>'+formatWan(m.releaseAmount)+' 万</td>'
@@ -545,13 +559,19 @@ window.initPage_inventory = function(){
     var d = getInvData(p);
     var st = compositeState(p);
 
-    // ① Hero
-    var hero = document.getElementById('invHero');
-    if(hero){
+    // ① 项目meta信息（融合到筛选栏）
+    var meta = document.getElementById('invProjMeta');
+    if(meta){
       var toneCls = st.tone==='good'?'green':st.tone==='focus'?'orange':st.tone==='warn'?'orange':'red';
-      hero.innerHTML = '<div class="inv-hero-left"><h2 class="inv-hero-title">'+p.name+' — 项目库存健康</h2>'
-        +'<div class="inv-hero-sub">'+p.bg+' · '+p.bu+' · '+p.customer+' · '+p.productLine+' · '+(p.lifecycleRaw||p.lifecycle)+' · '+(p.engStage||'')+'</div></div>'
-        +'<div class="inv-hero-right"><span class="inv-judge-pill-lg '+toneCls+'">'+st.label+'</span><span class="inv-hero-verdict">'+projectVerdict(p)+'</span></div>';
+      meta.innerHTML = '<span class="inv-pm-item"><b>'+p.name+'</b></span>'
+        +'<span class="inv-pm-sep">·</span>'
+        +'<span class="inv-pm-item">'+p.bg+'</span>'
+        +'<span class="inv-pm-item">'+p.bu+'</span>'
+        +'<span class="inv-pm-item">客户: '+p.customer+'</span>'
+        +'<span class="inv-pm-item">产品: '+p.productLine+'</span>'
+        +'<span class="inv-pm-item">阶段: '+(p.engStage||'')+'</span>'
+        +'<span class="inv-pm-item">周期: '+(p.lifecycleRaw||p.lifecycle)+'</span>'
+        +'<span class="inv-pm-judge '+toneCls+'">'+st.label+'</span>';
     }
 
     // ② 8指标汇总
@@ -562,7 +582,7 @@ window.initPage_inventory = function(){
         var t = metricStatus(p, m.key);
         var colorCls = t==='red'?'c-red':t==='orange'?'c-yellow':'c-green';
         var dot = t==='green' ? '' : '<span class="inv-sum-signal '+t+'"></span>';
-        return '<div class="inv-sum-card '+colorCls+'" title="'+m.header+'&#10;定义：'+m.definition+'&#10;计算：'+m.formula+'&#10;橙灯：'+m.orangeRule+'&#10;红灯：'+m.redRule+'">'
+        return '<div class="inv-sum-card '+colorCls+'" title="'+m.header+'&#10;定义：'+m.definition+'&#10;橙灯：'+m.orangeRule+'&#10;红灯：'+m.redRule+'">'
           +'<div class="inv-sum-label">'+m.header+'</div>'
           +'<div class="inv-sum-value">'+formatMetricValue(m, v)+'</div>'
           +'<div class="inv-sum-sub">'+dot+' '+m.label+'</div>'
@@ -570,10 +590,10 @@ window.initPage_inventory = function(){
       }).join('');
     }
 
-    // ④ 链路
+    // ③ 拓扑
     invRenderChain(p);
 
-    // ⑤ 物料明细
+    // ④ 物料风险标签
     invRenderMaterials(p);
 
   } catch(e){ console.error('inventory init error:', e); }

@@ -245,51 +245,57 @@
     <!-- ====== 4.库存健康 ====== -->
     <!-- ====== 4.项目库存健康 ====== -->
     <section class="page" id="page-inventory">
-      <!-- 项目选择器 (联动顶部四维) -->
+      <!-- 项目选择器 (含项目基本信息) -->
       <div class="inv-filter-bar">
         <div class="inv-filter-group">
           <span class="inv-filter-label">项目</span>
           <select class="inv-filter-select" id="inventoryProjectSelect" onchange="initPage_inventory()"></select>
         </div>
+        <span class="inv-proj-meta" id="invProjMeta"></span>
         <div class="inv-filter-spacer"></div>
-        <span class="inv-filter-hint">💡 指标悬浮可查看定义与计算公式；点击链路节点可下钻物料明细</span>
+        <span class="inv-filter-hint">💡 点击拓扑节点 → 联动下方风险标签物料清单</span>
       </div>
 
-      <!-- ① Hero 项目信息 -->
-      <div class="inv-hero" id="invHero"></div>
-
-      <!-- ② 8指标汇总卡片 -->
+      <!-- ① 8指标汇总卡片 -->
       <div class="inv-summary-grid" id="invSummaryGrid"></div>
 
-      <!-- ③ 全链路库存分布 · 拓扑地图 -->
+      <!-- ② 全链路库存拓扑 -->
       <div class="inv-section-card">
         <div class="inv-section-head">
           <h3 class="inv-section-title"><i class="fas fa-project-diagram"></i> 全链路库存拓扑</h3>
-          <span class="inv-section-pill" style="font-size:11px;color:var(--text-muted)">供应商 → IQC/MRB → 原材料 → 在制品 → 成品，点击任意节点联动下方物料表</span>
+          <span class="inv-section-pill" style="font-size:11px;color:var(--text-muted)">供应商 → 原材料 → 在制品 → 成品，点击节点联动风险标签物料</span>
         </div>
         <div class="inv-topo-board" id="invChainLayout"></div>
       </div>
 
-      <!-- ④ 物料粒度明细 -->
+      <!-- ③ 物料风险标签 (左树+右表) -->
       <div class="inv-section-card">
         <div class="inv-section-head">
-          <h3 class="inv-section-title"><i class="fas fa-cubes"></i> 物料粒度明细</h3>
-          <div class="inv-section-pill" id="invMaterialPill">供应商库存 · 0 条物料</div>
+          <h3 class="inv-section-title"><i class="fas fa-tags"></i> 物料风险标签</h3>
+          <span class="inv-section-pill" id="invMaterialPill">供应商库存 · 0 条物料</span>
         </div>
-        <div style="overflow-x:auto;">
-          <table class="inv-mat-table">
-            <thead>
-              <tr>
-                <th>物料编码</th><th>物料名称</th><th>版本/规格</th><th>数量</th>
-                <th>金额</th><th>子库</th><th>库龄</th><th>风险等级</th><th>风险原因</th>
-                <th>可用量</th><th>预留量</th><th>近30天需求</th><th>状态</th><th>风险标签</th>
-                <th>责任人</th><th>处置路径</th><th>预计释放金额</th>
-              </tr>
-            </thead>
-            <tbody id="invMatTbody"></tbody>
-          </table>
-          <div id="invMatEmpty" style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;display:none;">
-            <div style="font-size:32px;margin-bottom:8px;">📦</div>当前节点下暂无物料数据
+        <div class="inv-risk-layout">
+          <!-- 左：风险标签目录树 -->
+          <aside class="inv-risk-tree" id="invRiskTree"></aside>
+          <!-- 右：物料表 -->
+          <div class="inv-risk-table">
+            <div class="inv-risk-table-hint" id="invRiskTableHint"></div>
+            <div style="overflow-x:auto;">
+              <table class="inv-mat-table">
+                <thead>
+                  <tr>
+                    <th>物料编码</th><th>物料名称</th><th>版本/规格</th><th>数量</th>
+                    <th>金额</th><th>子库</th><th>库龄</th><th>风险等级</th><th>风险原因</th>
+                    <th>可用量</th><th>预留量</th><th>近30天需求</th><th>状态</th><th>风险标签</th>
+                    <th>责任人</th><th>处置路径</th><th>预计释放金额</th>
+                  </tr>
+                </thead>
+                <tbody id="invMatTbody"></tbody>
+              </table>
+              <div id="invMatEmpty" style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;display:none;">
+                <div style="font-size:32px;margin-bottom:8px;">📦</div>当前风险标签下暂无物料数据
+              </div>
+            </div>
           </div>
         </div>
       </div>
