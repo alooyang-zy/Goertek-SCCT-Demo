@@ -408,104 +408,110 @@ window.v56selectDomain=selectDomain;
 window.v56selectMetric=selectMetric;
 window.v56selectLoss=selectLoss;
 
+
 function initPage_cost(){
-  var container=document.getElementById("page-cost");
+  var container=document.getElementById('page-cost');
   if(!container)return;
+  var fp = (typeof getFilteredProjects==='function') ? getFilteredProjects() : projects;
 
   container.innerHTML='<div class="v56-page">'+
-    '<div class="v56-toolbar">'+
-    '<div class="v56-field"><label>统计范围</label><select id="v56-periodFilter"><option value="day">今日发生</option><option value="week">本周累计</option><option value="month">本月累计</option></select></div>'+
-    '<div class="v56-field"><label>项目阶段</label><select id="v56-stageFilter"><option value="">全部阶段</option></select></div>'+
-    '<div class="v56-field"><label>成本状态</label><select id="v56-statusFilter"><option value="">全部状态</option><option value="red">红色异常</option><option value="amber">黄色关注</option><option value="green">正常可控</option></select></div>'+
-    '<div class="v56-field" style="min-width:220px"><label>项目</label><select id="v56-projectFilter"><option value="">全部项目</option></select></div>'+
-    '<button class="v56-btn" id="v56-resetFilter" type="button" style="padding:6px 14px;font-size:12px;height:32px;margin-top:18px">重置</button>'+
+    '<div class="filter-bar">'+
+    '<div class="filter-group"><label>项目</label><select id="v56-projectFilter"></select></div>'+
+    '<span class="inv-proj-meta" id="v56-projMeta"></span>'+
+    '<div class="filter-group"><label>统计范围</label><select id="v56-periodFilter"><option value="day">今日发生</option><option value="week">本周累计</option><option value="month">本月累计</option></select></div>'+
+    '<div class="filter-group"><label>项目阶段</label><select id="v56-stageFilter"></select></div>'+
+    '<div class="filter-group"><label>成本状态</label><select id="v56-statusFilter"><option value="">全部状态</option><option value="red">红色异常</option><option value="amber">黄色关注</option><option value="green">正常可控</option></select></div>'+
+    '<div class="filter-spacer"></div>'+
+    '<span class="filter-hint">顶部全局筛选(BG/BU/客户/产品)自动联动</span>'+
     '</div>'+
-    '<nav class="v56-nav">'+
-    '<button class="v56-tab active" data-view="overview" type="button">管理总览</button>'+
-    '<button class="v56-tab" data-view="cCost" type="button">C运营成本</button>'+
-    '<button class="v56-tab" data-view="loss" type="button">L损失专项</button>'+
-    '<button class="v56-tab" data-view="pInvest" type="button">P前瞻投入</button>'+
-    '<button class="v56-tab" data-view="diagnosis" type="button">D诊断矩阵</button>'+
-    '<button class="v56-tab" data-view="drill" type="button">项目分析</button>'+
-    '</nav>'+
 
-    '<section id="v56-view-overview" class="v56-view active">'+
+    '<section class="inv-section-card">'+
+    '<div class="inv-section-head"><h3 class="inv-section-title"><i class="fas fa-coins"></i> 项目供应链运作成本关键指标</h3><span class="inv-section-pill" id="v56-selectedProjectSummary"></span></div>'+
     '<div id="v56-kpiGrid" class="v56-grid v56-kpi-grid"></div>'+
-    '<div class="v56-two-col">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>项目供应链总成本结构</h2><p>每行一个项目，同时看总成本规模、C/L/P结构和D类诊断状态。</p></div><div class="v56-legend"><span><i class="v56-dot c"></i>C 运营</span><span><i class="v56-dot l"></i>L 损失</span><span><i class="v56-dot p"></i>P 前瞻投入</span></div></div><div id="v56-structureBars" class="v56-stack-wrap"></div></section>'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>今日管理关注</h2><p>从基线偏差、损失成本率、呆滞报废、异常物流和客户索赔中自动识别优先级。</p></div><span class="v56-pill blue">系统推荐</span></div><div id="v56-alertList" class="v56-alert-list"></div></section>'+
-    '</div>'+
-    '<section class="v56-card" style="margin-top:14px;"><div class="v56-section-head"><div><h2>多项目对比</h2><p>D类指标进入项目列表，管理者可以直接看到项目异常来自成本强度、单位成本、损失成本、库存质量还是交付索赔。</p></div><span class="v56-pill gray" id="v56-projectCount">0 个项目</span></div><div style="overflow-x:auto;"><table class="v56-table"><thead><tr><th style="width:220px;">项目</th><th style="width:150px;">BG / BU</th><th style="width:86px;">阶段</th><th class="v56-num" style="width:98px;">S1总成本</th><th class="v56-num" style="width:88px;">S2成本率</th><th class="v56-num" style="width:92px;">S3偏差</th><th style="width:142px;">CLP结构</th><th style="width:208px;">D类主要异常</th><th style="width:112px;">趋势</th><th style="width:88px;">操作</th></tr></thead><tbody id="v56-projectTableBody"></tbody></table></div></section>'+
     '</section>'+
 
-    '<section id="v56-view-cCost" class="v56-view">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>C类运营成本：正常运营投入的效率管理</h2><p>C类页面只看正常供应链运转投入，重点比较C1-C4在不同项目、阶段、客户下的单位效率、占比结构和趋势变化。</p></div><span class="v56-pill teal">C0 = C1 + C2 + C3 + C4</span></div><div id="v56-cCostCards" class="v56-domain-cards"></div></section>'+
-    '<div class="v56-two-col">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>C类项目展开</h2><p>按C类运营成本规模、单位成本和D5-D9诊断排序，定位采购、库存、物流、计划运营的效率问题。</p></div></div><div id="v56-cCostRankList" class="v56-diag-list"></div></section>'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>C类趋势与行动</h2><p>趋势和动作不再单独成页，而是在对应成本域内直接看到变化与动作。</p></div></div><div id="v56-cCostTrend" class="v56-chart-box"></div></section>'+
-    '</div></section>'+
-
-    '<section id="v56-view-loss" class="v56-view">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>L损失专项：点击L1-L8后联动展开项目明细</h2><p>损失专项是止损入口。选择任一损失指标后，下方联动展示该指标的项目贡献、维度拆解、趋势和项目级归因。</p></div><span class="v56-pill red">止损优先</span></div><div id="v56-lossCards" class="v56-loss-grid"></div></section>'+
-    '<div class="v56-two-col">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>损失指标项目贡献</h2><p id="v56-lossFocusTitle">-</p></div></div><div id="v56-lossChart" class="v56-chart-box"></div></section>'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>多维度拆解</h2><p>从BG/BU、项目阶段、客户和责任方向判断这项损失到底集中在哪里。</p></div></div><div id="v56-lossDimCards" class="v56-diag-list"></div></section>'+
+    '<div class="v56-two-col" style="margin-bottom:16px;">'+
+    '<section class="inv-section-card"><div class="inv-section-head"><h3 class="inv-section-title"><i class="fas fa-chart-pie"></i> CLP成本结构</h3><div class="v56-legend"><span><i class="v56-dot c"></i>C 运营</span><span><i class="v56-dot l"></i>L 损失</span><span><i class="v56-dot p"></i>P 前瞻投入</span></div></div><div id="v56-projectPieChart" class="v56-chart-box"></div><div id="v56-domainCards" class="v56-domain-cards"></div></section>'+
+    '<section class="inv-section-card"><div class="inv-section-head"><h3 class="inv-section-title"><i class="fas fa-chart-line"></i> 总成本趋势 (S1/C0/L0)</h3><span class="inv-section-pill">近14期</span></div><div id="v56-projectOverallTrend" class="v56-chart-box"></div></section>'+
     '</div>'+
-    '<section class="v56-card" style="margin-top:14px;"><div class="v56-section-head"><div><h2>该损失指标的项目展开</h2><p>每一行是一个项目在当前损失指标上的表现，支持继续进入单项目下钻。</p></div></div><div style="overflow-x:auto;"><table class="v56-table"><thead><tr><th style="width:220px;">项目</th><th style="width:150px;">BG / BU</th><th style="width:88px;">阶段</th><th class="v56-num" style="width:110px;">损失金额</th><th class="v56-num" style="width:110px;">占L0</th><th class="v56-num" style="width:110px;">占S1</th><th style="width:130px;">趋势</th><th>主要归因 / 下一步动作</th><th style="width:90px;">操作</th></tr></thead><tbody id="v56-lossProjectBody"></tbody></table></div></section>'+
+
+    '<section class="inv-section-card" style="margin-bottom:16px;">'+
+    '<div class="inv-section-head"><h3 class="inv-section-title"><i class="fas fa-circle-exclamation"></i> D类异常诊断</h3><span class="inv-section-pill" style="font-size:11px;color:var(--text-muted)">点击指标卡片联动下方诊断归因</span></div>'+
+    '<div id="v56-diagnosisCards" class="v56-diagnosis-grid"></div>'+
     '</section>'+
 
-    '<section id="v56-view-pInvest" class="v56-view">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>P类前瞻投入：从费用看板进入投资复盘</h2><p>P类页面关注策略储备库存和供应能力提升投入，管理重点是投入强度、受益项目、释放节奏和后续回报。</p></div><span class="v56-pill green">P0 = P1 + P2</span></div><div id="v56-pInvestCards" class="v56-domain-cards"></div></section>'+
-    '<div class="v56-two-col">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>P类项目展开</h2><p>按P类投入强度、D16前瞻投入率和D17投入回报率判断项目是否存在投入过重或回报不清。</p></div></div><div id="v56-pInvestRankList" class="v56-diag-list"></div></section>'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>P类趋势与复盘</h2><p>查看前瞻投入是否随项目阶段释放，并对后续损失下降或效率提升形成复盘输入。</p></div></div><div id="v56-pInvestTrend" class="v56-chart-box"></div></section>'+
-    '</div></section>'+
-
-    '<section id="v56-view-diagnosis" class="v56-view">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>D类效率诊断：从金额看板进入问题定位</h2><p>D类不再作为指标解释，而是用于判断"异常在哪里"：采购强度、单位成本、损失占比、库存周转、异常物流、客户索赔、前瞻投入回报。</p></div><span class="v56-pill purple">D1-D17</span></div><div id="v56-diagnosisCards" class="v56-diagnosis-grid"></div></section>'+
-    '<div class="v56-two-col">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>项目诊断热力图</h2><p>红色代表管理层需要介入，黄色代表业务关注，绿色代表当前可控。点击项目可进入单项目下钻。</p></div></div><div class="v56-heatmap-wrap"><table class="v56-heatmap"><thead id="v56-heatmapHead"></thead><tbody id="v56-heatmapBody"></tbody></table></div></section>'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>优先治理排序</h2><p>按D类红灯数量、损失成本率、基线偏差和可改善金额综合排序。</p></div></div><div id="v56-rankList" class="v56-diag-list"></div></section>'+
-    '</div></section>'+
-
-    '<section id="v56-view-drill" class="v56-view">'+
-    '<section class="v56-card"><div class="v56-section-head"><div><h2>单项目下钻：构成、诊断、趋势、行动</h2><p id="v56-selectedProjectSummary">-</p></div><button class="v56-btn primary" id="v56-backToOverview" type="button">返回总览</button></div>'+
-    '<div id="v56-domainCards" class="v56-domain-cards"></div>'+
-    '<div class="v56-two-col">'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>成本构成饼状图</h3><span class="v56-pill gray">C/L/P结构</span></div><div id="v56-projectPieChart" class="v56-chart-box"></div></section>'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>项目总成本趋势</h3><span class="v56-pill blue">S1 / C0 / L0</span></div><div id="v56-projectOverallTrend" class="v56-chart-box"></div></section>'+
-    '</div>'+
-    '<div class="v56-split">'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>成本构成下钻</h3><span id="v56-domainExplain" class="v56-pill gray">-</span></div><div id="v56-metricBreakdown" class="v56-metric-grid"></div></section>'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>D类诊断与管理动作</h3><span class="v56-pill purple">定位问题</span></div><div id="v56-projectDiagnosisList" class="v56-diag-list"></div></section>'+
-    '</div>'+
-    '<div class="v56-two-col">'+
+    '<section class="inv-section-card" style="margin-bottom:16px;">'+
+    '<div class="inv-section-head"><h3 class="inv-section-title"><i class="fas fa-layer-group"></i> CLP 展开与分析</h3><span class="inv-section-pill" id="v56-domainExplain">点击C/L/P卡片切换明细</span></div>'+
+    '<div id="v56-metricBreakdown" class="v56-metric-grid"></div>'+
+    '<div class="v56-two-col" style="margin-top:14px;">'+
     '<section class="v56-card"><div class="v56-panel-title"><h3>选中指标趋势</h3><span id="v56-selectedMetricName" class="v56-pill blue">-</span></div><div id="v56-metricTrend" class="v56-chart-box"></div></section>'+
+    '<section class="v56-card"><div class="v56-panel-title"><h3>L损失 TOP 排行</h3><span class="v56-pill red">止损优先</span></div><div id="v56-lossRankMini" class="v56-diag-list"></div></section>'+
+    '</div></section>'+
+
+    '<section class="inv-section-card" style="margin-bottom:16px;">'+
+    '<div class="inv-section-head"><h3 class="inv-section-title"><i class="fas fa-diagram-project"></i> D类诊断与归因</h3><span class="inv-section-pill" style="font-size:11px;color:var(--text-muted)">点击项目行可联动刷新上方关键指标</span></div>'+
+    '<div class="v56-two-col">'+
+    '<section class="v56-card"><div class="v56-panel-title"><h3>诊断归因 (TOP6)</h3><span class="v56-pill purple">定位问题</span></div><div id="v56-projectDiagnosisList" class="v56-diag-list"></div></section>'+
     '<section class="v56-card"><div class="v56-panel-title"><h3>归因与责任追踪</h3><span class="v56-pill amber">行动闭环</span></div><div id="v56-projectActionList" class="v56-diag-list"></div></section>'+
-    '</div>'+
+    '</div></section>'+
+
+    '<section class="inv-section-card">'+
+    '<div class="inv-section-head"><h3 class="inv-section-title"><i class="fas fa-table"></i> 多项目对比</h3><span class="inv-section-pill" id="v56-projectCount">0 个项目</span></div>'+
+    '<div style="overflow-x:auto;"><table class="v56-table"><thead><tr><th style="width:220px;">项目</th><th style="width:150px;">BG / BU</th><th style="width:86px;">阶段</th><th class="v56-num" style="width:98px;">S1总成本</th><th class="v56-num" style="width:88px;">S2成本率</th><th class="v56-num" style="width:92px;">S3偏差</th><th style="width:142px;">CLP结构</th><th style="width:208px;">D类主要异常</th><th style="width:112px;">趋势</th><th style="width:88px;">操作</th></tr></thead><tbody id="v56-projectTableBody"></tbody></table></div>'+
     '</section>'+
     '</div>';
 
   els={
-    period:document.getElementById("v56-periodFilter"),
-    stage:document.getElementById("v56-stageFilter"),
-    status:document.getElementById("v56-statusFilter"),
-    project:document.getElementById("v56-projectFilter")
+    period:document.getElementById('v56-periodFilter'),
+    stage:document.getElementById('v56-stageFilter'),
+    status:document.getElementById('v56-statusFilter'),
+    project:document.getElementById('v56-projectFilter')
   };
 
-  fillSelect(els.stage,uniqueValues("stage"),"全部阶段");
-  // 项目下拉框
-  var projOpts = projects.map(function(p){return '<option value="'+p.id+'">'+p.name+' ('+p.id+')</option>';});
-  els.project.innerHTML = '<option value="">全部项目</option>' + projOpts.join('');
+  if(typeof fillProjectSelect==='function'){ fillProjectSelect(els.project, fp); }
+  else { els.project.innerHTML = '<option value="">— 选择项目 —</option>' + fp.map(function(p){return '<option value="'+p.id+'">'+p.name+' ['+p.bg+'·'+p.customer+']</option>';}).join(''); }
+  if(typeof consumeDrillDown==='function') consumeDrillDown('v56-projectFilter');
+  fillSelect(els.stage,uniqueValues('stage'),'全部阶段');
+  if(!els.project.value && fp.length) els.project.value = fp[0].id;
+  selectedProjectId = els.project.value || projects[0].id;
 
-  document.querySelectorAll("#page-cost .v56-tab").forEach(function(tab){tab.addEventListener("click",function(){switchView(tab.dataset.view);});});
-  Object.values(els).forEach(function(el){el.addEventListener("input",renderCurrent);});
-  document.getElementById("v56-resetFilter").addEventListener("click",function(){
-    els.period.value="day";els.stage.value="";els.status.value="";els.project.value="";
+  Object.values(els).forEach(function(el){el.addEventListener('change',function(){
+    if(el===els.project) selectedProjectId = els.project.value;
     renderCurrent();
-  });
-  document.getElementById("v56-backToOverview").addEventListener("click",function(){switchView("overview");});
+  });});
 
+  renderCurrent();
+}
+
+function renderCurrent(){
+  var p = selectedProject();
+  var list = filteredProjects();
+  var meta = document.getElementById('v56-projMeta');
+  if(meta){
+    var st = projectStatus(p);
+    meta.innerHTML = '<span class="inv-pm-item"><b>'+p.name+'</b></span><span class="inv-pm-sep">·</span><span class="inv-pm-item">'+p.bg+'</span><span class="inv-pm-item">'+p.bu+'</span><span class="inv-pm-item">客户: '+p.customer+'</span><span class="inv-pm-item">阶段: '+p.stage+'</span><span class="inv-pm-item">状态: <span class="v56-pill '+st+'" style="font-size:10px;padding:1px 8px">'+statusText(st)+'</span></span>';
+  }
+  renderKpis([p]);
+  document.getElementById('v56-selectedProjectSummary').textContent = p.name+'｜'+p.id+'｜S1 '+fmtWan(scaleValue(total(p)))+'｜S2 '+fmtPct(total(p)/p.revenue*100)+'｜基线 '+fmtWan(p.baseline)+'万';
+  renderDomainCards(p);
+  document.getElementById('v56-projectPieChart').innerHTML=donutChart([{name:'C0运营成本',value:c0(p),color:'#0e9f9c'},{name:'L0损失成本',value:l0(p),color:'#dc2626'},{name:'P0前瞻投入',value:p0(p),color:'#15a05d'}]);
+  document.getElementById('v56-projectOverallTrend').innerHTML=lineChart([{name:'S1总成本',values:p.trend,color:'#2364d8'},{name:'C0运营',values:p.cTrend,color:'#0e9f9c'},{name:'L0损失',values:p.lTrend,color:'#dc2626'}],['D-13','','','','','','D-7','','','','','','','D']);
+  renderDiagnosisCards([p]);
+  renderMetricBreakdown(p);
+  document.getElementById('v56-selectedMetricName').textContent=selectedMetric+' '+metricNames[selectedMetric];
+  var series=metricSeries(p,selectedMetric);
+  var portfolio=movingAverage(projects.map(function(x){return metricSeries(x,selectedMetric);}));
+  document.getElementById('v56-metricTrend').innerHTML=lineChart([{name:p.name,values:series,color:selectedMetric.startsWith('L')?'#dc2626':selectedMetric.startsWith('P')?'#15a05d':'#0e9f9c'},{name:'组合均值',values:portfolio,color:'#94a3b8'}],['D-13','','','','','','D-7','','','','','','','D']);
+  var lRanked=[...list].sort(function(a,b){return l0(b)-l0(a);}).slice(0,5);
+  document.getElementById('v56-lossRankMini').innerHTML=lRanked.map(function(pp,idx){return '<div class="v56-rank-card"><strong>'+(idx+1)+'. '+pp.name+'｜'+fmtWan(scaleValue(l0(pp)))+'</strong><p>L0占S1 '+fmtPct(l0(pp)/total(pp)*100)+'｜'+statusText(projectStatus(pp))+'</p></div>';}).join('')||'<div class="v56-empty">无项目数据</div>';
+  renderProjectDiagnosis(p);
+  renderProjectActions(p);
+  renderProjectTable(list);
+}
+
+function selectProject(id){
+  selectedProjectId=id;
+  if(els.project) els.project.value=id;
   renderCurrent();
 }
 

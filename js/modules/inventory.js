@@ -314,19 +314,19 @@ function buildChainForProject(p){
 var _topoColors = {
   supplier:'#2f6fa9', raw:'#4f8f64', wip:'#b78434', finished:'#9a6b2f'
 };
-// 拓扑加宽：1260 → 1440，节点框加大
+// 拓扑：340→380
 var _TOPO_W = 1440, _TOPO_H = 380;
 var _L1_POS = [
-  {x:180, y:130},
-  {x:540, y:130},
-  {x:900, y:130},
-  {x:1260, y:130}
+  {x:180, y:90},
+  {x:540, y:90},
+  {x:900, y:90},
+  {x:1260, y:90}
 ];
 var _L2_OFFSETS = {
-  2: [{dx:0,dy:100}],
-  3: [{dx:-80,dy:100},{dx:80,dy:100},{dx:0,dy:165}],
-  4: [{dx:-95,dy:100},{dx:95,dy:100},{dx:-50,dy:170},{dx:50,dy:170}],
-  5: [{dx:-105,dy:100},{dx:105,dy:100},{dx:-70,dy:170},{dx:70,dy:170},{dx:0,dy:235}]
+  2: [{dx:0,dy:95}],
+  3: [{dx:-80,dy:95},{dx:80,dy:95},{dx:0,dy:165}],
+  4: [{dx:-95,dy:95},{dx:95,dy:95},{dx:-50,dy:170},{dx:50,dy:170}],
+  5: [{dx:-105,dy:95},{dx:105,dy:95},{dx:-70,dy:170},{dx:70,dy:170},{dx:0,dy:245}]
 };
 
 function invRenderChain(p){
@@ -429,14 +429,20 @@ function invRenderChain(p){
 // ═══════════════ 物料风险标签目录树 ═══════════════
 // 6大类目录树，结合歌尔库存分类
 var _riskTreeDef = [
-  { id:'supply', name:'供应保障风险', icon:'🚚', tone:'red', tags:['供应缺口风险','供应商交期延误','市场性供应短缺','在途运输延误','清关异常'] },
-  { id:'quality', name:'质量冻结风险', icon:'🔬', tone:'purple', tags:['IQC待检积压','MRB扣押待判','来料高不良率','质量批次追溯'] },
-  { id:'demand', name:'需求计划风险', icon:'📊', tone:'orange', tags:['需求异常波动','预测持续偏差','无需求物料'] },
-  { id:'structure', name:'库存结构风险', icon:'🏭', tone:'cyan', tags:['库存超配','高账龄库存','ECN变更冻结','冻结占比过高'] },
-  { id:'obsolescence', name:'呆滞跌价风险', icon:'💀', tone:'red', tags:['确认呆滞','临期物料','物料停产EOL','市场跌价风险'] },
-  { id:'capital', name:'资金账务风险', icon:'💰', tone:'yellow', tags:['超额资金占用','账实不符'] }
+  { id:'supply', name:'供应风险', desc:'能否按时到料及外部供应中断', icon:'🚚', tone:'red', tags:['供应缺口风险','供应商交期延误','市场性供应短缺','在途运输延误','清关异常','供应商集中度风险'] },
+  { id:'demand', name:'需求计划风险', desc:'需求稳定性、预测偏差和库存超配', icon:'📊', tone:'orange', tags:['需求异常波动','预测持续偏差','无需求物料','库存超配','ECN变更冻结'] },
+  { id:'status', name:'库存状态风险', desc:'库存真实、可用、健康', icon:'📦', tone:'cyan', tags:['高账龄库存','冻结占比过高','临期物料','账实不符'] },
+  { id:'quality', name:'质量风险', desc:'检验、MRB、不良与追溯', icon:'🔬', tone:'purple', tags:['IQC待检积压','MRB扣押待判','来料高不良率','质量批次追溯'] },
+  { id:'finance', name:'财务风险', desc:'资金占用、跌价、EOL价值风险', icon:'💰', tone:'yellow', tags:['确认呆滞','物料停产EOL','超额资金占用','市场跌价风险'] }
 ];
 var _selectedRiskTag = null;  // 当前选中的风险标签
+
+// 折叠切换
+function invToggleCat(el){
+  var cat = el.closest('.inv-rt-cat');
+  if(cat) cat.classList.toggle('collapsed');
+}
+window.invToggleCat = invToggleCat;
 
 function invRenderMaterials(p){
   var chain = buildChainForProject(p);
@@ -454,19 +460,20 @@ function invRenderMaterials(p){
   // 渲染左侧风险标签目录树
   var tree = document.getElementById('invRiskTree');
   if(tree){
-    var totalMatched = 0;
     var treeHtml = '<div class="inv-rt-header">📂 风险标签目录</div>';
     treeHtml += '<div class="inv-rt-all" data-risk-tag="" id="invRtAll"><span class="inv-rt-icon">📋</span><span class="inv-rt-name">全部物料</span><span class="inv-rt-count">'+materials.length+'</span></div>';
     _riskTreeDef.forEach(function(cat){
       var catTotal = cat.tags.reduce(function(s,t){return s+(tagCounts[t]||0);},0);
-      totalMatched += catTotal;
-      treeHtml += '<div class="inv-rt-cat" data-cat="'+cat.id+'">'
-        +'<div class="inv-rt-cat-head"><span class="inv-rt-icon">'+cat.icon+'</span><span class="inv-rt-cat-name">'+cat.name+'</span><span class="inv-rt-cat-count">'+catTotal+'</span></div>'
+      var collapsed = catTotal===0 ? ' collapsed' : '';
+      treeHtml += '<div class="inv-rt-cat'+collapsed+'">'
+        +'<div class="inv-rt-cat-head" style="border-left:3px solid var(--inv-rt-'+cat.tone+')" onclick="invToggleCat(this)"><span class="inv-rt-icon">'+cat.icon+'</span><span class="inv-rt-cat-name">'+cat.name+'</span><span class="inv-rt-cat-arrow">▼</span></div>'
+        +'<div class="inv-rt-cat-desc">'+cat.desc+'</div>'
         +'<div class="inv-rt-tags">';
       cat.tags.forEach(function(t){
         var c = tagCounts[t]||0;
         var sel = _selectedRiskTag===t ? ' selected' : '';
-        treeHtml += '<div class="inv-rt-tag'+sel+'" data-risk-tag="'+t+'"><span class="inv-rt-dot inv-rt-dot-'+cat.tone+'"></span><span class="inv-rt-tag-name">'+t+'</span><span class="inv-rt-tag-count">'+c+'</span></div>';
+        var hasCount = c>0 ? ' has-count' : '';
+        treeHtml += '<div class="inv-rt-tag'+sel+hasCount+'" data-risk-tag="'+t+'"><span class="inv-rt-dot inv-rt-dot-'+cat.tone+'"></span><span class="inv-rt-tag-name">'+t+'</span><span class="inv-rt-tag-count">'+c+'</span></div>';
       });
       treeHtml += '</div></div>';
     });
