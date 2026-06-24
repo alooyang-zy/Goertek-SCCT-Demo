@@ -100,15 +100,13 @@ function initPage_delivery(){
   var severeCount = data.weekly.filter(function(w){return w.status==='严重延迟';}).length;
 
   // 项目信息
-  var info = document.getElementById('dlInfoBar');
+  var info = document.getElementById('dlInfoItems');
   if(info) info.innerHTML =
-    '<span class="dl-info-name">'+p.name+'</span>'
-    +'<span class="dl-info-items">'
+    '<span style="font-weight:700;color:var(--primary);margin-right:8px">'+p.name+'</span>'
     +'<span class="dl-info-item"><b>客户</b> '+p.customer+'</span>'
     +'<span class="dl-info-item"><b>产品线</b> '+p.productLine+'</span>'
     +'<span class="dl-info-item"><b>生命周期</b> '+p.lifecycle+'</span>'
-    +'<span class="dl-info-item"><b>PO数</b> '+data.items.length+'</span>'
-    +'</span>';
+    +'<span class="dl-info-item"><b>PO数</b> '+data.items.length+'</span>';
 
   // KPI
   var kg = document.getElementById('dlCards');

@@ -130,15 +130,13 @@ function initPage_forecast(){
   var data = getForecastData(pid);
 
   // 项目信息
-  var info = document.getElementById('fcInfoBar');
+  var info = document.getElementById('fcInfoItems');
   if(info) info.innerHTML =
-    '<span class="fc-info-name">'+p.name+'</span>'
-    +'<span class="fc-info-items">'
+    '<span style="font-weight:700;color:var(--primary);margin-right:8px">'+p.name+'</span>'
     +'<span class="fc-info-item"><b>客户</b> '+p.customer+'</span>'
     +'<span class="fc-info-item"><b>产品线</b> '+p.productLine+'</span>'
     +'<span class="fc-info-item"><b>生命周期</b> '+p.lifecycle+'</span>'
-    +'<span class="fc-info-item"><b>滚动预测</b> 13周</span>'
-    +'</span>';
+    +'<span class="fc-info-item"><b>滚动预测</b> 13周</span>';
 
   // KPI
   var kg = document.getElementById('fcCards');

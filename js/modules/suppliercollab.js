@@ -167,17 +167,15 @@ function initPage_suppliercollab(){
   var delayMats = data.materials.filter(function(m){return m.wipStatus==='延期'||m.wipStatus==='产能紧张';}).length;
 
   // ── 信息条 ──
-  var info = document.getElementById('scInfoBar');
+  var info = document.getElementById('scInfoItems');
   if(info) info.innerHTML =
-    '<span class="sc-info-name">'+p.name+'</span>'
-    +'<span class="sc-info-items">'
+    '<span style="font-weight:700;color:var(--primary);margin-right:8px">'+p.name+'</span>'
     +'<span class="sc-info-item"><b>客户</b> '+p.customer+'</span>'
     +'<span class="sc-info-item"><b>产品线</b> '+p.productLine+'</span>'
     +'<span class="sc-info-item"><b>阶段</b> '+p.engStage+'</span>'
     +'<span class="sc-info-item"><b>关键料</b> '+data.materials.length+'</span>'
     +'<span class="sc-info-item"><b>供应商</b> '+data.suppliers.length+'</span>'
-    +'<span class="sc-info-item"><b>风险项</b> <em style="color:var(--danger);font-style:normal;font-weight:700">'+totalRisk+'</em></span>'
-    +'</span>';
+    +'<span class="sc-info-item"><b>风险项</b> <em style="color:var(--danger);font-style:normal;font-weight:700">'+totalRisk+'</em></span>';
 
   // ── KPI卡片 ──
   var kg = document.getElementById('scCards');

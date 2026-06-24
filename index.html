@@ -324,8 +324,7 @@
 
     <!-- ====== 8.交期答复 ====== -->
     <section class="page" id="page-delivery">
-      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="deliveryProjectSelect" onchange="initPage_delivery()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">客户预测交期答复 · 延迟根因分析 · 产能物料瓶颈识别</span></div>
-      <div class="dl-info-bar" id="dlInfoBar"><span class="dl-info-name" id="dlProjectName"></span><span class="dl-info-items" id="dlInfoItems"></span></div>
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="deliveryProjectSelect" onchange="initPage_delivery()"></select></div><span class="dl-info-items" id="dlInfoItems" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:6px"></span></div>
       <div class="dl-cards" id="dlCards"></div>
       <div class="dl-chart-panel"><div class="dl-chart-card"><div class="dl-chart-title">交期趋势 · 最近12周</div><canvas id="dlTimelineChart" height="280"></canvas><div class="dl-chart-legend"><span><i style="background:#22c55e"></i>满足</span><span><i style="background:#ef4444"></i>延迟</span><span><i style="background:#3b82f6"></i>预测</span><span><i style="background:#f59e0b;border-radius:0;width:18px;height:2px;display:inline-block;vertical-align:middle;margin-right:4px"></i>ATP率</span></div></div></div>
       <div class="dl-root-panel" id="dlRootPanel"></div>
@@ -334,8 +333,7 @@
 
     <!-- ====== 9.需求预测 ====== -->
     <section class="page" id="page-forecast">
-      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="forecastProjectSelect" onchange="initPage_forecast()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">预测准确率/波动率 · 基线预测对比 · 乐观/保守判断</span></div>
-      <div class="fc-info-bar" id="fcInfoBar"><span class="fc-info-name" id="fcProjectName"></span><span class="fc-info-items" id="fcInfoItems"></span></div>
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="forecastProjectSelect" onchange="initPage_forecast()"></select></div><span class="fc-info-items" id="fcInfoItems" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:6px"></span></div>
       <div class="fc-cards" id="fcCards"></div>
       <div class="fc-chart-panel"><div class="fc-chart-card"><div class="fc-chart-title">客户预测 vs 基线预测 · 滚动12周</div><canvas id="fcBaselineChart" height="260"></canvas></div><div class="fc-chart-card"><div class="fc-chart-title">周度预测准确率 & 波动率</div><canvas id="fcAccuracyChart" height="260"></canvas></div></div>
       <div class="fc-judge-panel" id="fcJudgePanel"></div>
@@ -344,8 +342,7 @@
 
     <!-- ====== 10.供需齐套 ====== -->
     <section class="page" id="page-supplydemand">
-      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="sdProjectSelect" onchange="initPage_supplydemand()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">CTB引擎结果 · 齐套缺口分析 · 催料优先级</span></div>
-      <div class="sd-info-bar" id="sdInfoBar"><span class="sd-info-name" id="sdProjectName"></span><span class="sd-info-items" id="sdInfoItems"></span></div>
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="sdProjectSelect" onchange="initPage_supplydemand()"></select></div><span class="sd-info-items" id="sdInfoItems" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:6px"></span></div>
       <div class="sd-cards" id="sdCards"></div>
       <div class="sd-pipeline" id="sdPipeline"></div>
       <div class="sd-shortage-panel" id="sdShortagePanel"></div>
@@ -355,8 +352,7 @@
 
     <!-- ====== 11.供方协同 ====== -->
     <section class="page" id="page-suppliercollab">
-      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="scProjectSelect" onchange="initPage_suppliercollab()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">供方全维度协同 · 关键料库存/在制/质量/风险一体化分析</span></div>
-      <div class="sc-info-bar" id="scInfoBar"><span class="sc-info-name" id="scProjectName"></span><span class="sc-info-items" id="scInfoItems"></span></div>
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="scProjectSelect" onchange="initPage_suppliercollab()"></select></div><span class="sc-info-items" id="scInfoItems" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:6px"></span></div>
       <div class="sc-cards" id="scCards"></div>
       <div class="sc-pipeline" id="scPipeline"></div>
       <div class="sc-dual-panel">

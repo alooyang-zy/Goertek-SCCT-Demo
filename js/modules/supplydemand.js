@@ -103,10 +103,9 @@ function initPage_supplydemand(){
   var d=generateCTBData(proj);
 
   // Info bar
-  var infoBar=document.getElementById('sdInfoBar');
+  var infoBar=document.getElementById('sdInfoItems');
   if(infoBar){
-    document.getElementById('sdProjectName').textContent=proj.name;
-    document.getElementById('sdInfoItems').innerHTML=[
+    infoBar.innerHTML='<span style="font-weight:700;color:var(--primary);margin-right:8px">'+proj.name+'</span>'+[
       {l:'BG',v:proj.bg},{l:'BU',v:proj.bu},{l:'客户',v:proj.customer},{l:'产品线',v:proj.productLine},
       {l:'齐套率',v:d.overallRate+'%'},
       {l:'缺料项',v:d.shortMaterials.length+'项'},
