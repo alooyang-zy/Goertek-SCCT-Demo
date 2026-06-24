@@ -67,7 +67,7 @@
 #page-cost .v56-view.active { display: block; }
 
 #page-cost .v56-grid { display: grid; gap: 14px; }
-#page-cost .v56-kpi-grid { grid-template-columns: repeat(6, 1fr); margin-bottom: 14px; }
+#page-cost .v56-kpi-grid { grid-template-columns: repeat(5, 1fr); margin-bottom: 14px; }
 #page-cost .v56-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
 #page-cost .v56-card {
@@ -120,6 +120,40 @@
 #page-cost .v56-collapse-section:not(.collapsed) .v56-collapse-icon { transform: rotate(180deg); }
 #page-cost .v56-collapse-body { padding: 16px; }
 #page-cost .v56-collapse-section.collapsed .v56-collapse-body { display: none; }
+
+/* 指标卡片网格 (S/C/L/P/D类分析区) */
+#page-cost .v56-metric-grid-section { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+#page-cost #v56-sec-P-grid { grid-template-columns: repeat(2, 1fr); }
+@media(max-width:1100px){ #page-cost .v56-metric-grid-section { grid-template-columns: repeat(2, 1fr); } }
+@media(max-width:600px){ #page-cost .v56-metric-grid-section { grid-template-columns: 1fr; } }
+#page-cost .v56-mi-card {
+  background: var(--v56-panel); border: 1px solid var(--v56-line); border-radius: var(--v56-radius);
+  padding: 14px 16px; transition: all .15s; position: relative; overflow: hidden;
+}
+#page-cost .v56-mi-card:hover { border-color: var(--v56-blue); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+#page-cost .v56-mi-card.red { border-left: 4px solid var(--v56-red); }
+#page-cost .v56-mi-card.amber { border-left: 4px solid var(--v56-amber); }
+#page-cost .v56-mi-card.green { border-left: 4px solid var(--v56-green); }
+#page-cost .v56-mi-card.info { border-left: 4px solid var(--v56-blue); }
+#page-cost .v56-mi-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+#page-cost .v56-mi-code { font-size: 13px; font-weight: 800; color: var(--v56-blue); background: var(--v56-blue-soft); padding: 2px 8px; border-radius: 4px; }
+#page-cost .v56-mi-name { font-size: 12px; font-weight: 600; color: var(--v56-text); flex: 1; }
+#page-cost .v56-mi-status { font-size: 12px; flex-shrink: 0; }
+#page-cost .v56-mi-val { font-size: 28px; font-weight: 800; color: var(--v56-text); line-height: 1.2; display: flex; align-items: baseline; gap: 4px; }
+#page-cost .v56-mi-card.red .v56-mi-val { color: var(--v56-red); }
+#page-cost .v56-mi-card.amber .v56-mi-val { color: var(--v56-amber); }
+#page-cost .v56-mi-unit { font-size: 12px; font-weight: 500; color: var(--v56-muted); }
+#page-cost .v56-mi-clp { font-size: 20px; font-weight: 700; color: var(--v56-text); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+#page-cost .v56-mi-clp span { font-size: 12px; font-weight: 700; }
+#page-cost .v56-mi-formula { font-size: 10px; color: var(--v56-muted); margin-top: 6px; line-height: 1.6; }
+#page-cost .v56-mi-sub { font-size: 10px; color: var(--v56-muted); margin-top: 4px; }
+#page-cost .v56-mi-action { font-size: 10px; color: var(--v56-purple); margin-top: 4px; font-weight: 600; }
+#page-cost .v56-mi-bar { height: 3px; background: var(--v56-line); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+#page-cost .v56-mi-bar span { display: block; height: 100%; border-radius: 2px; transition: width .4s; }
+#page-cost .v56-mi-card.red .v56-mi-bar span { background: var(--v56-red); }
+#page-cost .v56-mi-card.amber .v56-mi-bar span { background: var(--v56-amber); }
+#page-cost .v56-mi-card.green .v56-mi-bar span { background: var(--v56-green); }
+#page-cost .v56-mi-card.info .v56-mi-bar span { background: var(--v56-blue); }
 
 #page-cost .v56-legend { display: flex; gap: 12px; font-size: 11px; color: var(--v56-muted); flex-wrap: wrap; }
 #page-cost .v56-legend span { display: inline-flex; gap: 5px; align-items: center; }

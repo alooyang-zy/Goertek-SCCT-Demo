@@ -4,7 +4,7 @@
 (function(){
 "use strict";
 
-var periodMeta = { day:{factor:0.08,label:"今日",suffix:"今日"}, week:{factor:0.32,label:"本周",suffix:"本周"}, month:{factor:1,label:"本月",suffix:"本月"} };
+var periodMeta = { ytd:{factor:1,label:"累计至今",suffix:"累计"}, day:{factor:0.08,label:"今日",suffix:"今日"}, week:{factor:0.32,label:"本周",suffix:"本周"}, month:{factor:1,label:"本月",suffix:"本月"} };
 
 var metricNames = {
   S1:"供应链总成本",S2:"供应链总成本率",S3:"总成本基线偏差",S4:"CLP成本结构占比",
@@ -413,7 +413,7 @@ function initPage_cost(){
     '<div class="filter-bar">'+
     '<div class="filter-group"><label>项目</label><select id="v56-projectFilter"></select></div>'+
     '<span class="inv-proj-meta" id="v56-projMeta"></span>'+
-    '<div class="filter-group"><label>统计范围</label><select id="v56-periodFilter"><option value="day">今日发生</option><option value="week">本周累计</option><option value="month">本月累计</option></select></div>'+
+    '<div class="filter-group"><label>统计范围</label><select id="v56-periodFilter"><option value="ytd" selected>累计至今</option><option value="month">本月累计</option><option value="week">本周累计</option><option value="day">今日发生</option></select></div>'+
     '<div class="filter-group"><label>项目阶段</label><select id="v56-stageFilter"></select></div>'+
     '</div>'+
 
@@ -424,45 +424,23 @@ function initPage_cost(){
 
     '<section class="inv-section-card v56-collapse-section collapsed" id="v56-sec-S">'+
     '<div class="inv-section-head v56-collapse-toggle" onclick="window.v56toggleSection(\'S\')"><h3 class="inv-section-title"><i class="fas fa-table"></i> S类分析 — 成本结构与多项目对比</h3><span class="v56-collapse-icon"><i class="fas fa-chevron-down"></i></span></div>'+
-    '<div class="v56-collapse-body">'+
-    '<div id="v56-structureBars" style="margin-bottom:14px"></div>'+
-    '<div style="overflow-x:auto;"><table class="v56-table"><thead><tr><th style="width:220px;">项目</th><th style="width:150px;">BG / BU</th><th style="width:86px;">阶段</th><th class="v56-num" style="width:98px;">S1总成本</th><th class="v56-num" style="width:88px;">S2成本率</th><th class="v56-num" style="width:92px;">S3偏差</th><th style="width:142px;">CLP结构</th><th style="width:208px;">D类主要异常</th><th style="width:112px;">趋势</th><th style="width:88px;">操作</th></tr></thead><tbody id="v56-projectTableBody"></tbody></table></div>'+
-    '<div style="text-align:right;margin-top:8px"><span class="inv-section-pill" id="v56-projectCount">0 个项目</span></div>'+
-    '</div></section>'+
+    '<div class="v56-collapse-body"><div id="v56-sec-S-grid" class="v56-metric-grid-section"></div></div></section>'+
 
     '<section class="inv-section-card v56-collapse-section collapsed" id="v56-sec-C">'+
     '<div class="inv-section-head v56-collapse-toggle" onclick="window.v56toggleSection(\'C\')"><h3 class="inv-section-title"><i class="fas fa-chart-pie"></i> C类分析 — 运营成本结构与趋势</h3><span class="v56-collapse-icon"><i class="fas fa-chevron-down"></i></span></div>'+
-    '<div class="v56-collapse-body">'+
-    '<div class="v56-legend"><span><i class="v56-dot c"></i>C 运营</span><span><i class="v56-dot l"></i>L 损失</span><span><i class="v56-dot p"></i>P 前瞻投入</span></div>'+
-    '<div class="v56-two-col" style="margin-top:10px">'+
-    '<div id="v56-projectPieChart" class="v56-chart-box"></div>'+
-    '<div id="v56-projectOverallTrend" class="v56-chart-box"></div>'+
-    '</div>'+
-    '<div id="v56-domainCards" class="v56-domain-cards" style="margin-top:14px"></div>'+
-    '</div></section>'+
+    '<div class="v56-collapse-body"><div id="v56-sec-C-grid" class="v56-metric-grid-section"></div></div></section>'+
 
     '<section class="inv-section-card v56-collapse-section collapsed" id="v56-sec-L">'+
     '<div class="inv-section-head v56-collapse-toggle" onclick="window.v56toggleSection(\'L\')"><h3 class="inv-section-title"><i class="fas fa-circle-exclamation"></i> L类分析 — 损失成本归因</h3><span class="v56-collapse-icon"><i class="fas fa-chevron-down"></i></span></div>'+
-    '<div class="v56-collapse-body">'+
-    '<div class="v56-two-col">'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>L损失 TOP 排行</h3><span class="v56-pill red">止损优先</span></div><div id="v56-lossRankMini" class="v56-diag-list"></div></section>'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>CLP 损失明细</h3><span class="v56-pill" id="v56-domainExplain">异常损失止损</span></div><div id="v56-metricBreakdown" class="v56-metric-grid"></div></section>'+
-    '</div></div></section>'+
+    '<div class="v56-collapse-body"><div id="v56-sec-L-grid" class="v56-metric-grid-section"></div></div></section>'+
 
     '<section class="inv-section-card v56-collapse-section collapsed" id="v56-sec-P">'+
     '<div class="inv-section-head v56-collapse-toggle" onclick="window.v56toggleSection(\'P\')"><h3 class="inv-section-title"><i class="fas fa-lightbulb"></i> P类分析 — 前瞻投入与回报</h3><span class="v56-collapse-icon"><i class="fas fa-chevron-down"></i></span></div>'+
-    '<div class="v56-collapse-body">'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>选中指标趋势</h3><span id="v56-selectedMetricName" class="v56-pill blue">-</span></div><div id="v56-metricTrend" class="v56-chart-box"></div></section>'+
-    '</div></section>'+
+    '<div class="v56-collapse-body"><div id="v56-sec-P-grid" class="v56-metric-grid-section"></div></div></section>'+
 
     '<section class="inv-section-card v56-collapse-section collapsed" id="v56-sec-D">'+
     '<div class="inv-section-head v56-collapse-toggle" onclick="window.v56toggleSection(\'D\')"><h3 class="inv-section-title"><i class="fas fa-stethoscope"></i> D类分析 — 诊断归因与行动</h3><span class="v56-collapse-icon"><i class="fas fa-chevron-down"></i></span></div>'+
-    '<div class="v56-collapse-body">'+
-    '<div id="v56-diagnosisCards" class="v56-diagnosis-grid" style="margin-bottom:14px"></div>'+
-    '<div class="v56-two-col">'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>诊断归因 (TOP6)</h3><span class="v56-pill purple">定位问题</span></div><div id="v56-projectDiagnosisList" class="v56-diag-list"></div></section>'+
-    '<section class="v56-card"><div class="v56-panel-title"><h3>归因与责任追踪</h3><span class="v56-pill amber">行动闭环</span></div><div id="v56-projectActionList" class="v56-diag-list"></div></section>'+
-    '</div></div></section>'+
+    '<div class="v56-collapse-body"><div id="v56-sec-D-grid" class="v56-metric-grid-section"></div></div></section>'+
 
     '</div>';
 
@@ -487,9 +465,102 @@ function initPage_cost(){
   renderCurrent();
 }
 
+// ===== 指标卡片辅助函数 =====
+function _formatStatus(st){return st==='red'?'red':st==='amber'?'amber':'green';}
+function _fmtFormulas(metric,val,unit,p){
+  var formulas={
+    S1:'S1 = C0 + L0 + P0　（全口径供应链运营、损失与前瞻投入合计）',
+    S2:'S2 = S1 ÷ 营业收入 × 100%',
+    S3:'S3 = (S1 − 基线成本) ÷ 基线成本 × 100%',
+    S4:'',
+    C1:'采购与供应商日常运营、认证评审、合同管理相关支出',
+    C2:'库存资金占用成本（含资金成本、仓储保险与损耗）',
+    C3:'正常物流运输、仓储作业与订单处理费用',
+    C4:'计划编制协调、排程调度与变更相关人力及系统成本',
+    L1:'库龄超标、需求变更导致的库存减值与呆滞损失',
+    L2:'品质判定不可用/到期/版本不符物料的报废损失',
+    L3:'因缺料急单通过现货渠道高价采购的溢价损失',
+    L4:'供应商份额偏差导致的价差损失',
+    L5:'因缺料导致产线停线的直接与机会损失',
+    L6:'供应商跳票/突发品质不良的紧急处置成本',
+    L7:'延误插单造成的加急运输与空运增量成本',
+    L8:'因未达成交付承诺导致的客户罚款与商业索赔',
+    P1:'为应对供应不确定性主动建立的策略储备库存投入',
+    P2:'供应商开发、认证、能力提升及供应资源布局投入'
+  };
+  var Dformulas={
+    D1:'D1 = S1 ÷ 采购总额 × 100%',D2:'D2 = S1 × 10000 ÷ 产出件数',D3:'D3 = L0 ÷ S1 × 100%',D4:'D4 = P0 ÷ S1 × 100%',
+    D5:'D5 = C1 ÷ 采购总额 × 100%',D6:'D6 = C2 ÷ 库存金额 × 100%',D7:'D7 = C3 ÷ 发运金额 × 100%',D8:'D8 = C4 ÷ 营业收入 × 100%',
+    D9:'D9 = 库存周转天数',D10:'D10 = L0 ÷ 营业收入 × 100%',D11:'D11 = (L1+L2) ÷ 库存金额 × 100%',
+    D12:'D12 = L3 ÷ 紧急采购额 × 100%',D13:'D13 = L5 ÷ 产线价值 × 100%',
+    D14:'D14 = L7 ÷ (标准运费+L7) × 100%',D15:'D15 = L8 ÷ 营业收入 × 100%',
+    D16:'D16 = P0 ÷ 营业收入 × 100%',D17:'D17 = P类收益 ÷ P0 × 100%'
+  };
+  return formulas[metric]||Dformulas[metric]||'';
+}
+function renderMetricCard(item){
+  var cls=item.status||'green', statusIcon={red:'🔴',amber:'🟡',green:'🟢'};
+  var valueHtml=item.code==='S4'?'<div class="v56-mi-clp">'+item.clp.c.toFixed(0)+'%<span style="color:#0e9f9c">C</span> / '+item.clp.l.toFixed(0)+'%<span style="color:#dc2626">L</span> / '+item.clp.p.toFixed(0)+'%<span style="color:#15a05d">P</span></div>':'<div class="v56-mi-val">'+item.value+'<span class="v56-mi-unit">'+item.unit+'</span></div>';
+  return '<div class="v56-mi-card '+cls+'"><div class="v56-mi-top"><span class="v56-mi-code">'+item.code+'</span><span class="v56-mi-name">'+item.name+'</span><span class="v56-mi-status '+cls+'" title="'+(cls==='red'?'异常':cls==='amber'?'关注':'正常')+'">'+statusIcon[cls]+'</span></div>'+valueHtml+'<div class="v56-mi-formula">'+_fmtFormulas(item.code,item.value,item.unit,null)+'</div>'+(item.sub?'<div class="v56-mi-sub">'+item.sub+'</div>':'')+(item.action?'<div class="v56-mi-action">'+item.action+'</div>':'')+'<div class="v56-mi-bar"><span style="width:'+(cls==='red'?'100':cls==='amber'?'40':'8')+'%"></span></div></div>';
+}
+
+// S类 4指标
+function renderSSection(p){
+  var s=total(p),s2=s/p.revenue*100,s3=(s-p.baseline)/p.baseline*100,cP=c0(p)/s*100,lP=l0(p)/s*100,pP=p0(p)/s*100;
+  var items=[
+    {code:'S1',name:'供应链总成本',value:fmtWan(scaleValue(s)),unit:'万',status:s3>20?'red':s3>10?'amber':'green',sub:'C0 '+fmtWan(scaleValue(c0(p)))+'万 + L0 '+fmtWan(scaleValue(l0(p)))+'万 + P0 '+fmtWan(scaleValue(p0(p)))+'万'},
+    {code:'S2',name:'供应链总成本率',value:fmtPct(s2),unit:'',status:s2>20?'red':s2>15?'amber':'green',sub:'营业收入 '+fmtWan(scaleValue(p.revenue))+'万'},
+    {code:'S3',name:'总成本基线偏差',value:fmtPct(s3),unit:'',status:s3>20?'red':s3>10?'amber':'green',sub:'基线成本 '+fmtWan(p.baseline)+'万'},
+    {code:'S4',name:'CLP成本结构占比',value:'',unit:'',status:'info',sub:'',clp:{c:cP,l:lP,p:pP}}
+  ];
+  var el=document.getElementById('v56-sec-S-grid');if(el)el.innerHTML=items.map(renderMetricCard).join('');
+}
+
+// C类 4指标
+function renderCSection(p){
+  var items=[
+    {code:'C1',name:'采购与供应商运营成本',value:fmtWan(scaleValue(p.c.C1)),unit:'万',status:p.c.C1/total(p)>0.35?'red':p.c.C1/total(p)>0.25?'amber':'green',sub:'占S1 '+fmtPct(p.c.C1/total(p)*100)},
+    {code:'C2',name:'库存持有成本',value:fmtWan(scaleValue(p.c.C2)),unit:'万',status:p.c.C2/p.inventory*100>12?'red':p.c.C2/p.inventory*100>8?'amber':'green',sub:'库存资金 '+fmtWan(scaleValue(p.inventory))+'万，C2/库存 '+fmtPct(p.c.C2/p.inventory*100)},
+    {code:'C3',name:'正常仓储与物流运营成本',value:fmtWan(scaleValue(p.c.C3)),unit:'万',status:p.c.C3/p.shipAmount*100>1.8?'red':p.c.C3/p.shipAmount*100>1.3?'amber':'green',sub:'发运金额 '+fmtWan(scaleValue(p.shipAmount))+'万'},
+    {code:'C4',name:'计划运营与协调成本',value:fmtWan(scaleValue(p.c.C4)),unit:'万',status:p.c.C4/p.revenue*100>1.3?'red':p.c.C4/p.revenue*100>0.8?'amber':'green',sub:'占营收 '+fmtPct(p.c.C4/p.revenue*100)}
+  ];
+  var el=document.getElementById('v56-sec-C-grid');if(el)el.innerHTML=items.map(renderMetricCard).join('');
+}
+
+// L类 8指标
+function renderLSection(p){
+  var lMet=['L1','L2','L3','L4','L5','L6','L7','L8'];
+  var lNames=['呆滞物料损失成本','报废物料损失成本','紧急采购现货溢价损失','供应商份额偏差损失成本','缺料停线损失成本','跳票/突发品质不良异常处理损失成本','加急运输与空运增量成本','客户交付类罚款与索赔'];
+  var items=lMet.map(function(m,i){
+    var v=p.l[m]||0;
+    return {code:m,name:lNames[i],value:fmtWan(scaleValue(v)),unit:'万',status:v/total(p)>0.08?'red':v/total(p)>0.04?'amber':'green',sub:'占S1 '+fmtPct(v/total(p)*100)+'，L类排名'+(i+1),action:p.actions.find(function(a){return a.metric===m;})?'处置：'+p.actions.find(function(a){return a.metric===m;}).action.slice(0,28)+'…':''};
+  });
+  var el=document.getElementById('v56-sec-L-grid');if(el)el.innerHTML=items.map(renderMetricCard).join('');
+}
+
+// P类 2指标
+function renderPSection(p){
+  var items=[
+    {code:'P1',name:'策略储备库存投入成本',value:fmtWan(scaleValue(p.p.P1)),unit:'万',status:p.p.P1/total(p)>0.15?'red':p.p.P1/total(p)>0.1?'amber':'green',sub:'占S1 '+fmtPct(p.p.P1/total(p)*100)},
+    {code:'P2',name:'供应资源与供应商能力提升投入成本',value:fmtWan(scaleValue(p.p.P2)),unit:'万',status:p.p.P2/total(p)>0.12?'red':p.p.P2/total(p)>0.08?'amber':'green',sub:'占S1 '+fmtPct(p.p.P2/total(p)*100)}
+  ];
+  var el=document.getElementById('v56-sec-P-grid');if(el)el.innerHTML=items.map(renderMetricCard).join('');
+}
+
+// D类 17指标(4分组:经营总览/运营效率/损失风险/前瞻投入)
+function renderDSection(p){
+  var d=calcD(p);
+  var dMet=['D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','D14','D15','D16','D17'];
+  var dUnits={D2:'元/件',D9:'天'};
+  var items=dMet.map(function(m){
+    var v=d[m],st=statusFor(m,v);
+    return {code:m,name:metricNames[m],value:m==='D2'?fmtYuan(v):m==='D9'?v.toFixed(0)+'天':fmtPct(v),unit:dUnits[m]||'',status:st,sub:'阈值: '+thresholds[m]?thresholds[m][0]:''+' → '+thresholds[m]?thresholds[m][1]:''};
+  });
+  var el=document.getElementById('v56-sec-D-grid');if(el)el.innerHTML=items.map(renderMetricCard).join('');
+}
+
 function renderCurrent(){
   var p = selectedProject();
-  var list = filteredProjects();
   var meta = document.getElementById('v56-projMeta');
   if(meta){
     var st = projectStatus(p);
@@ -497,21 +568,11 @@ function renderCurrent(){
   }
   renderKpis([p]);
   document.getElementById('v56-selectedProjectSummary').textContent = p.name+'｜'+p.id+'｜S1 '+fmtWan(scaleValue(total(p)))+'｜S2 '+fmtPct(total(p)/p.revenue*100)+'｜基线 '+fmtWan(p.baseline)+'万';
-  renderDomainCards(p);
-  document.getElementById('v56-projectPieChart').innerHTML=donutChart([{name:'C0运营成本',value:c0(p),color:'#0e9f9c'},{name:'L0损失成本',value:l0(p),color:'#dc2626'},{name:'P0前瞻投入',value:p0(p),color:'#15a05d'}]);
-  document.getElementById('v56-projectOverallTrend').innerHTML=lineChart([{name:'S1总成本',values:p.trend,color:'#2364d8'},{name:'C0运营',values:p.cTrend,color:'#0e9f9c'},{name:'L0损失',values:p.lTrend,color:'#dc2626'}],['D-13','','','','','','D-7','','','','','','','D']);
-  renderDiagnosisCards([p]);
-  renderMetricBreakdown(p);
-  document.getElementById('v56-selectedMetricName').textContent=selectedMetric+' '+metricNames[selectedMetric];
-  var series=metricSeries(p,selectedMetric);
-  var portfolio=movingAverage(projects.map(function(x){return metricSeries(x,selectedMetric);}));
-  document.getElementById('v56-metricTrend').innerHTML=lineChart([{name:p.name,values:series,color:selectedMetric.startsWith('L')?'#dc2626':selectedMetric.startsWith('P')?'#15a05d':'#0e9f9c'},{name:'组合均值',values:portfolio,color:'#94a3b8'}],['D-13','','','','','','D-7','','','','','','','D']);
-  var lRanked=[...list].sort(function(a,b){return l0(b)-l0(a);}).slice(0,5);
-  document.getElementById('v56-lossRankMini').innerHTML=lRanked.map(function(pp,idx){return '<div class="v56-rank-card"><strong>'+(idx+1)+'. '+pp.name+'｜'+fmtWan(scaleValue(l0(pp)))+'</strong><p>L0占S1 '+fmtPct(l0(pp)/total(pp)*100)+'｜'+statusText(projectStatus(pp))+'</p></div>';}).join('')||'<div class="v56-empty">无项目数据</div>';
-  renderProjectDiagnosis(p);
-  renderProjectActions(p);
-  renderStructureBars(list);
-  renderProjectTable(list);
+  renderSSection(p);
+  renderCSection(p);
+  renderLSection(p);
+  renderPSection(p);
+  renderDSection(p);
 }
 
 function selectProject(id){
