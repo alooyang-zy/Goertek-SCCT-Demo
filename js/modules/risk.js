@@ -276,29 +276,19 @@ function renderQuad(risks){
   var ch=echarts.init(dom);
   var seriesArr = ['A','B','C','D'].filter(function(q){return seriesData[q].length>0;}).map(function(q){
     return {name:quadLabels[q],type:'scatter',data:seriesData[q],
-      symbolSize:function(v){return Math.max(14,Math.min(45,v[2]/40));},
-      itemStyle:{color:quadColors[q],opacity:.85},
-      label:{show:true,formatter:function(p){return p.name.split(' ')[0];},position:'top',fontSize:9,fontWeight:700,color:quadColors[q]},
-      emphasis:{focus:'series',label:{fontSize:11}}
+      symbolSize:function(v){return Math.max(14,Math.min(40,v[2]/40));},
+      itemStyle:{color:quadColors[q],opacity:.85}
     };
   });
   ch.setOption({
     tooltip:{trigger:'item',
-      formatter:function(p){var parts=p.name.split(' ');return '<b>'+parts[0]+'</b> '+parts.slice(1).join(' ')+'<br/>敏捷性: '+p.value[0]+'%<br/>TTS: '+p.value[1]+'天<br/>VAR: ¥'+p.value[2]+'万<br/>象限: '+quadLabels[quadMap[parts[0]]||'C']};}
+      formatter:function(p){var parts=(p.name||'').split(' ');return '<b>'+parts[0]+'</b> '+parts.slice(1).join(' ')+'<br/>敏捷性: '+p.value[0]+'%<br/>TTS: '+p.value[1]+'天<br/>VAR: ¥'+p.value[2]+'万<br/>象限: '+(quadLabels[quadMap[parts[0]]]||'C');}}
     },
     legend:{bottom:0,textStyle:{fontSize:10}},
-    grid:{left:60,right:30,top:20,bottom:55},
-    xAxis:{name:'敏捷性 →（越高越好）',nameTextStyle:{fontSize:11,color:'var(--text-sec)'},min:20,max:80,axisLabel:{fontSize:10},splitLine:{lineStyle:{type:'dashed',color:function(p){return p.value===50?'#dc2626':'#e2e8f0';},width:function(p){return p.value===50?2:1;}}}},
-    yAxis:{name:'韧性TTS ← 越高越强',nameTextStyle:{fontSize:11,color:'var(--text-sec)'},min:0,max:50,axisLabel:{fontSize:10},splitLine:{lineStyle:{type:'dashed',color:function(p){return p.value===7||p.value===14?'#dc2626':'#e2e8f0';},width:function(p){return p.value===7||p.value===14?2:1;}}}},
-    series:seriesArr,
-    graphic:[
-      {type:'text',left:62,top:24,style:{text:'🔵 韧性强 (TTS>14d)',fill:'#3b82f6',fontSize:10,fontWeight:'bold'}},
-      {type:'text',left:62,bottom:62,style:{text:'🔴 韧性弱 (TTS<7d)',fill:'#dc2626',fontSize:10,fontWeight:'bold'}},
-      {type:'text',right:32,top:'middle',style:{text:'敏捷强 →',fill:'#3b82f6',fontSize:10,fontWeight:'bold'}},
-      {type:'text',left:68,top:'middle',style:{text:'← 敏捷弱',fill:'#f97316',fontSize:10,fontWeight:'bold'}},
-      // D象限优先处置标记
-      {type:'text',left:65+'%',top:58+'%',style:{text:'⚠ 优先处置区',fill:'#dc2626',fontSize:11,fontWeight:'bold'},z:100},
-    ]
+    grid:{left:60,right:30,top:20,bottom:50},
+    xAxis:{name:'敏捷性 →（越高越好）',nameTextStyle:{fontSize:11},min:20,max:80},
+    yAxis:{name:'韧性TTS ← 越高越强',nameTextStyle:{fontSize:11},min:0,max:50},
+    series:seriesArr
   });
   App.charts.rrQuad=ch;
 }
