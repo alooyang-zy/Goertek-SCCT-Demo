@@ -128,57 +128,59 @@
 #page-cost .v56-s4-st { font-size: 14px; }
 #page-cost .v56-s4-sub { font-size: 10px; color: var(--v56-muted); margin-top: 6px; line-height: 1.5; }
 
-/* ── 板块二：CLP三层树图(组织架构样式) ── */
-#page-cost .v56-tr { display: flex; flex-direction: column; align-items: center; padding: 16px 0; }
-#page-cost .v56-tr-root { margin-bottom: 4px; }
-#page-cost .v56-tr-conn { margin: 0 0 4px; }
-#page-cost .v56-tr-conn svg { display: block; }
-#page-cost .v56-tr-l2 { display: flex; gap: 16px; justify-content: center; width: 100%; }
+/* ── 板块二：CLP三层树图(科技感组织架构) ── */
+#page-cost .v56-tr-wrap { display: flex; flex-direction: column; align-items: center; padding: 20px 12px; gap: 0; }
+#page-cost .v56-tb-l1 { display: flex; justify-content: center; margin-bottom: 2px; }
 
-/* Node box (S1/C0/L0/P0) */
-#page-cost .v56-tr-box {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: var(--v56-panel); border: 2px solid #3b82f6; border-radius: 10px;
-  padding: 12px 20px; text-align: center; position: relative; transition: all .15s;
-  min-width: 160px;
+/* Node box */
+#page-cost .v56-tb {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: linear-gradient(135deg, rgba(30,41,59,.7), rgba(15,23,42,.85));
+  border: 1.5px solid rgba(77,163,255,.4); border-radius: 10px;
+  padding: 12px 22px; text-align: center; transition: all .2s;
+  backdrop-filter: blur(4px); position: relative;
 }
-#page-cost .v56-tr-box:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }
-#page-cost .v56-tr-root .v56-tr-box { min-width: 220px; padding: 14px 28px; }
-#page-cost .v56-tr-code { font-size: 12px; font-weight: 800; padding: 2px 10px; border-radius: 4px; }
-#page-cost .v56-tr-name { font-size: 13px; font-weight: 600; color: var(--v56-text); }
-#page-cost .v56-tr-val { font-size: 20px; font-weight: 800; color: var(--v56-text); }
-#page-cost .v56-tr-sub { font-size: 10px; color: var(--v56-muted); margin-top: -2px; }
-#page-cost .v56-tr-toggle {
-  position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
-  width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--v56-line);
-  background: var(--v56-panel); cursor: pointer; font-size: 10px; color: var(--v56-muted);
-  display: flex; align-items: center; justify-content: center; z-index: 2;
+#page-cost .v56-tb:hover { border-color: rgba(77,163,255,.8); box-shadow: 0 0 14px rgba(77,163,255,.12); }
+#page-cost .v56-tb.root { min-width: 240px; padding: 16px 36px; border-width: 2px; border-color: rgba(77,163,255,.6); }
+#page-cost .v56-tb.l2 { min-width: 200px; padding: 14px 24px; }
+#page-cost .v56-tb-code { font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 4px; }
+#page-cost .v56-tb-name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+#page-cost .v56-tb-val { font-size: 22px; font-weight: 800; color: #f1f5f9; }
+#page-cost .v56-tb-sub { font-size: 10px; color: #64748b; margin-top: -2px; }
+#page-cost .v56-tb-toggle {
+  font-size: 10px; color: #64748b; margin-top: 4px; display: block; text-align: center;
+  transition: transform .3s, color .2s;
 }
-#page-cost .v56-tr-toggle:hover { background: var(--v56-blue-soft); color: var(--v56-blue); }
+#page-cost .v56-tb-toggle:hover { color: #4da3ff; }
+#page-cost .v56-tb-branch.collapsed .v56-tl-hbar,
+#page-cost .v56-tb-branch.collapsed .v56-tl-row { display: none; }
+#page-cost .v56-tb-col.collapsed .v56-tb-toggle { transform: rotate(180deg); }
 
-/* Branch (C/L/P) */
-#page-cost .v56-tr-branch { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
-#page-cost .v56-tr-l2 .v56-tr-box { margin-bottom: 6px; }
+/* L1→L2 connector */
+#page-cost .v56-tl-conn { display: block; margin: 0 auto 2px; }
 
-/* Children row */
-#page-cost .v56-tr-row { padding: 4px 8px; transition: max-height .4s, opacity .3s; overflow: hidden; }
-#page-cost .v56-tr-row.collapsed { max-height: 0 !important; opacity: 0; padding: 0 8px; }
-#page-cost .v56-tr-row:not(.collapsed) { max-height: 800px; opacity: 1; }
-#page-cost .v56-tr-hbar { margin-bottom: 2px; }
-#page-cost .v56-tr-hbar svg { display: block; width: 100%; }
-#page-cost .v56-tr-leafrow { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 0 4px; }
+/* L2 three-columns */
+#page-cost .v56-tb-l2 { display: flex; gap: 60px; justify-content: center; margin-bottom: 0; }
 
-/* Leaf card (C1-C4, L1-L8, P1-P2) */
-#page-cost .v56-tr-leaf {
+/* Branch: horizontal bar + leaf row */
+#page-cost .v56-tb-branch { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; }
+#page-cost .v56-tl-hbar svg { display: block; }
+#page-cost .v56-tl-row { display: flex; gap: 8px; justify-content: center; flex-wrap: nowrap; }
+
+/* Leaf card — uniform 130×78 */
+#page-cost .v56-tl {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  background: var(--v56-panel); border: 1px solid var(--v56-line); border-radius: 6px;
-  border-left: 3px solid var(--v56-line); padding: 10px 8px; text-align: center;
-  min-width: 128px; width: 128px; min-height: 72px; transition: all .15s;
+  width: 130px; height: 78px; border: 1px solid rgba(100,116,139,.35); border-left: 3px solid;
+  border-radius: 6px; background: linear-gradient(135deg, rgba(30,41,59,.5), rgba(15,23,42,.7));
+  text-align: center; transition: all .2s; backdrop-filter: blur(2px);
 }
-#page-cost .v56-tr-leaf:hover { box-shadow: 0 2px 6px rgba(0,0,0,.06); }
-#page-cost .v56-tr-lcode { font-size: 10px; font-weight: 800; }
-#page-cost .v56-tr-lname { font-size: 10px; font-weight: 600; color: var(--v56-text); line-height: 1.3; word-break: keep-all; }
-#page-cost .v56-tr-lval { font-size: 15px; font-weight: 800; color: var(--v56-text); }
+#page-cost .v56-tl:hover {
+  border-color: rgba(148,163,184,.6); box-shadow: 0 0 10px rgba(77,163,255,.08);
+  transform: translateY(-1px);
+}
+#page-cost .v56-tl-code { font-size: 10px; font-weight: 800; }
+#page-cost .v56-tl-name { font-size: 10px; font-weight: 600; color: #cbd5e1; line-height: 1.3; }
+#page-cost .v56-tl-val { font-size: 14px; font-weight: 800; color: #e2e8f0; }
 
 /* ── 板块三：D类诊断矩阵 ── */
 #page-cost .v56-dmg-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: var(--v56-text); margin-bottom: 12px; }
