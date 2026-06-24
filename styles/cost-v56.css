@@ -128,30 +128,57 @@
 #page-cost .v56-s4-st { font-size: 14px; }
 #page-cost .v56-s4-sub { font-size: 10px; color: var(--v56-muted); margin-top: 6px; line-height: 1.5; }
 
-/* ── 板块二：CLP三层树图 ── */
-#page-cost .v56-tree { text-align: center; padding: 10px 0; }
-#page-cost .v56-tree-l1, #page-cost .v56-tree-l2 { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
-#page-cost .v56-tree-l2 .v56-tn { flex: 1; min-width: 180px; max-width: 280px; }
-#page-cost .v56-tree-arrow { color: var(--v56-muted); font-size: 18px; margin: 8px 0; }
-#page-cost .v56-tree-arrow i { opacity: .4; }
-#page-cost .v56-tn { display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--v56-panel); border: 1px solid var(--v56-line); border-radius: 8px; padding: 12px 14px; text-align: center; }
-#page-cost .v56-tn-root { border: 2px solid var(--v56-blue); background: var(--v56-blue-soft); min-width: 200px; }
-#page-cost .v56-tn-code { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
-#page-cost .v56-tn-name { font-size: 12px; font-weight: 600; color: var(--v56-text); }
-#page-cost .v56-tn-val { font-size: 18px; font-weight: 800; color: var(--v56-text); }
-#page-cost .v56-tn-val small { font-size: 11px; font-weight: 500; color: var(--v56-muted); margin-left: 4px; }
-#page-cost .v56-tn-c { border-left: 3px solid #0e9f9c; }
-#page-cost .v56-tn-l { border-left: 3px solid var(--v56-red); }
-#page-cost .v56-tn-p { border-left: 3px solid var(--v56-green); }
-#page-cost .v56-tn-leaf { border-left: 2px solid var(--v56-line); min-width: 120px; padding: 8px 10px; }
-#page-cost .v56-tn-leaf .v56-tn-name { font-size: 11px; }
-#page-cost .v56-tn-leaf .v56-tn-val { font-size: 15px; }
-#page-cost .v56-tree-l3 { display: flex; gap: 12px; }
-@media(max-width:900px){ #page-cost .v56-tree-l3 { flex-direction: column; } }
-#page-cost .v56-tree-branch { flex: 1; min-width: 0; border: 1px solid var(--v56-line); border-radius: 8px; overflow: hidden; }
-#page-cost .v56-tree-blabel { font-size: 11px; font-weight: 700; color: var(--v56-text); background: var(--v56-line); padding: 6px 12px; text-align: center; }
-#page-cost .v56-tree-leafrow { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; }
-#page-cost .v56-tree-leafrow .v56-tn { flex: 1 1 140px; min-width: 130px; }
+/* ── 板块二：CLP三层树图(组织架构样式) ── */
+#page-cost .v56-tr { display: flex; flex-direction: column; align-items: center; padding: 16px 0; }
+#page-cost .v56-tr-root { margin-bottom: 4px; }
+#page-cost .v56-tr-conn { margin: 0 0 4px; }
+#page-cost .v56-tr-conn svg { display: block; }
+#page-cost .v56-tr-l2 { display: flex; gap: 16px; justify-content: center; width: 100%; }
+
+/* Node box (S1/C0/L0/P0) */
+#page-cost .v56-tr-box {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--v56-panel); border: 2px solid #3b82f6; border-radius: 10px;
+  padding: 12px 20px; text-align: center; position: relative; transition: all .15s;
+  min-width: 160px;
+}
+#page-cost .v56-tr-box:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+#page-cost .v56-tr-root .v56-tr-box { min-width: 220px; padding: 14px 28px; }
+#page-cost .v56-tr-code { font-size: 12px; font-weight: 800; padding: 2px 10px; border-radius: 4px; }
+#page-cost .v56-tr-name { font-size: 13px; font-weight: 600; color: var(--v56-text); }
+#page-cost .v56-tr-val { font-size: 20px; font-weight: 800; color: var(--v56-text); }
+#page-cost .v56-tr-sub { font-size: 10px; color: var(--v56-muted); margin-top: -2px; }
+#page-cost .v56-tr-toggle {
+  position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+  width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--v56-line);
+  background: var(--v56-panel); cursor: pointer; font-size: 10px; color: var(--v56-muted);
+  display: flex; align-items: center; justify-content: center; z-index: 2;
+}
+#page-cost .v56-tr-toggle:hover { background: var(--v56-blue-soft); color: var(--v56-blue); }
+
+/* Branch (C/L/P) */
+#page-cost .v56-tr-branch { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+#page-cost .v56-tr-l2 .v56-tr-box { margin-bottom: 6px; }
+
+/* Children row */
+#page-cost .v56-tr-row { padding: 4px 8px; transition: max-height .4s, opacity .3s; overflow: hidden; }
+#page-cost .v56-tr-row.collapsed { max-height: 0 !important; opacity: 0; padding: 0 8px; }
+#page-cost .v56-tr-row:not(.collapsed) { max-height: 800px; opacity: 1; }
+#page-cost .v56-tr-hbar { margin-bottom: 2px; }
+#page-cost .v56-tr-hbar svg { display: block; width: 100%; }
+#page-cost .v56-tr-leafrow { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 0 4px; }
+
+/* Leaf card (C1-C4, L1-L8, P1-P2) */
+#page-cost .v56-tr-leaf {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: var(--v56-panel); border: 1px solid var(--v56-line); border-radius: 6px;
+  border-left: 3px solid var(--v56-line); padding: 10px 8px; text-align: center;
+  min-width: 128px; width: 128px; min-height: 72px; transition: all .15s;
+}
+#page-cost .v56-tr-leaf:hover { box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+#page-cost .v56-tr-lcode { font-size: 10px; font-weight: 800; }
+#page-cost .v56-tr-lname { font-size: 10px; font-weight: 600; color: var(--v56-text); line-height: 1.3; word-break: keep-all; }
+#page-cost .v56-tr-lval { font-size: 15px; font-weight: 800; color: var(--v56-text); }
 
 /* ── 板块三：D类诊断矩阵 ── */
 #page-cost .v56-dmg-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: var(--v56-text); margin-bottom: 12px; }
