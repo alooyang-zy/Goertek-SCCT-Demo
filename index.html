@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="styles/benchmark.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.onload=null;this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 </head>
 <body>
 <aside class="sidebar" id="sidebar">
@@ -370,16 +371,57 @@
     </section>
 
     <!-- ====== 12.风险雷达预警 ====== -->
-    <section class="page" id="page-risk">
-      <div class="filter-bar" style="gap:0">
-        <div class="filter-group"><label>项目:</label><select id="riskProjectSelect" onchange="initPage_risk()"></select></div>
-        <span id="rrInfoInline" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:14px"></span>
+    <section class="page" id="page-risk" style="background:#0f172a;color:#e2e8f0;min-height:100vh;padding:16px 20px;font-family:'Inter','Segoe UI','Microsoft YaHei',sans-serif">
+      <!-- Top Filter Bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="color:#94a3b8;font-size:12px">供应链控制塔 / 项目运营 / <b style="color:#e2e8f0">风险雷达</b></span>
+          <span style="font-size:14px;font-weight:700;color:#f8fafc">2.5 风险雷达</span>
+          <span style="font-size:11px;color:#64748b">SCOR敏捷 × 韧性双维度评估</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select id="riskProjectSelect" onchange="initPage_risk()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:4px 10px;font-size:12px"></select>
+          <select id="riskCatFilter" onchange="initPage_risk()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:4px 10px;font-size:12px">
+            <option value="all">全部类别</option>
+            <option value="internal">内部运营风险</option>
+            <option value="supply">供应网络风险</option>
+            <option value="external">外部宏观风险</option>
+          </select>
+          <button onclick="initPage_risk()" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer"><i class="fas fa-sync-alt"></i> 刷新</button>
+          <span style="font-size:10px;color:#475569">更新: 2026-06-24 13:04</span>
+          <button onclick="alert('报告导出功能对接后端API')" style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer"><i class="fas fa-download"></i> 导出报告</button>
+        </div>
       </div>
-      <div class="npi-cards" id="rrKpiRow"></div>
-      <div class="rr-layout">
-        <div class="rr-sidebar" id="rrSidebar"></div>
-        <div class="rr-detail" id="rrDetail"><div class="rr-empty">点击左侧风险项查看详情</div></div>
+      <!-- Row 1: KPI Cards -->
+      <div id="rrKpiRow" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px"></div>
+      <!-- Row 2: Radar + Trend -->
+      <div style="display:grid;grid-template-columns:5fr 7fr;gap:12px;margin-bottom:14px">
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#f8fafc;padding-left:8px;border-left:3px solid #3b82f6">SCOR五维风险雷达</div><div id="rrRadarChart" style="height:340px"></div></div>
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#f8fafc;padding-left:8px;border-left:3px solid #f97316">风险趋势走势（30天）</div><div id="rrTrendChart" style="height:340px"></div></div>
       </div>
+      <!-- Row 3: Heat Matrix -->
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:14px;overflow:hidden">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#f8fafc;padding-left:8px;border-left:3px solid #ef4444;display:flex;justify-content:space-between;align-items:center">
+          <span>风险热力矩阵</span>
+          <span style="font-size:10px;color:#64748b;font-weight:400" id="rrMatrixCount"></span>
+        </div>
+        <div style="overflow-x:auto" id="rrMatrixWrap"></div>
+      </div>
+      <!-- Row 4: Quadrant + TOP 8 -->
+      <div style="display:grid;grid-template-columns:6fr 6fr;gap:12px;margin-bottom:14px">
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#f8fafc;padding-left:8px;border-left:3px solid #22c55e">韧性 TTS-TTR 四象限分布</div><div id="rrQuadChart" style="height:380px"></div></div>
+        <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;color:#f8fafc;padding-left:8px;border-left:3px solid #eab308">TOP 8 高风险告警</div><div id="rrTopAlerts" style="max-height:380px;overflow-y:auto"></div></div>
+      </div>
+      <!-- Row 5: Alert Rules -->
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#f8fafc;padding-left:8px;border-left:3px solid #8b5cf6;display:flex;justify-content:space-between;align-items:center">
+          <span>预警规则引擎状态</span>
+          <button onclick="document.getElementById('rrRulesBody').classList.toggle('hidden')" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer">折叠/展开</button>
+        </div>
+        <div id="rrRulesBody" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px"></div>
+      </div>
+      <!-- Footer -->
+      <div style="text-align:center;color:#475569;font-size:10px;padding:8px 0">© 2026 歌尔供应链控制塔 v1.0 | 数据更新: 2026-06-24 13:04:20</div>
     </section>
 
     <!-- ====== 12.事件闭环管理 ====== -->
