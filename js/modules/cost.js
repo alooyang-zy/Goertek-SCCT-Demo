@@ -476,50 +476,50 @@ function renderS4Kpis(p){
 
 // ═══════════════ 板块二：运作成本构成 CLP三层树图(科技感组织架构) ═══════════════
 function _tBox(code,name,value,sub,color,cls){
-  return '<div class="v56-tb '+cls+'" style="border-color:'+color+'"><span class="v56-tb-code" style="background:'+color+'22;color:'+color+'">'+code+'</span><span class="v56-tb-name">'+name+'</span><span class="v56-tb-val">'+value+'</span>'+(sub?'<span class="v56-tb-sub">'+sub+'</span>':'')+'</div>';
+  return '<div class="v56-tb '+cls+'" style="--tc:'+color+'"><span class="v56-tb-code">'+code+'</span><span class="v56-tb-name">'+name+'</span><span class="v56-tb-val">'+value+'</span>'+(sub?'<span class="v56-tb-sub">'+sub+'</span>':'')+'</div>';
 }
-function _tLeaf(code,name,value,color){
-  return '<div class="v56-tl" style="border-color:'+color+';background:linear-gradient(135deg,'+color+'08,'+color+'03)"><span class="v56-tl-code" style="color:'+color+'">'+code+'</span><span class="v56-tl-name">'+name+'</span><span class="v56-tl-val">'+value+'</span></div>';
+function _tLeaf(code,name,value,pct,color){
+  return '<div class="v56-tl" style="--tc:'+color+'"><span class="v56-tl-code">'+code+'</span><span class="v56-tl-name">'+name+'</span><span class="v56-tl-val">'+value+'</span><span class="v56-tl-pct">'+pct+'</span></div>';
 }
-window._v56trToggle=function(code){
-  var el=document.getElementById('v56-tr-'+code); if(el) el.classList.toggle('collapsed');
-  var btn=document.querySelector('#v56-tb-'+code+' .v56-tb-toggle i');
-  if(btn){btn.classList.toggle('fa-chevron-down');btn.classList.toggle('fa-chevron-up');}
+window._v56trToggle=function(key){
+  var el=document.getElementById('v56-tr-'+key); if(el) el.classList.toggle('collapsed');
 };
 
 function renderCostTree(p){
   var s=total(p);
-  var cD=[{code:'C1',name:'采购与供应商运营成本',v:fmtWan(scaleValue(p.c.C1))},{code:'C2',name:'库存持有成本',v:fmtWan(scaleValue(p.c.C2))},{code:'C3',name:'正常仓储与物流运营成本',v:fmtWan(scaleValue(p.c.C3))},{code:'C4',name:'计划运营与协调成本',v:fmtWan(scaleValue(p.c.C4))}];
-  var lD=[{code:'L1',name:'呆滞物料损失成本',v:fmtWan(scaleValue(p.l.L1))},{code:'L2',name:'报废物料损失成本',v:fmtWan(scaleValue(p.l.L2))},{code:'L3',name:'紧急采购现货溢价损失',v:fmtWan(scaleValue(p.l.L3))},{code:'L4',name:'供应商份额偏差损失成本',v:fmtWan(scaleValue(p.l.L4))},{code:'L5',name:'缺料停线损失成本',v:fmtWan(scaleValue(p.l.L5))},{code:'L6',name:'跳票/突发品质不良异常处理',v:fmtWan(scaleValue(p.l.L6))},{code:'L7',name:'加急运输与空运增量成本',v:fmtWan(scaleValue(p.l.L7))},{code:'L8',name:'客户交付类罚款与索赔',v:fmtWan(scaleValue(p.l.L8))}];
-  var pD=[{code:'P1',name:'策略储备库存投入成本',v:fmtWan(scaleValue(p.p.P1))},{code:'P2',name:'供应资源与供应商能力提升',v:fmtWan(scaleValue(p.p.P2))}];
-  var colC='#06b6d4', colL='#ef4444', colP='#22c55e', colS='#4da3ff';
+  var cD=[{code:'C1',name:'采购与供应商运营成本',v:fmtWan(scaleValue(p.c.C1)),pct:fmtPct(p.c.C1/s*100)},{code:'C2',name:'库存持有成本',v:fmtWan(scaleValue(p.c.C2)),pct:fmtPct(p.c.C2/s*100)},{code:'C3',name:'正常仓储与物流运营成本',v:fmtWan(scaleValue(p.c.C3)),pct:fmtPct(p.c.C3/s*100)},{code:'C4',name:'计划运营与协调成本',v:fmtWan(scaleValue(p.c.C4)),pct:fmtPct(p.c.C4/s*100)}];
+  var lD=[{code:'L1',name:'呆滞物料损失成本',v:fmtWan(scaleValue(p.l.L1)),pct:fmtPct(p.l.L1/s*100)},{code:'L2',name:'报废物料损失成本',v:fmtWan(scaleValue(p.l.L2)),pct:fmtPct(p.l.L2/s*100)},{code:'L3',name:'紧急采购现货溢价损失',v:fmtWan(scaleValue(p.l.L3)),pct:fmtPct(p.l.L3/s*100)},{code:'L4',name:'供应商份额偏差损失成本',v:fmtWan(scaleValue(p.l.L4)),pct:fmtPct(p.l.L4/s*100)},{code:'L5',name:'缺料停线损失成本',v:fmtWan(scaleValue(p.l.L5)),pct:fmtPct(p.l.L5/s*100)},{code:'L6',name:'跳票/突发品质不良异常处理',v:fmtWan(scaleValue(p.l.L6)),pct:fmtPct(p.l.L6/s*100)},{code:'L7',name:'加急运输与空运增量成本',v:fmtWan(scaleValue(p.l.L7)),pct:fmtPct(p.l.L7/s*100)},{code:'L8',name:'客户交付类罚款与索赔',v:fmtWan(scaleValue(p.l.L8)),pct:fmtPct(p.l.L8/s*100)}];
+  var pD=[{code:'P1',name:'策略储备库存投入成本',v:fmtWan(scaleValue(p.p.P1)),pct:fmtPct(p.p.P1/s*100)},{code:'P2',name:'供应资源与供应商能力提升',v:fmtWan(scaleValue(p.p.P2)),pct:fmtPct(p.p.P2/s*100)}];
+  var colS='#4da3ff', colC='#06b6d4', colL='#ef4444', colP='#22c55e';
 
+  // L3 branches: horizontal bar connector + single row leaves
   function _branch(key,color,items){
-    var w=items.length*138; // 每个叶子130+8gap
-    var hbar='<div class="v56-tl-hbar"><svg width="'+w+'" height="24"><line x1="0" y1="12" x2="'+w+'" y2="12" stroke="'+color+'" stroke-width="1.5" opacity=".4"/>'+items.map(function(_,i){var cx=65+i*138; return'<line x1="'+cx+'" y1="12" x2="'+cx+'" y2="22" stroke="'+color+'" stroke-width="1.5" opacity=".5"/>';}).join('')+'</svg></div>';
+    var count=items.length;
+    var leafW=108, gap=6, totalW=count*leafW+(count-1)*gap;
+    // SVG connector: center vertical + horizontal bar + N vertical drops
+    var svg='<svg width="'+totalW+'" height="22" class="v56-tl-conn">';
+    svg+='<line x1="'+(totalW/2)+'" y1="0" x2="'+(totalW/2)+'" y2="10" stroke="'+color+'" stroke-width="1.5" opacity=".5"/>';
+    svg+='<line x1="'+(leafW/2)+'" y1="10" x2="'+(totalW-leafW/2)+'" y2="10" stroke="'+color+'" stroke-width="1.2" opacity=".4"/>';
+    items.forEach(function(_,i){var cx=leafW/2+i*(leafW+gap); svg+='<line x1="'+cx+'" y1="10" x2="'+cx+'" y2="20" stroke="'+color+'" stroke-width="1.2" opacity=".5"/>';});
+    svg+='</svg>';
     return '<div class="v56-tb-branch" id="v56-tr-'+key+'">'+
-      hbar+
-      '<div class="v56-tl-row">'+items.map(function(it){return _tLeaf(it.code,it.name,it.v,color);}).join('')+'</div>'+
+      '<div class="v56-tb-l2box" onclick="window._v56trToggle(\''+key+'\')" style="cursor:pointer">'+_tBox(key, key==='C0'?'运营成本':key==='L0'?'损失成本':'前瞻投入', items.reduce(function(a,i){return a+parseFloat(i.v);},0).toFixed(1)+'万', '', color, 'l2')+'<i class="fas fa-chevron-up v56-tb-toggle"></i></div>'+
+      svg+
+      '<div class="v56-tl-row">'+items.map(function(it){return _tLeaf(it.code,it.name,it.v,it.pct,color);}).join('')+'</div>'+
     '</div>';
   }
 
   // L1→L2 connector SVG
-  var conn='<svg width="780" height="30" class="v56-tl-conn"><line x1="390" y1="0" x2="390" y2="12" stroke="#64748b" stroke-width="1.5" opacity=".5"/><line x1="130" y1="12" x2="650" y2="12" stroke="#64748b" stroke-width="1.5" opacity=".4"/><line x1="130" y1="12" x2="130" y2="24" stroke="#06b6d4" stroke-width="1.5" opacity=".6"/><line x1="390" y1="12" x2="390" y2="24" stroke="#ef4444" stroke-width="1.5" opacity=".6"/><line x1="650" y1="12" x2="650" y2="24" stroke="#22c55e" stroke-width="1.5" opacity=".6"/><circle cx="390" cy="4" r="3" fill="#64748b" opacity=".5"/></svg>';
+  var l1l2='<svg width="780" height="28" class="v56-tl-conn-main"><line x1="390" y1="0" x2="390" y2="12" stroke="#4da3ff" stroke-width="2" opacity=".4"/><line x1="130" y1="12" x2="650" y2="12" stroke="#64748b" stroke-width="1.5" opacity=".35"/><line x1="130" y1="12" x2="130" y2="26" stroke="'+colC+'" stroke-width="1.5" opacity=".5"/><line x1="390" y1="12" x2="390" y2="26" stroke="'+colL+'" stroke-width="1.5" opacity=".5"/><line x1="650" y1="12" x2="650" y2="26" stroke="'+colP+'" stroke-width="1.5" opacity=".5"/></svg>';
 
   var html='<div class="v56-tr-wrap">'+
-    // L1: S1 Root
     '<div class="v56-tb-l1">'+_tBox('S1','供应链总成本',fmtWan(scaleValue(s)),fmtPct(total(p)/p.revenue*100),colS,'root')+'</div>'+
-    conn+
-    // L2: C0/L0/P0 boxes + each with toggle
+    l1l2+
     '<div class="v56-tb-l2">'+
-      '<div class="v56-tb-col" id="v56-tb-C0" onclick="window._v56trToggle(\'C0\')" style="cursor:pointer">'+_tBox('C0','运营成本',fmtWan(scaleValue(c0(p))),fmtPct(c0(p)/s*100),colC,'l2')+'<i class="fas fa-chevron-up v56-tb-toggle"></i></div>'+
-      '<div class="v56-tb-col" id="v56-tb-L0" onclick="window._v56trToggle(\'L0\')" style="cursor:pointer">'+_tBox('L0','损失成本',fmtWan(scaleValue(l0(p))),fmtPct(l0(p)/s*100),colL,'l2')+'<i class="fas fa-chevron-up v56-tb-toggle"></i></div>'+
-      '<div class="v56-tb-col" id="v56-tb-P0" onclick="window._v56trToggle(\'P0\')" style="cursor:pointer">'+_tBox('P0','前瞻投入',fmtWan(scaleValue(p0(p))),fmtPct(p0(p)/s*100),colP,'l2')+'<i class="fas fa-chevron-up v56-tb-toggle"></i></div>'+
+      _branch('C0',colC,cD)+
+      _branch('L0',colL,lD)+
+      _branch('P0',colP,pD)+
     '</div>'+
-    // L3: Leaf rows (one per branch, single row)
-    _branch('C0',colC,cD)+
-    _branch('L0',colL,lD)+
-    _branch('P0',colP,pD)+
     '</div>';
 
   var el=document.getElementById('v56-costTree');if(el)el.innerHTML=html;
