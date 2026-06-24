@@ -437,7 +437,6 @@ function initPage_cost(){
 
   els={
     period:document.getElementById('v56-periodFilter'),
-    stage:document.getElementById('v56-stageFilter'),
     project:document.getElementById('v56-projectFilter')
   };
 
