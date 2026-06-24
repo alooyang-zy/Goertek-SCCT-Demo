@@ -34,7 +34,7 @@ var projects = [
   {id:"IOT-25-SENS-K08",name:"IoT传感器K08",bg:"零组件BG",bu:"微电子BU",customer:"国内客户K",stage:"MP量产",owner:"IP-IoT",revenue:390,procurement:225,output:43800,baseline:24.8,inventory:44,shipAmount:318,lineValue:72,standardTransport:2.1,emergencyPurchase:1.8,pBenefit:0.9,invDays:26,c:{C1:5.1,C2:3.8,C3:4.4,C4:1.9},l:{L1:0.6,L2:0.2,L3:0.2,L4:0.1,L5:0.3,L6:0.2,L7:0.1,L8:0.0},p:{P1:0.8,P2:0.5},trend:[22,22.4,22.7,23,23.2,23.4,23.6,23.8,24,24.2,24.4,24.6,24.7,24.8],cTrend:[14.8,15,15.1,15.1,15.2,15.2,15.3,15.3,15.3,15.4,15.4,15.3,15.2,15.2],lTrend:[1.2,1.2,1.3,1.3,1.4,1.4,1.5,1.5,1.6,1.6,1.6,1.7,1.6,1.7],actions:[{metric:"D2",reason:"单位供应链运作成本低于组合均值，作为对标项目",action:"沉淀低仓储低损失的标准作业方式",owner:"IP/物流",saving:0.3,due:"06-26",status:"复盘中"},{metric:"D9",reason:"库存周转保持健康，暂无管理红灯",action:"维持当前安全库存策略",owner:"计划",saving:0.2,due:"06-30",status:"观察"}]}
 ];
 
-var thresholds = { D1:[12,16],D2:[28,48],D3:[18,28],D4:[10,18],D5:[2.2,3.2],D6:[8,12],D7:[1.3,1.8],D8:[0.8,1.3],D9:[45,70],D10:[1.6,3.2],D11:[6,11],D12:[18,28],D13:[1.2,2.2],D14:[12,22],D15:[0.05,0.12],D16:[1.2,2.4],D17:[45,25] };
+var thresholds = { D1:[16,22],D2:[35,55],D3:[22,32],D4:[14,22],D5:[2.8,4.0],D6:[10,15],D7:[1.6,2.2],D8:[1.0,1.6],D9:[55,80],D10:[2.0,4.0],D11:[8,14],D12:[22,35],D13:[1.5,2.8],D14:[15,28],D15:[0.08,0.16],D16:[1.6,3.0],D17:[60,35] };
 
 var currentView = "overview";
 var selectedProjectId = projects[0].id;
@@ -573,7 +573,8 @@ var dDiagnosis={
   D13:'缺料停线损失率偏高时，检查齐套率、供应商交付可靠性和安全库存设置。建议纳入风险雷达观察。',
   D14:'异常物流费用占比偏高时，检查加急审批、标准线路基准和交付承诺。建议空运申请绑定责任事件。',
   D15:'客户交付索赔率偏高时，检查OTIF达成、交付承诺和客户合同条款。建议建立交付红线日复盘。',
-  D16:'前瞻投入率偏高时，需要明确受益项目、投入周期和预期回报。建议区分一次性与持续性投入。'
+  D16:'前瞻投入率偏高时，需要明确受益项目、投入周期和预期回报。建议区分一次性与持续性投入。',
+  D17:'投入回报偏低时，应建立基线、观察周期和收益确认规则。建议按项目和投入类型分别追踪ROI。'
 };
 var dActions={
   D1:'按品类拆分成本 / 识别异常科目 / 对比历史趋势',
@@ -600,7 +601,7 @@ function renderDMatrix(p){
   var el=document.getElementById('v56-dMatrix');if(!el)return;
 
   var isAll=_dFilter==='all', isRed=_dFilter==='red', isAmber=_dFilter==='amber', isGreen=_dFilter==='green';
-  var html='<div class="v56-dmg-title"><span>D类诊断指标 · 共16项</span>'+
+  var html='<div class="v56-dmg-title"><span>D类诊断指标 · 共17项</span>'+
     '<div class="v56-dmg-filters">'+
       '<span class="v56-dmg-fbtn '+(isAll?'active':'')+'" onclick="window._v56dFilter(\'all\')">全部</span>'+
       '<span class="v56-dmg-fbtn red '+(isRed?'active':'')+'" onclick="window._v56dFilter(\'red\')">🔴 异常</span>'+
@@ -612,7 +613,7 @@ function renderDMatrix(p){
     {key:'经营总览',metrics:['D1','D2','D3','D4'],cols:4},
     {key:'运营效率',metrics:['D5','D6','D7','D8','D9'],cols:5},
     {key:'损失风险',metrics:['D10','D11','D12','D13','D14','D15'],cols:6},
-    {key:'前瞻投入',metrics:['D16'],cols:1}
+    {key:'前瞻投入',metrics:['D16','D17'],cols:2}
   ];
 
   groups.forEach(function(g){
