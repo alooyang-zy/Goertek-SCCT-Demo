@@ -476,16 +476,15 @@ function renderS4Kpis(p){
 
 // ═══════════════ 板块二：运作成本构成 (杜邦分析模型样式) ═══════════════
 function _dbNode(code,name,value,pct,color,level){
-  var borderC = level===1 ? '2px solid '+color : '2px solid '+color;
-  var bg = level===1 ? color+'18' : color+'12';
-  return '<div class="v56-db-node" style="border:'+borderC+';background:'+bg+';--dc:'+color+'">'+
-    '<div class="v56-db-code" style="color:'+color+';border-bottom:1px solid '+color+'40">'+code+' '+name+'</div>'+
+  var bg = level===1 ? color+'0c' : color+'06';
+  return '<div class="v56-db-node" style="border:2px solid '+color+';background:'+bg+';--dc:'+color+'">'+
+    '<div class="v56-db-code" style="color:'+color+'">'+code+' '+name+'</div>'+
     '<div class="v56-db-val">'+value+'</div>'+
     (pct?'<div class="v56-db-pct" style="color:'+color+'">'+pct+'</div>':'')+
   '</div>';
 }
 function _dbLeaf(code,name,value,pct,color){
-  return '<div class="v56-db-leaf" style="border-color:'+color+'88;background:'+color+'0e;--dc:'+color+'">'+
+  return '<div class="v56-db-leaf" style="border-color:'+color+'80;background:'+color+'04;--dc:'+color+'">'+
     '<div class="v56-db-lcode" style="color:'+color+'">'+code+'</div>'+
     '<div class="v56-db-lname">'+name+'</div>'+
     '<div class="v56-db-lval">'+value+'</div>'+
