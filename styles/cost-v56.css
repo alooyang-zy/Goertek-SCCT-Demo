@@ -157,7 +157,7 @@
 #page-cost .v56-db-leafrow { display: flex; gap: 4px; justify-content: center; flex-wrap: nowrap; }
 
 #page-cost .v56-db-leaf {
-  width: 96px; min-height: 98px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  width: 106px; min-height: 98px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   border: 1.5px solid; border-radius: 6px; border-top: 3px solid var(--dc);
   padding: 8px 4px; text-align: center; transition: all .2s;
 }

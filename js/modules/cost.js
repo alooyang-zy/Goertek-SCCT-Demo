@@ -503,7 +503,7 @@ function renderCostTree(p){
   var colS='#4da3ff', colC='#06b6d4', colL='#ef4444', colP='#22c55e';
 
   // L2→L3 连线（每个分支：中心竖线→水平线→各叶子竖线）
-  var LEAF_W=96, LEAF_GAP=4, L2_GAP=16;
+  var LEAF_W=106, LEAF_GAP=4, L2_GAP=16;
   function _branch(key,color,name,value,pct,items){
     var n=items.length, totalW=n*LEAF_W+(n-1)*LEAF_GAP, halfW=totalW/2;
     var conn='<svg width="'+totalW+'" height="28" style="display:block;margin:0 auto">'+
