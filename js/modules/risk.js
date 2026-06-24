@@ -2,89 +2,33 @@
 (function(){
 "use strict";
 
-// ═══════════════ 风险数据目录 ═══════════════
-var RISK_CATALOG = {
-  internal: { label: "内部运营风险", categories: [
-    { id:"C1", name:"需求与计划", risks:[
-      {id:"1.1",name:"需求预测失准",score:72,agility:68,resilience:45,trend:"up",level:"P2",scor:{impact:"响应性",indicator:"需求预测偏差MAPE"},tts:8,ttr:12,var:320},
-      {id:"1.2",name:"主生产计划失效",score:65,agility:71,resilience:52,trend:"stable",level:"P2",scor:{impact:"可靠性",indicator:"计划达成率"},tts:12,ttr:8,var:180},
-      {id:"1.3",name:"工单执行异常",score:48,agility:55,resilience:60,trend:"down",level:"P3",scor:{impact:"响应性",indicator:"工单准时完工率"},tts:15,ttr:5,var:90}
-    ]},
-    { id:"C2", name:"研发与工程变更", risks:[
-      {id:"2.1",name:"NPI导入风险",score:81,agility:45,resilience:38,trend:"up",level:"P1",scor:{impact:"敏捷性",indicator:"SOP偏差天数"},tts:3,ttr:21,var:680},
-      {id:"2.2",name:"ECN变更执行风险",score:58,agility:62,resilience:55,trend:"stable",level:"P2",scor:{impact:"可靠性",indicator:"ECN执行及时率"},tts:10,ttr:7,var:150},
-      {id:"2.3",name:"EOL退市管理风险",score:44,agility:48,resilience:70,trend:"down",level:"P3",scor:{impact:"资产效率",indicator:"EOL库存消化率"},tts:30,ttr:14,var:220}
-    ]},
-    { id:"C3", name:"物料与采购执行", risks:[
-      {id:"3.1",name:"物料计划覆盖风险",score:77,agility:72,resilience:48,trend:"up",level:"P2",scor:{impact:"响应性",indicator:"物料覆盖天数"},tts:6,ttr:14,var:410},
-      {id:"3.2",name:"采购执行效率风险",score:61,agility:65,resilience:58,trend:"stable",level:"P2",scor:{impact:"成本",indicator:"PO执行及时率"},tts:9,ttr:10,var:230},
-      {id:"3.x",name:"物料缺料风险",score:88,agility:35,resilience:30,trend:"up",level:"P1",scor:{impact:"可靠性",indicator:"缺料BOM占比"},tts:2,ttr:28,var:920},
-      {id:"3.3",name:"备料协同风险",score:55,agility:60,resilience:62,trend:"stable",level:"P2",scor:{impact:"响应性",indicator:"备料齐套率"},tts:11,ttr:9,var:170}
-    ]},
-    { id:"C4", name:"制造与品质执行", risks:[
-      {id:"4.1",name:"制造过程稳定性风险",score:53,agility:58,resilience:65,trend:"down",level:"P3",scor:{impact:"可靠性",indicator:"过程良率CPK"},tts:18,ttr:6,var:140},
-      {id:"4.2",name:"出货履约风险",score:69,agility:73,resilience:55,trend:"up",level:"P2",scor:{impact:"可靠性",indicator:"OTIF完美订单率"},tts:7,ttr:11,var:350}
-    ]},
-    { id:"C5", name:"库存与仓储健康", risks:[
-      {id:"5.1",name:"库存水位失控风险",score:62,agility:55,resilience:60,trend:"stable",level:"P2",scor:{impact:"资产效率",indicator:"库存周转天数DOI"},tts:14,ttr:21,var:280},
-      {id:"5.2",name:"Aging与E&O风险",score:45,agility:40,resilience:72,trend:"down",level:"P3",scor:{impact:"资产效率",indicator:"E&O金额占比"},tts:60,ttr:30,var:480},
-      {id:"5.3",name:"异常库存处置风险",score:38,agility:42,resilience:75,trend:"down",level:"P3",scor:{impact:"资产效率",indicator:"异常库存处置周期"},tts:45,ttr:15,var:190},
-      {id:"5.4",name:"VMI库存管控风险",score:56,agility:50,resilience:63,trend:"stable",level:"P2",scor:{impact:"资产效率",indicator:"VMI库存准确率"},tts:20,ttr:8,var:120}
-    ]}
-  ]},
-  supply: { label: "供应网络风险", categories: [
-    { id:"C6", name:"供应商交付能力", risks:[
-      {id:"6.1",name:"交期承诺可靠性风险",score:74,agility:70,resilience:52,trend:"up",level:"P2",scor:{impact:"可靠性",indicator:"供应商OTIF率"},tts:7,ttr:14,var:430},
-      {id:"6.2",name:"来料质量稳定性风险",score:66,agility:60,resilience:58,trend:"stable",level:"P2",scor:{impact:"可靠性",indicator:"来料合格率IQC"},tts:10,ttr:12,var:290}
-    ]},
-    { id:"C7", name:"供应连续性保障", risks:[
-      {id:"7.1",name:"供应商稳定性风险",score:79,agility:42,resilience:35,trend:"up",level:"P1",scor:{impact:"韧性",indicator:"供应商稳定性评分"},tts:5,ttr:30,var:750},
-      {id:"7.2",name:"单源依赖风险",score:91,agility:28,resilience:22,trend:"up",level:"P1",scor:{impact:"韧性",indicator:"单源物料占比"},tts:3,ttr:45,var:1200},
-      {id:"7.3",name:"供应商经营持续性风险",score:83,agility:35,resilience:28,trend:"up",level:"P1",scor:{impact:"韧性",indicator:"供应商财务健康度"},tts:4,ttr:35,var:880}
-    ]},
-    { id:"C8", name:"多级供应网络", risks:[
-      {id:"8.1",name:"Tier-N隐性断链风险",score:85,agility:32,resilience:25,trend:"up",level:"P1",scor:{impact:"韧性",indicator:"Tier2+可视化覆盖率"},tts:4,ttr:40,var:1050},
-      {id:"8.2",name:"大宗原材料波动风险",score:68,agility:55,resilience:50,trend:"stable",level:"P2",scor:{impact:"成本",indicator:"大宗价格波动系数"},tts:8,ttr:18,var:540}
-    ]}
-  ]},
-  external: { label: "外部宏观风险", categories: [
-    { id:"C9", name:"全球物流与通道", risks:[
-      {id:"9.1",name:"干线物流中断风险",score:76,agility:62,resilience:45,trend:"up",level:"P2",scor:{impact:"响应性",indicator:"干线准时到港率"},tts:6,ttr:18,var:620},
-      {id:"9.2",name:"运力资源短缺风险",score:58,agility:52,resilience:55,trend:"stable",level:"P2",scor:{impact:"成本",indicator:"运力紧张指数"},tts:10,ttr:15,var:340}
-    ]},
-    { id:"C10", name:"贸易与政策合规", risks:[
-      {id:"10.1",name:"出口管制与制裁风险",score:88,agility:30,resilience:28,trend:"up",level:"P1",scor:{impact:"韧性",indicator:"受管制物料使用率"},tts:1,ttr:60,var:2100},
-      {id:"10.2",name:"关税与清关政策风险",score:71,agility:45,resilience:42,trend:"up",level:"P2",scor:{impact:"成本",indicator:"关税成本占比"},tts:5,ttr:25,var:780}
-    ]},
-    { id:"C11", name:"ESG与大客户合规", risks:[
-      {id:"11.1",name:"供应链ESG合规风险",score:52,agility:48,resilience:65,trend:"stable",level:"P3",scor:{impact:"韧性",indicator:"供应商ESG评分"},tts:30,ttr:45,var:360},
-      {id:"11.2",name:"碳中和达标风险",score:46,agility:40,resilience:60,trend:"down",level:"P3",scor:{impact:"成本",indicator:"碳排放达标率"},tts:90,ttr:60,var:420},
-      {id:"11.3",name:"大客户审计准入风险",score:78,agility:38,resilience:35,trend:"up",level:"P1",scor:{impact:"韧性",indicator:"大客户审计通过率"},tts:5,ttr:30,var:1500}
-    ]}
-  ]}
-};
+// ═══════════════ 风险数据目录（13类核心风险）══════════════
+var RISK_CATALOG = [
+  // ── 内部运营风险 ──────────────────────────────────────────
+  { id:"R01", group:"内部运营", groupColor:"#3b82f6", name:"需求预测失准", desc:"客户PO与预测持续偏差，导致计划失效、备料错误", scor:"响应性", indicator:"需求预测偏差 MAPE", score:72, agility:68, resilience:58, tts:10, ttr:10, var:320, level:"P2", trend:"up", alertRule:"MAPE > 15% 连续3周", aiAdvice:"锁定未来4周滚动预测，触发S&OP紧急评审，同步备料计划" },
+  { id:"R02", group:"内部运营", groupColor:"#3b82f6", name:"NPI/ECN工程变更冲击", desc:"新品导入或工程变更引发BOM变动、物料呆滞和产能重排", scor:"敏捷性", indicator:"SOP计划偏差天数 / ECN执行及时率", score:81, agility:42, resilience:40, tts:5, ttr:18, var:680, level:"P1", trend:"up", alertRule:"SOP偏差>7天 OR ECN执行率<95%", aiAdvice:"SOP节点评审提前至D-30，冻结BOM变更窗口，锁定首批物料" },
+  { id:"R03", group:"内部运营", groupColor:"#3b82f6", name:"物料缺料断供", desc:"关键物料库存不足或断档，直接导致工单停产", scor:"可靠性", indicator:"缺料BOM占比 / 物料覆盖天数", score:88, agility:38, resilience:32, tts:3, ttr:22, var:920, level:"P1", trend:"up", alertRule:"缺料BOM占比>5% OR 覆盖天数<5天", aiAdvice:"48小时内触发紧急采购或跨项目调拨，优先保障P1项目工单" },
+  { id:"R04", group:"内部运营", groupColor:"#3b82f6", name:"EOL/E&O库存风险", desc:"停产物料未消化或需求缩减导致呆滞库存持续积累", scor:"资产效率", indicator:"E&O金额占比 / EOL库存消化率", score:46, agility:44, resilience:70, tts:45, ttr:25, var:480, level:"P3", trend:"down", alertRule:"E&O占比>3% OR EOL消化率<80%", aiAdvice:"启动跨项目E&O消化评审，优先替代使用或协商供应商退货" },
+  { id:"R05", group:"内部运营", groupColor:"#3b82f6", name:"出货履约风险", desc:"客户订单无法按时按量交付，影响OTIF和客户关系", scor:"可靠性", indicator:"OTIF完美订单率", score:69, agility:72, resilience:55, tts:8, ttr:10, var:350, level:"P2", trend:"up", alertRule:"OTIF<95% 连续2周 OR 单笔订单延迟>3天", aiAdvice:"触发交付预警，联动排产和物流资源优先保障，客户提前沟通" },
+  // ── 供应网络风险 ──────────────────────────────────────────
+  { id:"R06", group:"供应网络", groupColor:"#8b5cf6", name:"供应商交付稳定性", desc:"供应商交期承诺可靠性下降，来料延迟影响计划执行", scor:"可靠性", indicator:"供应商OTIF率 / 延迟频次", score:74, agility:65, resilience:52, tts:8, ttr:14, var:430, level:"P2", trend:"up", alertRule:"供应商OTIF<90% OR 单月延迟次数>3次", aiAdvice:"启动供应商约谈机制，同步激活备用供应商预案" },
+  { id:"R07", group:"供应网络", groupColor:"#8b5cf6", name:"来料质量异常", desc:"来料批次不合格率上升，导致IQC拦截或直通率下降", scor:"可靠性", indicator:"IQC来料合格率 / 批次不合格率", score:66, agility:60, resilience:58, tts:7, ttr:14, var:290, level:"P2", trend:"stable", alertRule:"IQC合格率<99% 连续2批 OR 单批不合格率>5%", aiAdvice:"立即隔离问题批次，触发供应商8D响应，评估库存缓冲是否充足" },
+  { id:"R08", group:"供应网络", groupColor:"#8b5cf6", name:"单源依赖断供", desc:"关键物料仅有单一供应商，一旦中断无替代来源", scor:"韧性", indicator:"单源物料占比 / 单源物料TTS", score:91, agility:28, resilience:22, tts:3, ttr:45, var:1200, level:"P1", trend:"up", alertRule:"单源物料 AND TTS<7天", aiAdvice:"72小时内启动第二货源认证，同步评估安全库存拉升至21天" },
+  { id:"R09", group:"供应网络", groupColor:"#8b5cf6", name:"Tier-N隐性断链", desc:"二级及以上供应商中断，传导周期长且预警窗口极短", scor:"韧性", indicator:"Tier2+可视化覆盖率 / 隐性依赖节点数", score:85, agility:32, resilience:25, tts:4, ttr:40, var:1050, level:"P1", trend:"up", alertRule:"Tier2可视率<50% AND 该物料采购金额>总额5%", aiAdvice:"启动二级供应商穿透排查，重点关注台积电/大立光上游原材料节点" },
+  // ── 外部宏观风险 ──────────────────────────────────────────
+  { id:"R10", group:"外部宏观", groupColor:"#f97316", name:"干线物流中断", desc:"主要航运/陆运通道中断或严重延误，影响全球交付时效", scor:"响应性", indicator:"干线准时到港率 / 平均在途时长", score:76, agility:62, resilience:42, tts:6, ttr:18, var:620, level:"P2", trend:"up", alertRule:"干线准时率<85% OR 单条航线延迟>5天", aiAdvice:"评估空运替代成本，优先保障P1项目；中长期增加多港中转预案" },
+  { id:"R11", group:"外部宏观", groupColor:"#f97316", name:"贸易合规与制裁", desc:"出口管制、关税政策或实体清单变动影响物料采购和产品出货", scor:"韧性", indicator:"受管制物料使用率 / 关税成本变动幅度", score:88, agility:30, resilience:28, tts:1, ttr:60, var:2100, level:"P1", trend:"up", alertRule:"涉管制物料被列入制裁清单 OR 关税单次变化>5%", aiAdvice:"立即核查受影响物料清单，启动合规替代评估，TTR长达60天须提前布局" },
+  { id:"R12", group:"外部宏观", groupColor:"#f97316", name:"大客户审计准入", desc:"Apple/Meta等大客户质量或ESG审计不通过，影响准入资格", scor:"韧性", indicator:"大客户审计通过率 / 整改关闭及时率", score:78, agility:38, resilience:35, tts:5, ttr:30, var:1500, level:"P1", trend:"up", alertRule:"审计发现Major NC OR 整改超期未关闭", aiAdvice:"启动审计准备清单，对标客户要求逐项自评，预留30天整改缓冲期" },
+  { id:"R13", group:"外部宏观", groupColor:"#f97316", name:"地缘与突发事件", desc:"台风/地震/疫情/战争等黑天鹅事件导致工厂或通道不可用", scor:"韧性", indicator:"受影响工厂产能占比 / 备用基地切换时效", score:82, agility:35, resilience:30, tts:2, ttr:35, var:1800, level:"P1", trend:"stable", alertRule:"外部预警信号触发（台风路径/地震/政策突发）", aiAdvice:"激活业务连续性计划(BCP)，评估歌尔潍坊/重庆备用基地覆盖能力" }
+];
 
 var LVL = {P1:{bg:'#dc2626',txt:'#fff',tag:'高危'},P2:{bg:'#f97316',txt:'#fff',tag:'中高'},P3:{bg:'#eab308',txt:'#1e293b',tag:'中等'},P4:{bg:'#22c55e',txt:'#fff',tag:'低危'}};
 var TRD = {up:{icon:'↑',color:'#dc2626',label:'恶化'},stable:{icon:'→',color:'#eab308',label:'持平'},down:{icon:'↓',color:'#22c55e',label:'改善'}};
-var AI = {
-  '7.2':'建议72小时内启动第二货源认证，当前TTS仅3天，缺货风险极高',
-  '10.1':'立即核查受管制物料清单，启动合规替代方案评估，TTR达60天',
-  '8.1':'启动二级供应商穿透排查，重点关注台积电/大立光上游节点',
-  '2.1':'SOP节点评审提前至D-30，锁定V1 BOM并冻结变更窗口',
-  '11.3':'启动审计准备清单，对标客户要求逐项自评，预留30天整改期',
-  d:'建议在48小时内完成影响范围评估，优先保障P1项目连续性'
-};
-
 function allRisks(filter){
-  var a=[];
-  ['internal','supply','external'].forEach(function(ck){
-    if(filter&&filter!=='all'&&filter!==ck) return;
-    var cat=RISK_CATALOG[ck];
-    cat.categories.forEach(function(c){
-      c.risks.forEach(function(r){ a.push({catKey:ck,catLabel:cat.label,catName:c.name,catId:c.id,risk:r}); });
-    });
-  });
-  return a;
+  if(!filter||filter==='all') return RISK_CATALOG.slice();
+  var map={internal:'内部运营',supply:'供应网络',external:'外部宏观'};
+  var target=map[filter]||'';
+  return RISK_CATALOG.filter(function(r){return r.group===target;});
 }
 
 // ═══ 主入口 ═══
@@ -105,9 +49,9 @@ function initPage_risk(){
 
     var p1=0,p2=0,p3=0,ts=0,ta=0,trs=0,tts=0,ttr=0,alerts=0;
     risks.forEach(function(r){
-      var rr=r.risk; ts+=rr.score; ta+=rr.agility; trs+=rr.resilience; tts+=rr.tts; ttr+=rr.ttr;
-      if(rr.level==='P1')p1++; else if(rr.level==='P2')p2++; else p3++;
-      if(rr.tts<7)alerts++;
+      ts+=r.score; ta+=r.agility; trs+=r.resilience; tts+=r.tts; ttr+=r.ttr;
+      if(r.level==='P1')p1++; else if(r.level==='P2')p2++; else p3++;
+      if(r.tts<7)alerts++;
     });
     var avgS=Math.round(ts/n),avgA=Math.round(ta/n),avgR=Math.round(trs/n);
     var avgTts=Math.round(tts/n*10)/10,avgTtr=Math.round(ttr/n*10)/10;
@@ -171,9 +115,8 @@ function renderRadar(risks){
   var dims={可靠性:[],响应性:[],敏捷性:[],成本:[],资产韧性:[]};
   var keys=['可靠性','响应性','敏捷性','成本','资产韧性'];
   risks.forEach(function(r){
-    var imp=r.risk.scor.impact;
-    if(keys.indexOf(imp)>=0) dims[imp].push(r.risk.score);
-    else dims['资产韧性'].push(r.risk.score); // fallback
+    if(keys.indexOf(r.scor)>=0) dims[r.scor].push(r.score);
+    else dims['资产韧性'].push(r.score);
   });
   var cur=[],base=[];
   keys.forEach(function(k){
@@ -226,18 +169,25 @@ function renderTrend(){
 }
 
 // ── Heat Matrix ──
-function renderMatrix(risks,filter){
+function renderMatrix(fullList,filter){
   var el=document.getElementById('rrMatrixWrap'); if(!el) return;
-  var groups=[];
-  ['internal','supply','external'].forEach(function(ck){
-    if(filter!=='all'&&filter!==ck)return;
-    var cat=RISK_CATALOG[ck]; var items=[];
-    cat.categories.forEach(function(c){c.risks.forEach(function(r){items.push({risk:r,catName:c.name,catId:c.id});});});
-    if(items.length) groups.push({label:cat.label,items:items});
+  // group by group field
+  var groups=[]; var seen={};
+  ['内部运营','供应网络','外部宏观'].forEach(function(gname){
+    var items=fullList.filter(function(r){return r.group===gname;});
+    if(!items.length) return;
+    var gc=items[0].groupColor;
+    groups.push({label:gname,color:gc,items:items});
   });
+  // filter groups
+  if(filter!=='all'){
+    var map={internal:'内部运营',supply:'供应网络',external:'外部宏观'};
+    var target=map[filter]||'';
+    groups=groups.filter(function(g){return g.label===target;});
+  }
   var flat=[];
   groups.forEach(function(g){
-    flat.push({type:'h',label:g.label});
+    flat.push({type:'h',label:g.label,color:g.color});
     g.items.forEach(function(r){flat.push(r);});
   });
   var countEl=document.getElementById('rrMatrixCount');
@@ -245,45 +195,48 @@ function renderMatrix(risks,filter){
 
   var h='<table style="width:100%;border-collapse:collapse;min-width:1200px;font-size:12px">'
     +'<thead><tr style="background:var(--primary-bg)">'
-    +'<th style="padding:8px 10px;text-align:left;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border)">风险代码</th>'
-    +'<th style="padding:8px 10px;text-align:left;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border)">风险领域</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);cursor:pointer" onclick="window._rrSort(\'score\')">综合评分 ▾</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);cursor:pointer" onclick="window._rrSort(\'agility\')">敏捷性</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);cursor:pointer" onclick="window._rrSort(\'resilience\')">韧性</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border)">TTS存活</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border)">TTR恢复</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border)">VAR损失</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border)">趋势</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border)">SCOR维度</th>'
-    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border)">操作</th>'
+    +'<th style="padding:8px 10px;text-align:left;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">代码</th>'
+    +'<th style="padding:8px 10px;text-align:left;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">风险领域</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">描述</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap" onclick="window._rrSort(\'score\')">综合 ▾</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap" onclick="window._rrSort(\'agility\')">敏捷性</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap" onclick="window._rrSort(\'resilience\')">韧性</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">TTS</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">TTR</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">VAR</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">趋势</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">SCOR</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">预警规则</th>'
+    +'<th style="padding:8px 10px;text-align:center;color:var(--text-sec);font-size:10px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap">操作</th>'
     +'</tr></thead><tbody>';
 
   flat.forEach(function(item){
     if(item.type==='h'){
-      h+='<tr style="background:var(--primary-bg)"><td colspan="11" style="padding:7px 14px;font-size:11px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)">'+item.label+'</td></tr>';
+      h+='<tr style="background:var(--primary-bg)"><td colspan="13" style="padding:7px 14px;font-size:11px;font-weight:700;color:var(--text-sec);letter-spacing:.04em;border-bottom:1px solid var(--border)"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+item.color+';margin-right:6px;vertical-align:middle"></span>'+item.label+'</td></tr>';
       return;
     }
-    var r=item.risk; var lcl=LVL[r.level];
-    var tr=TRD[r.trend];
+    var r=item; var lcl=LVL[r.level]; var tr=TRD[r.trend];
     var ab=r.agility, ac=ab<40?'var(--danger)':ab<60?'var(--warning)':'var(--success)';
     var rb=r.resilience, rc=rb<40?'var(--danger)':rb<60?'var(--warning)':'var(--success)';
     var ttsW=r.tts<7?'<i class="fas fa-exclamation-triangle" style="color:var(--danger);font-size:9px;margin-right:2px"></i>':'';
     var ttrW=r.ttr>21?'<i class="fas fa-exclamation-triangle" style="color:var(--warning);font-size:9px;margin-right:2px"></i>':'';
     var vc=r.var>500?'var(--danger)':r.var>200?'var(--warning)':'var(--text)';
-    var scorMap={可靠性:'var(--primary)',响应性:'var(--warning)',敏捷性:'var(--success)',成本:'#8b5cf6',韧性:'var(--danger)'};
-    var scl=scorMap[r.scor.impact]||'var(--text)';
+    var scorMap={可靠性:'var(--primary)',响应性:'var(--warning)',敏捷性:'var(--success)',成本:'var(--primary-light)',韧性:'var(--danger)',资产效率:'#8b5cf6'};
+    var scl=scorMap[r.scor]||'var(--text)';
     h+='<tr style="transition:all .15s;border-bottom:1px solid var(--border-light)" onmouseenter="this.style.background=\'var(--primary-bg)\'" onmouseleave="this.style.background=\'\'">'
-      +'<td style="padding:10px 10px"><span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:'+lcl.bg+';color:'+lcl.txt+';font-weight:700;font-size:10px">'+r.id+'</span><span style="font-size:10px;color:var(--text-muted);margin-left:4px">'+item.catId+'</span></td>'
-      +'<td style="padding:10px 10px"><div style="font-weight:600;color:var(--text)">'+r.name+'</div><div style="font-size:10px;color:var(--text-muted)">'+item.catName+'</div></td>'
-      +'<td style="padding:10px 10px;text-align:center"><span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:24px;border-radius:6px;background:'+lcl.bg+';color:'+lcl.txt+';font-weight:700;font-size:12px">'+r.score+'</span></td>'
-      +'<td style="padding:10px 8px;text-align:center"><div style="width:70px;margin:0 auto;height:6px;background:var(--border-light);border-radius:3px;overflow:hidden"><div style="width:'+ab+'%;height:100%;background:'+ac+';border-radius:3px"></div></div><div style="font-size:9px;color:'+ac+';margin-top:2px">'+ab+'</div></td>'
-      +'<td style="padding:10px 8px;text-align:center"><div style="width:70px;margin:0 auto;height:6px;background:var(--border-light);border-radius:3px;overflow:hidden"><div style="width:'+rb+'%;height:100%;background:'+rc+';border-radius:3px"></div></div><div style="font-size:9px;color:'+rc+';margin-top:2px">'+rb+'</div></td>'
-      +'<td style="padding:10px 8px;text-align:center;font-family:monospace;color:'+(r.tts<7?'var(--danger)':'var(--text)')+';font-weight:600">'+ttsW+r.tts+'<span style="font-size:9px;color:var(--text-muted)"> 天</span></td>'
-      +'<td style="padding:10px 8px;text-align:center;font-family:monospace;color:'+(r.ttr>21?'var(--warning)':'var(--text)')+';font-weight:600">'+ttrW+r.ttr+'<span style="font-size:9px;color:var(--text-muted)"> 天</span></td>'
-      +'<td style="padding:10px 8px;text-align:center;font-family:monospace;color:'+vc+';font-weight:600">¥'+r.var+'<span style="font-size:9px;color:var(--text-muted)"> 万</span></td>'
-      +'<td style="padding:10px 8px;text-align:center"><span style="color:'+tr.color+';font-weight:700;font-size:14px">'+tr.icon+'</span><span style="font-size:10px;color:'+tr.color+'"> '+tr.label+'</span></td>'
-      +'<td style="padding:10px 8px;text-align:center"><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:'+scl+'22;color:'+scl+';border:1px solid '+scl+'44">'+r.scor.impact+'</span></td>'
-      +'<td style="padding:10px 8px;text-align:center"><button style="background:var(--primary);color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer" onclick="window._rrSim(\''+r.id+'\',\''+r.name.replace(/'/g,"\\'")+'\')">模拟</button></td>'
+      +'<td style="padding:8px 8px"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:22px;border-radius:5px;background:'+lcl.bg+';color:'+lcl.txt+';font-weight:700;font-size:10px;padding:0 6px">'+r.id+'</span></td>'
+      +'<td style="padding:8px 8px"><div style="font-weight:600;color:var(--text)">'+r.name+'</div></td>'
+      +'<td style="padding:8px 8px;max-width:200px"><div style="font-size:10px;color:var(--text-muted);line-height:1.3">'+r.desc+'</div></td>'
+      +'<td style="padding:8px 6px;text-align:center"><span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:22px;border-radius:5px;background:'+lcl.bg+';color:'+lcl.txt+';font-weight:700;font-size:11px">'+r.score+'</span></td>'
+      +'<td style="padding:8px 4px;text-align:center"><div style="width:60px;margin:0 auto;height:5px;background:var(--border-light);border-radius:3px;overflow:hidden"><div style="width:'+ab+'%;height:100%;background:'+ac+';border-radius:3px"></div></div><div style="font-size:9px;color:'+ac+';margin-top:2px">'+ab+'</div></td>'
+      +'<td style="padding:8px 4px;text-align:center"><div style="width:60px;margin:0 auto;height:5px;background:var(--border-light);border-radius:3px;overflow:hidden"><div style="width:'+rb+'%;height:100%;background:'+rc+';border-radius:3px"></div></div><div style="font-size:9px;color:'+rc+';margin-top:2px">'+rb+'</div></td>'
+      +'<td style="padding:8px 4px;text-align:center;font-family:monospace;color:'+(r.tts<7?'var(--danger)':'var(--text)')+';font-weight:600">'+ttsW+r.tts+'天</td>'
+      +'<td style="padding:8px 4px;text-align:center;font-family:monospace;color:'+(r.ttr>21?'var(--warning)':'var(--text)')+';font-weight:600">'+ttrW+r.ttr+'天</td>'
+      +'<td style="padding:8px 4px;text-align:center;font-family:monospace;color:'+vc+';font-weight:600">¥'+r.var+'万</td>'
+      +'<td style="padding:8px 4px;text-align:center"><span style="color:'+tr.color+';font-weight:700;font-size:13px">'+tr.icon+'</span><span style="font-size:9px;color:'+tr.color+'">'+tr.label+'</span></td>'
+      +'<td style="padding:8px 4px;text-align:center"><span style="padding:2px 6px;border-radius:10px;font-size:9px;font-weight:600;background:'+scl+'22;color:'+scl+'">'+r.scor+'</span></td>'
+      +'<td style="padding:8px 4px;text-align:center"><span style="font-size:9px;color:var(--text-muted);line-height:1.2;display:block;max-width:140px">'+r.alertRule+'</span></td>'
+      +'<td style="padding:8px 4px;text-align:center"><button style="background:var(--primary);color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer" onclick="window._rrSim(\''+r.id+'\',\''+r.name.replace(/'/g,"\\'")+'\')">模拟</button></td>'
       +'</tr>';
   });
   h+='</tbody></table>';
@@ -304,9 +257,9 @@ function renderQuad(risks){
   dom.style.width='100%'; dom.style.height='360px';
   var p1d=[],p2d=[],p3d=[];
   risks.forEach(function(r){
-    var rr=r.risk; if(rr.tts>30||rr.ttr>60)return;
-    var pt={name:rr.name,value:[rr.ttr,rr.tts,rr.var]};
-    if(rr.level==='P1')p1d.push(pt); else if(rr.level==='P2')p2d.push(pt); else p3d.push(pt);
+    if(r.tts>30||r.ttr>60)return;
+    var pt={name:r.name,value:[r.ttr,r.tts,r.var]};
+    if(r.level==='P1')p1d.push(pt); else if(r.level==='P2')p2d.push(pt); else p3d.push(pt);
   });
   if(App.charts.rrQuad)try{App.charts.rrQuad.dispose();}catch(e){}
   var ch=echarts.init(dom);
@@ -328,11 +281,10 @@ function renderQuad(risks){
 // ── TOP 8 Alerts ──
 function renderTop8(risks){
   var el=document.getElementById('rrTopAlerts'); if(!el) return;
-  var top=risks.filter(function(r){return r.risk.score>75;}).sort(function(a,b){return b.risk.score-a.risk.score;}).slice(0,8);
+  var top=risks.filter(function(r){return r.score>75;}).sort(function(a,b){return b.score-a.score;}).slice(0,8);
   if(!top.length){el.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px">暂无高风险项</div>';return;}
-  el.innerHTML=top.map(function(item){
-    var r=item.risk; var lcl=LVL[r.level]; var tr=TRD[r.trend];
-    var tip=AI[r.id]||AI.d;
+  el.innerHTML=top.map(function(r){
+    var lcl=LVL[r.level]; var tr=TRD[r.trend];
     return '<div style="background:var(--card);border:1px solid var(--border-light);border-radius:8px;padding:12px 14px;margin-bottom:8px;border-left:4px solid '+lcl.bg+'" onmouseenter="this.style.borderColor=\'var(--primary)\';this.style.boxShadow=\'var(--shadow-md)\'" onmouseleave="this.style.borderColor=\'var(--border-light)\';this.style.boxShadow=\'none\'">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       +'<div><span style="background:'+lcl.bg+';color:'+lcl.txt+';padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px">'+r.level+'</span><span style="font-weight:700;color:var(--text)">'+r.name+'</span></div>'
@@ -341,8 +293,8 @@ function renderTop8(risks){
       +'<span>弹性: '+r.agility+'%</span><span>TTS: <b style="color:'+(r.tts<7?'var(--danger)':'var(--text)')+'">'+r.tts+'天</b>'+(r.tts<7?' ⚠':'')+'</span>'
       +'<span>TTR: <b style="color:'+(r.ttr>21?'var(--warning)':'var(--text)')+'">'+r.ttr+'天</b></span>'
       +'<span>VAR: <b style="color:'+(r.var>500?'var(--danger)':'var(--text)')+'">¥'+r.var+'万</b></span></div>'
-      +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">SCOR: ['+r.scor.impact+'] '+r.scor.indicator+'</div>'
-      +'<div style="font-size:10px;color:var(--text-sec);font-style:italic;margin-bottom:8px">🤖 '+tip+'</div>'
+      +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">SCOR: ['+r.scor+'] '+r.indicator+'</div>'
+      +'<div style="font-size:10px;color:var(--text-sec);font-style:italic;margin-bottom:8px">🤖 '+r.aiAdvice+'</div>'
       +'<div style="display:flex;gap:6px">'
       +'<button style="background:var(--primary);color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:9px;cursor:pointer" onclick="window._rrSim(\''+r.id+'\',\''+r.name.replace(/'/g,"\\'")+'\')">模拟</button>'
       +'<button style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);border-radius:4px;padding:2px 8px;font-size:9px;cursor:pointer" onclick="alert(\'事件创建中...\')">创建事件</button>'
