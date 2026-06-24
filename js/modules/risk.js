@@ -33,12 +33,13 @@ function allRisks(filter){
 
 // ═══ 主入口 ═══
 function initPage_risk(){
-  var fp = getFilteredProjects(); if(!fp.length) return;
+  var fp = getFilteredProjects();
   var sel = document.getElementById('riskProjectSelect');
   if(sel) fillProjectSelect(sel, fp);
   consumeDrillDown('riskProjectSelect');
-  var pid = sel && sel.value ? sel.value : fp[0].id;
-  var p = projects.find(function(x){return x.id===pid;}) || fp[0];
+  var pid = sel ? sel.value : '';
+  var p = pid ? projects.find(function(x){return x.id===pid;}) : null;
+  if(!p && fp.length){ p = fp[0]; pid = p.id; if(sel) sel.value = pid; }
   if(!p) return;
 
   var catF=document.getElementById('riskCatFilter');
