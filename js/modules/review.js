@@ -1,75 +1,186 @@
-// ===== 闭环复盘 =====
+// Module: review — 5.3 闭环复盘（验尸台+经验库）
 (function(){
 "use strict";
-var REVIEW_EVENTS = [
-  {id:'CL-001',title:'XR模组A01 紧采溢价事件',cat:'物料',rootCause:'安全库存不足',measure:'建立长周期料安全库存机制',closeDate:'06-10',recur:false,lesson:'NPI项目长周期料需提前8周锁定'},
-  {id:'CL-002',title:'TWS整机B09 齐套缺口',cat:'计划',rootCause:'BOM变更未同步',measure:'BOM变更冻结窗口+齐套预检',closeDate:'06-08',recur:false,lesson:'BOM变更需48小时前通知计划'},
-  {id:'CL-003',title:'车载传感E12 供应商份额切换',cat:'供应商',rootCause:'单源依赖',measure:'备用源预认证+份额缓冲',closeDate:'06-05',recur:false,lesson:'车规模组必须保持双源'},
-  {id:'CL-004',title:'专业音频G66 呆滞料',cat:'物料',rootCause:'EOL预测偏差',measure:'EOL前8周启动呆滞预警',closeDate:'06-03',recur:true,lesson:'EOL项目需建立呆滞周报'},
-  {id:'CL-005',title:'VR光学J31 空运追交',cat:'物流',rootCause:'排产延误',measure:'PVT阶段日计划会+风险料预警',closeDate:'05-30',recur:false,lesson:'PVT空运需绑定责任事件'},
-  {id:'CL-006',title:'IoT传感器K08 交期偏差',cat:'计划',rootCause:'产能分配冲突',measure:'跨项目产能协调机制',closeDate:'05-28',recur:false,lesson:'高峰期需预留15%产能缓冲'},
-  {id:'CL-007',title:'麦克风D05 IQC批量不良',cat:'质量',rootCause:'供应商工艺偏移',measure:'SPC监控+首件确认加强',closeDate:'05-25',recur:false,lesson:'NPI供应商需加强SPC'},
-  {id:'CL-008',title:'音箱模组C18 缺料停线',cat:'物料',rootCause:'MRP建议未执行',measure:'MRP执行率纳入考核',closeDate:'05-20',recur:true,lesson:'MRP执行率需日清日结'}
+
+var REVIEW_DATA = [
+  { eventId:'E-0842', title:'单源物料TTS<3天', closeDate:'06/27', status:'待复盘', days:3.3, effectiveness:'B+', score:85,
+    timeline:[
+      {time:'06/24 08:32', stage:'发现', text:'规则触发', duration:'43分钟'},
+      {time:'06/24 09:15', stage:'响应', text:'王磊接单', duration:'5.25小时'},
+      {time:'06/24 14:30', stage:'决策', text:'方案确认', duration:'2.3天'},
+      {time:'06/26 11:00', stage:'物料到货', text:'空运到货', duration:'0.3天'},
+      {time:'06/27 17:00', stage:'验证关闭', text:'生产恢复', duration:'总计3.3天'}
+    ],
+    why:[
+      '供应商XX产能受限，且歌尔仅有该单一供应商',
+      '2024年Q3双源计划中止，资源被抽调至NPI项目',
+      '采购KPI未包含「双源覆盖率」考核指标',
+      '控制塔上线前缺少全局风险度量机制',
+      '双源认证资源优先级机制缺失'
+    ],
+    rootCauseTags:['流程根因：双源认证资源优先级机制缺失','制度根因：采购KPI未对齐韧性目标','系统根因：无自动预警触发双源启动'],
+    metrics:[
+      {name:'物料覆盖天数', expected:'14天', actual:'12天', eval:'基本达成'},
+      {name:'AW01工单', expected:'不停产', actual:'延迟4小时', eval:'基本达成'},
+      {name:'OTIF', expected:'≥95%', actual:'94.2%', eval:'未达成'},
+      {name:'处置成本', expected:'¥80万', actual:'¥73万', eval:'优于预期'},
+      {name:'处置时长', expected:'3天', actual:'3.3天', eval:'略超预期'}
+    ],
+    improvements:[
+      {action:'将双源覆盖率纳入采购季度KPI', owner:'赵敏', deadline:'07/15', status:'进行中'},
+      {action:'建立单源物料强制预警规则', owner:'系统组', deadline:'07/30', status:'待启动'},
+      {action:'制定NPI期间双源保护机制', owner:'王磊', deadline:'08/01', status:'待启动'}
+    ],
+    summary:'单源物料在NPI资源抽调期间需设置自动保护机制，双源认证中止时应自动提升风险等级并触发预警。',
+    tags:['单源依赖','NPI冲突','韧性管理','R08'],
+    relatedCases:['E-0712','E-0698']
+  },
+  { eventId:'E-0825', title:'NPI工程变更影响BOM', closeDate:'06/24', status:'待复盘', days:6.0, effectiveness:'A', score:92,
+    timeline:[
+      {time:'06/18 10:00', stage:'发现', text:'人工上报', duration:'4小时'},
+      {time:'06/18 14:00', stage:'响应', text:'冻结BOM', duration:'5.8天'},
+      {time:'06/24 09:00', stage:'关闭', text:'首批重排完成', duration:'总计6.0天'}
+    ],
+    why:['ECN通知过晚','BOM冻结窗口未固化','变更影响评估流程缺失'],
+    rootCauseTags:['流程根因：ECN影响评估流程缺失','制度根因：BOM变更窗口未纳入考核'],
+    metrics:[
+      {name:'物料呆滞风险', expected:'消除', actual:'消除', eval:'达成'},
+      {name:'重排成本', expected:'¥50万', actual:'¥42万', eval:'优于预期'},
+      {name:'交付延迟', expected:'≤3天', actual:'2.5天', eval:'达成'}
+    ],
+    improvements:[
+      {action:'建立ECN影响评估Checklist', owner:'工程部', deadline:'07/10', status:'进行中'},
+      {action:'BOM冻结窗口纳入项目KPI', owner:'PMO', deadline:'07/20', status:'待启动'}
+    ],
+    summary:'ECN需提前D-7完成影响评估，BOM变更冻结窗口必须纳入项目里程碑。',
+    tags:['ECN','BOM','NPI','R02'],
+    relatedCases:['E-0789']
+  }
 ];
 
-function initPage_review(container){
-  container = container || document.getElementById('page-review');
+var selectedReview = REVIEW_DATA[0];
+
+function priorityColor(p){ return p==='P1'?'var(--danger)':p==='P2'?'var(--warning)':'var(--info)'; }
+
+function initPage_review(){
+  var container = document.getElementById('page-review');
   if(!container) return;
   container.innerHTML =
-    '<div class="kpi-grid" id="rvKpiGrid"></div>'
-    + '<div class="chart-row" style="grid-template-columns:1fr 1fr">'
-    + '<div class="chart-card"><div class="card-header"><h3><i class="fas fa-chart-pie"></i> 根因分布</h3></div><div class="card-body"><div style="height:280px"><canvas id="rvRootChart"></canvas></div></div></div>'
-    + '<div class="chart-card"><div class="card-header"><h3><i class="fas fa-chart-line"></i> 复发率趋势</h3></div><div class="card-body"><div style="height:280px"><canvas id="rvRecurChart"></canvas></div></div></div>'
-    + '</div>'
-    + '<div class="chart-row" style="grid-template-columns:1fr;margin-top:14px">'
-    + '<div class="chart-card"><div class="card-header"><h3><i class="fas fa-clipboard-check"></i> 已关闭事件归档</h3></div><div class="card-body" style="padding:0;overflow-x:auto"><table class="data-table" id="rvTable"><thead></thead><tbody></tbody></table></div></div>'
-    + '</div>'
-    + '<div class="chart-row" style="grid-template-columns:1fr;margin-top:14px">'
-    + '<div class="chart-card"><div class="card-header"><h3><i class="fas fa-book"></i> 经验教训沉淀</h3></div><div class="card-body" id="rvLessons"></div></div>'
-    + '</div>';
-
-  // KPI
-  var kpiGrid = container.querySelector('#rvKpiGrid');
-  if(kpiGrid){
-    var closed = REVIEW_EVENTS.length;
-    var recur = REVIEW_EVENTS.filter(function(e){return e.recur;}).length;
-    var recurRate = Math.round(recur/closed*100);
-    kpiGrid.innerHTML = [
-      {lbl:'本月关闭事件',val:closed,unit:'件',color:'var(--primary)',icon:'fa-circle-check'},
-      {lbl:'平均关闭时长',val:4.2,unit:'天',color:'var(--info)',icon:'fa-clock'},
-      {lbl:'复发率',val:recurRate,unit:'%',color:recurRate>20?'var(--danger)':'var(--warning)',icon:'fa-rotate-right'},
-      {lbl:'知识库沉淀',val:closed,unit:'条',color:'var(--success)',icon:'fa-book'}
-    ].map(function(k){return '<div class="kpi-card" style="border-top:3px solid '+k.color+'"><div style="display:flex;align-items:center;gap:8px"><i class="fas '+k.icon+'" style="color:'+k.color+'"></i><span style="font-size:11px;color:var(--text-sec);font-weight:600">'+k.lbl+'</span></div><div style="font-size:28px;font-weight:800;color:'+k.color+';margin-top:8px">'+k.val+'<span style="font-size:13px;color:var(--text-muted)"> '+k.unit+'</span></div></div>';}).join('');
-  }
-
-  // 归档表
-  var table = container.querySelector('#rvTable');
-  if(table){
-    var catColors = {物料:'var(--danger)',计划:'var(--warning)',供应商:'var(--info)',质量:'var(--purple)',物流:'var(--teal)'};
-    table.querySelector('thead').innerHTML = '<tr><th>事件ID</th><th>事件描述</th><th>根因分类</th><th>根因</th><th>改善措施</th><th>关闭日期</th><th>复发</th></tr>';
-    table.querySelector('tbody').innerHTML = REVIEW_EVENTS.map(function(e){
-      var catColor = catColors[e.cat]||'var(--text-muted)';
-      return '<tr><td>'+e.id+'</td><td>'+e.title+'</td><td><span style="color:'+catColor+';font-weight:600">'+e.cat+'</span></td><td>'+e.rootCause+'</td><td>'+e.measure+'</td><td>'+e.closeDate+'</td><td>'+(e.recur?'<span style="color:var(--danger);font-weight:700">是</span>':'<span style="color:var(--success)">否</span>')+'</td></tr>';
-    }).join('');
-  }
-
-  // 根因饼图
-  if(window.Chart){
-    var cats = {}; REVIEW_EVENTS.forEach(function(e){cats[e.cat]=(cats[e.cat]||0)+1;});
-    var ctx1 = container.querySelector('#rvRootChart');
-    if(ctx1){ if(App.charts.rvRoot)App.charts.rvRoot.destroy(); App.charts.rvRoot=new Chart(ctx1,{type:'doughnut',data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['rgba(239,68,68,0.7)','rgba(245,158,11,0.7)','rgba(59,130,246,0.7)','rgba(124,58,237,0.7)','rgba(20,184,166,0.7)']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}}); }
-    // 复发率趋势
-    var ctx2 = container.querySelector('#rvRecurChart');
-    if(ctx2){ if(App.charts.rvRecur)App.charts.rvRecur.destroy(); App.charts.rvRecur=new Chart(ctx2,{type:'line',data:{labels:['1月','2月','3月','4月','5月','6月'],datasets:[{label:'复发率%',data:[28,25,22,18,20,16],borderColor:'rgba(239,68,68,1)',backgroundColor:'rgba(239,68,68,0.1)',borderWidth:2,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}); }
-  }
-
-  // 经验教训
-  var lessonsEl = container.querySelector('#rvLessons');
-  if(lessonsEl){
-    lessonsEl.innerHTML = REVIEW_EVENTS.map(function(e){
-      return '<div style="padding:12px;border-left:3px solid '+(e.recur?'var(--danger)':'var(--success)')+';background:var(--bg);border-radius:0 8px 8px 0;margin-bottom:8px"><div style="font-weight:700;font-size:13px;margin-bottom:4px">'+e.title+'</div><div style="font-size:12px;color:var(--text-sec)"><strong>教训：</strong>'+e.lesson+'</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">'+e.id+' · 关闭 '+e.closeDate+(e.recur?' · <span style="color:var(--danger);font-weight:600">已复发</span>':'')+'</div></div>';
-    }).join('');
-  }
+    '<div class="filter-bar">'
+      +'<span style="font-size:11px;color:var(--text-muted)">闭环复盘 · 验证关闭 · 萃取经验 · 降低复发</span>'
+      +'<button class="cl-btn cl-btn-primary" style="margin-left:auto" onclick="window._rvStats()">复盘统计</button>'
+    +'</div>'
+    +'<div class="rv-layout">'
+      +'<div class="rv-left">'
+        +'<div class="rv-section-title">待复盘事件队列</div>'
+        +'<div class="rv-queue" id="rvQueue"></div>'
+      +'</div>'
+      +'<div class="rv-right" id="rvReport"></div>'
+    +'</div>'
+    +'<div id="rvStatsPanel" style="display:none"></div>';
+  renderQueue();
+  renderReport();
 }
-registerModule('review', initPage_review);
+
+function renderQueue(){
+  var el = document.getElementById('rvQueue');
+  if(!el) return;
+  el.innerHTML = REVIEW_DATA.map(function(r){
+    var active = selectedReview && selectedReview.eventId===r.eventId?'active':'';
+    var due = r.status==='待复盘'?'复盘截止：06/30':'';
+    return '<div class="rv-queue-item '+active+'" onclick="window._rvSelect(\''+r.eventId+'\')">'
+      +'<div class="rv-queue-title">'+r.title+'</div>'
+      +'<div class="rv-queue-meta">'+r.eventId+' · 关闭时间 '+r.closeDate+' · 处置 '+r.days+'天</div>'
+      +'<div class="rv-queue-meta">有效性 <b>'+r.effectiveness+'</b> · '+due+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function renderReport(){
+  var el = document.getElementById('rvReport');
+  if(!el || !selectedReview) return;
+  var r = selectedReview;
+  el.innerHTML =
+    '<div class="rv-report-card">'
+      +'<div class="rv-report-header">'
+        +'<div><div class="rv-report-title">'+r.title+'</div><div class="rv-report-sub">'+r.eventId+' · 关闭时间 '+r.closeDate+' · 处置天数 '+r.days+'天</div></div>'
+        +'<div class="rv-effectiveness">综合有效性 <b>'+r.effectiveness+'</b></div>'
+      +'</div>'
+      +'<div class="rv-modules">'
+        +'<div class="rv-module">'
+          +'<div class="rv-module-title">事件回顾</div>'
+          +'<div class="rv-timeline">'+r.timeline.map(function(t){
+            return '<div class="rv-timeline-item"><div class="rv-timeline-dot"></div><div class="rv-timeline-content"><div class="rv-timeline-time">'+t.time+'</div><div>'+t.stage+'：'+t.text+'</div><div class="rv-timeline-duration">'+t.duration+'</div></div></div>';
+          }).join('')+'</div>'
+        +'</div>'
+        +'<div class="rv-module">'
+          +'<div class="rv-module-title">根因分析（5-Why）</div>'
+          +'<div class="rv-why-list">'+r.why.map(function(w,i){return '<div class="rv-why-item"><span>Why'+(i+1)+'</span>'+w+'</div>';}).join('')+'</div>'
+          +'<div class="rv-root-tags">'+r.rootCauseTags.map(function(t){return '<div class="rv-root-tag">'+t+'</div>';}).join('')+'</div>'
+        +'</div>'
+        +'<div class="rv-module">'
+          +'<div class="rv-module-title">方案效果评估</div>'
+          +'<table class="data-table rv-compare-table"><thead><tr><th>指标</th><th>方案预期</th><th>实际结果</th><th>评价</th></tr></thead><tbody>'
+          +r.metrics.map(function(m){return '<tr><td>'+m.name+'</td><td>'+m.expected+'</td><td>'+m.actual+'</td><td><span class="rv-eval-'+m.eval+'">'+m.eval+'</span></td></tr>';}).join('')
+          +'</tbody></table>'
+        +'</div>'
+        +'<div class="rv-module">'
+          +'<div class="rv-module-title">改进行动</div>'
+          +'<table class="data-table rv-improve-table"><thead><tr><th>改进行动</th><th>责任人</th><th>期限</th><th>状态</th></tr></thead><tbody>'
+          +r.improvements.map(function(i){return '<tr><td>'+i.action+'</td><td>'+i.owner+'</td><td>'+i.deadline+'</td><td><span class="rv-status-'+i.status+'">'+i.status+'</span></td></tr>';}).join('')
+          +'</tbody></table>'
+        +'</div>'
+        +'<div class="rv-module rv-lesson-module">'
+          +'<div class="rv-module-title">经验沉淀</div>'
+          +'<div class="rv-lesson-summary">'+r.summary+'</div>'
+          +'<div class="rv-tags">'+r.tags.map(function(t){return '<span class="rv-tag">#'+t+'</span>';}).join('')+'</div>'
+          +'<div class="rv-related">相关案例：'+r.relatedCases.map(function(c){return '<a onclick="alert(\'跳转案例 '+c+'\')">'+c+'</a>';}).join('、')+'</div>'
+          +'<button class="cl-btn cl-btn-primary" style="margin-top:12px" onclick="window._rvSyncKnowledge()">提交并同步到知识中心 6.1</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+}
+
+function renderStats(){
+  var el = document.getElementById('rvStatsPanel');
+  if(!el) return;
+  el.style.display = el.style.display==='none'?'block':'none';
+  el.innerHTML =
+    '<div class="rv-stats-card">'
+      +'<div class="rv-stats-header"><span>本季度复盘统计</span><button onclick="window._rvStats()" style="background:none;border:none;cursor:pointer;font-size:18px">×</button></div>'
+      +'<div class="rv-stats-grid">'
+        +'<div class="rv-stat"><div class="rv-stat-num">38</div><div class="rv-stat-label">总复盘数</div></div>'
+        +'<div class="rv-stat"><div class="rv-stat-num">87%</div><div class="rv-stat-label">按期完成率</div></div>'
+        +'<div class="rv-stat"><div class="rv-stat-num">71%</div><div class="rv-stat-label">改进行动完成率</div></div>'
+        +'<div class="rv-stat"><div class="rv-stat-num">76%</div><div class="rv-stat-label">方案有效率</div></div>'
+      +'</div>'
+      +'<div class="rv-root-chart">'
+        +'<div class="rv-chart-title">高频根因 TOP5</div>'
+        +'<div class="rv-bar-row"><span>① 单源依赖管理缺失</span><div class="rv-bar-wrap"><div class="rv-bar" style="width:80%"></div></div><span>8次</span></div>'
+        +'<div class="rv-bar-row"><span>② 预测偏差未及时修订</span><div class="rv-bar-wrap"><div class="rv-bar" style="width:60%"></div></div><span>6次</span></div>'
+        +'<div class="rv-bar-row"><span>③ Tier2可视度不足</span><div class="rv-bar-wrap"><div class="rv-bar" style="width:50%"></div></div><span>5次</span></div>'
+        +'<div class="rv-bar-row"><span>④ NPI与运营资源冲突</span><div class="rv-bar-wrap"><div class="rv-bar" style="width:40%"></div></div><span>4次</span></div>'
+        +'<div class="rv-bar-row"><span>⑤ 外部政策变动响应滞后</span><div class="rv-bar-wrap"><div class="rv-bar" style="width:30%"></div></div><span>3次</span></div>'
+      +'</div>'
+    +'</div>';
+}
+
+window._rvSelect = function(eid){
+  selectedReview = REVIEW_DATA.find(function(r){return r.eventId===eid;}) || selectedReview;
+  renderQueue();
+  renderReport();
+};
+
+window._rvSyncKnowledge = function(){
+  alert('已同步至知识中心 6.1');
+  switchPage('knowledge');
+};
+
+window._rvStats = function(){
+  renderStats();
+};
+
+window.initPage_review = initPage_review;
+
 })();
+registerModule('review', window.initPage_review);

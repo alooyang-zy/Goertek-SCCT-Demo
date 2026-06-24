@@ -1597,6 +1597,182 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .sc-card-accent.green~.sc-card-value{color:var(--success)}
 .sc-card-accent.red~.sc-card-value{color:var(--danger)}
 .sc-card-accent.amber~.sc-card-value{color:var(--warning)}
+
+/* ===== 风险闭环 — 5.1 事件中心 ===== */
+.cl-status-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.cl-status-card{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);padding:16px 20px;cursor:pointer;transition:var(--transition);box-shadow:var(--shadow)}
+.cl-status-card:hover,.cl-status-card.active{border-color:var(--primary);box-shadow:var(--shadow-md)}
+.cl-status-label{font-size:12px;color:var(--text-sec);font-weight:600}
+.cl-status-num{font-size:28px;font-weight:800;color:var(--text);margin:6px 0}
+.cl-status-num span{font-size:14px;color:var(--text-muted);font-weight:500}
+.cl-status-meta{font-size:11px;color:var(--text-muted)}
+.cl-main-layout{display:grid;grid-template-columns:1fr 360px;gap:14px;position:relative}
+.cl-list-panel{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.cl-event-table{width:100%;border-collapse:collapse;font-size:12px}
+.cl-event-table th{padding:10px 8px;text-align:left;color:var(--text-sec);font-size:11px;font-weight:600;border-bottom:1px solid var(--border)}
+.cl-event-table td{padding:12px 8px;border-bottom:1px solid var(--border-light);vertical-align:middle}
+.cl-event-table tr:hover,.cl-event-table tr.active{background:var(--primary-bg)}
+.cl-event-title{font-weight:600;color:var(--text)}
+.cl-deadline{font-family:monospace;font-weight:600}
+.cl-overdue .cl-deadline{color:var(--danger)}
+.cl-overdue{background:var(--danger-bg)!important}
+.cl-pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap}
+.cl-btn{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--text);transition:var(--transition)}
+.cl-btn:hover{background:var(--primary-bg);border-color:var(--primary)}
+.cl-btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.cl-btn-primary:hover{background:var(--primary-dark);color:#fff}
+.cl-btn-warn{background:var(--warning-bg);color:var(--warning);border-color:var(--warning)}
+.cl-btn-sm{padding:2px 6px;font-size:10px;border-radius:4px;margin-right:4px}
+.cl-detail-drawer{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);box-shadow:var(--shadow);padding:0;max-height:calc(100vh - 180px);overflow:auto;display:none}
+.cl-detail-drawer.open{display:block}
+.cl-drawer-header{padding:16px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:flex-start}
+.cl-drawer-title{font-size:15px;font-weight:700;color:var(--text)}
+.cl-drawer-sub{display:flex;gap:8px;align-items:center;margin-top:6px}
+.cl-drawer-close{background:none;border:none;font-size:20px;color:var(--text-muted);cursor:pointer}
+.cl-drawer-body{padding:16px}
+.cl-drawer-section{margin-bottom:18px}
+.cl-drawer-sec-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;padding-left:8px;border-left:3px solid var(--primary)}
+.cl-info-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border-light);font-size:12px}
+.cl-info-row label{color:var(--text-muted);font-weight:500}
+.cl-info-row div{color:var(--text-sec);max-width:60%;text-align:right}
+.cl-timeline{position:relative;padding-left:16px}
+.cl-timeline-item{position:relative;padding:8px 0 12px 16px;border-left:2px solid var(--border-light)}
+.cl-timeline-dot{position:absolute;left:-5px;top:10px;width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.cl-timeline-dot.auto{background:var(--danger)}
+.cl-timeline-dot.owner{background:var(--warning)}
+.cl-timeline-dot.done{background:var(--success)}
+.cl-timeline-time{font-size:10px;color:var(--text-muted);margin-bottom:2px}
+.cl-timeline-content{font-size:12px;color:var(--text-sec)}
+.cl-drawer-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cl-modal{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;display:none;align-items:center;justify-content:center}
+.cl-modal.open{display:flex}
+.cl-modal-content{background:var(--card);border-radius:var(--radius);width:520px;max-width:90%;box-shadow:var(--shadow-lg);max-height:90vh;overflow:auto}
+.cl-modal-header{padding:14px 16px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.cl-modal-header button{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-muted)}
+.cl-modal-body{padding:16px}
+.cl-form-row{margin-bottom:12px}
+.cl-form-row label{display:block;font-size:12px;color:var(--text-sec);margin-bottom:4px;font-weight:600}
+.cl-form-row input,.cl-form-row select,.cl-form-row textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit}
+.cl-modal-footer{padding:14px 16px;border-top:1px solid var(--border-light);display:flex;justify-content:flex-end;gap:8px}
+
+/* ===== 风险闭环 — 5.2 方案对策 ===== */
+.sol-overview{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.sol-overview-card{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow)}
+.sol-overview-label{font-size:12px;color:var(--text-sec);font-weight:600}
+.sol-overview-num{font-size:28px;font-weight:800;color:var(--text);margin:6px 0}
+.sol-overview-num span{font-size:14px;color:var(--text-muted);font-weight:500}
+.sol-overview-sub{font-size:11px;color:var(--text-muted)}
+.sol-main{display:grid;grid-template-columns:1fr 420px;gap:14px}
+.sol-left{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.sol-view-toggle{display:flex;gap:8px;margin-bottom:12px}
+.sol-view-toggle button{padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:12px;cursor:pointer}
+.sol-view-toggle button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.sol-kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;min-height:400px}
+.sol-kanban-col{background:var(--bg);border-radius:8px;padding:10px}
+.sol-kanban-header{font-size:12px;font-weight:700;color:var(--text-sec);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.sol-kanban-count{background:var(--card);padding:2px 8px;border-radius:99px;font-size:11px}
+.sol-kanban-card{background:var(--card);border:1px solid var(--border-light);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:var(--transition)}
+.sol-kanban-card:hover,.sol-kanban-card.active{border-color:var(--primary);box-shadow:var(--shadow-md)}
+.sol-card-priority{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;color:#fff;margin-bottom:6px}
+.sol-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px}
+.sol-card-meta{font-size:11px;color:var(--text-muted);margin-bottom:4px}
+.sol-progress{height:4px;background:var(--border-light);border-radius:2px;margin-top:6px;overflow:hidden}
+.sol-progress-bar{height:100%;background:var(--primary);border-radius:2px}
+.sol-progress-text{font-size:10px;color:var(--text-muted);margin-top:2px}
+.sol-detail-card{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);box-shadow:var(--shadow);padding:0;overflow:hidden}
+.sol-detail-header{padding:16px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:flex-start}
+.sol-detail-title{font-size:15px;font-weight:700;color:var(--text)}
+.sol-detail-sub{font-size:12px;color:var(--text-muted);margin-top:4px}
+.sol-tabs{display:flex;border-bottom:1px solid var(--border-light);background:var(--bg)}
+.sol-tab{padding:10px 14px;font-size:12px;color:var(--text-sec);cursor:pointer;border-bottom:2px solid transparent;transition:var(--transition)}
+.sol-tab:hover{color:var(--primary)}
+.sol-tab.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--card)}
+.sol-detail-body{padding:16px;min-height:280px}
+.sol-tab-content{font-size:12px}
+.sol-section-title{font-size:13px;font-weight:700;color:var(--text);margin:16px 0 8px;padding-left:8px;border-left:3px solid var(--primary)}
+.sol-section-title:first-child{margin-top:0}
+.sol-section-text{color:var(--text-sec);line-height:1.6;margin-bottom:12px}
+.sol-plan-table th,.sol-plan-table td{font-size:11px;padding:8px 6px}
+.sol-decision-box{background:var(--primary-bg);border:1px solid var(--primary-light);border-radius:8px;padding:12px;margin-top:16px}
+.sol-decision-box div{margin-bottom:4px;color:var(--text-sec)}
+.sol-timeline-item{padding:10px 0;border-bottom:1px solid var(--border-light)}
+.sol-timeline-time{font-size:10px;color:var(--text-muted)}
+.sol-timeline-user{font-size:11px;font-weight:700;color:var(--primary);margin:2px 0}
+.sol-timeline-text{font-size:12px;color:var(--text-sec)}
+.sol-comment-box{display:flex;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light)}
+.sol-comment-box input{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px}
+.sol-metrics{display:grid;gap:12px}
+.sol-metric-card{border:1px solid var(--border-light);border-radius:8px;padding:12px}
+.sol-metric-name{font-size:12px;font-weight:700;color:var(--text)}
+.sol-metric-value{font-size:16px;font-weight:800;color:var(--primary);margin:6px 0}
+.sol-sparkline{height:40px;position:relative;margin-top:8px}
+.sol-spark-bar{position:absolute;bottom:0;width:8px;background:var(--primary);border-radius:2px;opacity:.7}
+.sol-ai-panel{background:var(--info-bg);border-top:1px solid var(--border-light);padding:16px}
+.sol-ai-title{font-size:13px;font-weight:700;color:var(--info);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sol-ai-section{margin-bottom:10px}
+.sol-ai-sub{font-size:11px;font-weight:700;color:var(--text-sec);margin-bottom:4px}
+.sol-ai-section ul{padding-left:18px;margin:0}
+.sol-ai-section li{font-size:11px;color:var(--text-sec);margin-bottom:2px}
+.sol-ai-case{font-size:11px;color:var(--text-muted);padding:8px;background:var(--card);border-radius:6px}
+.sol-ai-case a{color:var(--primary);cursor:pointer;text-decoration:underline}
+.sol-list-table th,.sol-list-table td{font-size:11px;padding:8px 6px}
+
+/* ===== 风险闭环 — 5.3 闭环复盘 ===== */
+.rv-layout{display:grid;grid-template-columns:320px 1fr;gap:14px}
+.rv-left{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);max-height:calc(100vh - 180px);overflow:auto}
+.rv-section-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;padding-left:8px;border-left:3px solid var(--primary)}
+.rv-queue-item{padding:12px;border:1px solid var(--border-light);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:var(--transition)}
+.rv-queue-item:hover,.rv-queue-item.active{border-color:var(--primary);background:var(--primary-bg)}
+.rv-queue-title{font-size:13px;font-weight:700;color:var(--text)}
+.rv-queue-meta{font-size:11px;color:var(--text-muted);margin-top:4px}
+.rv-report-card{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);box-shadow:var(--shadow);max-height:calc(100vh - 180px);overflow:auto}
+.rv-report-header{padding:16px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center}
+.rv-report-title{font-size:16px;font-weight:700;color:var(--text)}
+.rv-report-sub{font-size:12px;color:var(--text-muted);margin-top:4px}
+.rv-effectiveness{background:var(--success-bg);color:var(--success);padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700}
+.rv-modules{padding:16px}
+.rv-module{margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border-light)}
+.rv-module:last-child{border-bottom:none}
+.rv-module-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;padding-left:8px;border-left:3px solid var(--primary)}
+.rv-timeline{position:relative;padding-left:12px}
+.rv-timeline-item{position:relative;padding:8px 0 12px 16px;border-left:2px solid var(--border-light)}
+.rv-timeline-dot{position:absolute;left:-5px;top:10px;width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.rv-timeline-content{font-size:12px;color:var(--text-sec)}
+.rv-timeline-time{font-size:10px;color:var(--text-muted);margin-bottom:2px}
+.rv-timeline-duration{font-size:10px;color:var(--warning);margin-top:2px;font-weight:600}
+.rv-why-list{margin-bottom:12px}
+.rv-why-item{font-size:12px;color:var(--text-sec);padding:8px 0;border-bottom:1px dashed var(--border-light);display:flex;gap:8px}
+.rv-why-item span{background:var(--primary);color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;height:fit-content}
+.rv-root-tags{display:flex;flex-wrap:wrap;gap:8px}
+.rv-root-tag{background:var(--warning-bg);color:var(--warning);padding:4px 10px;border-radius:99px;font-size:11px}
+.rv-compare-table th,.rv-compare-table td{font-size:11px;padding:8px 6px}
+.rv-eval-达成{color:var(--success);font-weight:700}
+.rv-eval-基本达成{color:var(--warning);font-weight:700}
+.rv-eval-未达成{color:var(--danger);font-weight:700}
+.rv-eval-优于预期{color:var(--success);font-weight:700}
+.rv-eval-略超预期{color:var(--warning);font-weight:700}
+.rv-improve-table th,.rv-improve-table td{font-size:11px;padding:8px 6px}
+.rv-status-进行中{color:var(--primary);font-weight:700}
+.rv-status-待启动{color:var(--text-muted)}
+.rv-lesson-module{background:var(--primary-bg);border-radius:8px;padding:16px}
+.rv-lesson-summary{font-size:14px;font-weight:600;color:var(--text);line-height:1.6;margin-bottom:12px}
+.rv-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.rv-tag{background:var(--primary);color:#fff;padding:2px 8px;border-radius:99px;font-size:10px}
+.rv-related{font-size:12px;color:var(--text-sec)}
+.rv-related a{color:var(--primary);cursor:pointer;text-decoration:underline;margin-right:8px}
+.rv-stats-card{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-top:16px}
+.rv-stats-header{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;margin-bottom:12px}
+.rv-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.rv-stat{text-align:center;padding:12px;background:var(--bg);border-radius:8px}
+.rv-stat-num{font-size:24px;font-weight:800;color:var(--primary)}
+.rv-stat-label{font-size:11px;color:var(--text-muted);margin-top:4px}
+.rv-root-chart{margin-top:12px}
+.rv-chart-title{font-size:13px;font-weight:700;margin-bottom:12px}
+.rv-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px}
+.rv-bar-row span{min-width:160px;color:var(--text-sec)}
+.rv-bar-wrap{flex:1;height:12px;background:var(--border-light);border-radius:6px;overflow:hidden}
+.rv-bar{height:100%;background:var(--primary);border-radius:6px}
+
 .sc-card-accent.cyan~.sc-card-value{color:var(--info)}
 /* Pipeline */
 .sc-pipeline{display:flex;margin-bottom:16px;background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
