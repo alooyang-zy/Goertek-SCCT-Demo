@@ -169,7 +169,18 @@
 #page-cost .v56-db-lpct { font-size: 12px; font-weight: 700; }
 
 /* ── 板块三：D类诊断矩阵 ── */
-#page-cost .v56-dmg-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: var(--v56-text); margin-bottom: 12px; }
+#page-cost .v56-dmg-title { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: var(--v56-text); margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+#page-cost .v56-dmg-filters { display: flex; gap: 6px; }
+#page-cost .v56-dmg-fbtn {
+  font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px;
+  border: 1px solid var(--v56-line); cursor: pointer; user-select: none;
+  transition: all .15s; color: var(--v56-muted); background: var(--v56-panel);
+}
+#page-cost .v56-dmg-fbtn:hover { border-color: var(--v56-blue); color: var(--v56-blue); }
+#page-cost .v56-dmg-fbtn.active { border-color: currentColor; background: var(--v56-blue-soft); }
+#page-cost .v56-dmg-fbtn.red.active { border-color: var(--v56-red); background: #fef2f2; color: var(--v56-red); }
+#page-cost .v56-dmg-fbtn.amber.active { border-color: var(--v56-amber); background: #fffbeb; color: var(--v56-amber); }
+#page-cost .v56-dmg-fbtn.green.active { border-color: var(--v56-green); background: #f0fdf4; color: var(--v56-green); }
 #page-cost .v56-dmg-group { margin-bottom: 14px; }
 #page-cost .v56-dmg-gtitle { font-size: 11px; font-weight: 700; color: var(--v56-blue); background: var(--v56-blue-soft); padding: 6px 12px; border-radius: 6px 6px 0 0; border: 1px solid var(--v56-blue); border-bottom: none; }
 #page-cost .v56-dmg-row { display: grid; gap: 10px; border: 1px solid var(--v56-line); border-top: 1px solid var(--v56-blue); padding: 10px; border-radius: 0 0 6px 6px; }

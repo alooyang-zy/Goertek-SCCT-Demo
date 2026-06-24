@@ -43,6 +43,7 @@ var selectedMetric = "L1";
 var selectedLoss = "L1";
 var els = {};
 var _v56Sections = {S:false, C:false, L:false, P:false, D:false};
+var _dFilter = 'all';
 
 function sum(obj){ return Object.values(obj).reduce(function(a,b){return a+b;},0); }
 function total(p){ return sum(p.c)+sum(p.l)+sum(p.p); }
@@ -595,13 +596,18 @@ var dActions={
 
 function renderDMatrix(p){
   var d=calcD(p);
-  var dMet=['D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','D14','D15','D16'];
-  var redCount=0;
+  var redCount=0,amberCount=0,greenCount=0;
   var el=document.getElementById('v56-dMatrix');if(!el)return;
 
-  var html='<div class="v56-dmg-title"><span>D类诊断指标 · 共16项</span><span style="font-size:11px;color:var(--v56-muted)">异常↓ 需诊断归因并启动管理动作</span></div>';
+  var isAll=_dFilter==='all', isRed=_dFilter==='red', isAmber=_dFilter==='amber', isGreen=_dFilter==='green';
+  var html='<div class="v56-dmg-title"><span>D类诊断指标 · 共16项</span>'+
+    '<div class="v56-dmg-filters">'+
+      '<span class="v56-dmg-fbtn '+(isAll?'active':'')+'" onclick="window._v56dFilter(\'all\')">全部</span>'+
+      '<span class="v56-dmg-fbtn red '+(isRed?'active':'')+'" onclick="window._v56dFilter(\'red\')">🔴 异常</span>'+
+      '<span class="v56-dmg-fbtn amber '+(isAmber?'active':'')+'" onclick="window._v56dFilter(\'amber\')">🟡 关注</span>'+
+      '<span class="v56-dmg-fbtn green '+(isGreen?'active':'')+'" onclick="window._v56dFilter(\'green\')">🟢 正常</span>'+
+    '</div></div>';
   
-  // Group headers
   var groups=[
     {key:'经营总览',metrics:['D1','D2','D3','D4'],cols:4},
     {key:'运营效率',metrics:['D5','D6','D7','D8','D9'],cols:5},
@@ -610,10 +616,12 @@ function renderDMatrix(p){
   ];
 
   groups.forEach(function(g){
-    html+='<div class="v56-dmg-group"><div class="v56-dmg-gtitle">'+g.key+'</div><div class="v56-dmg-row" style="grid-template-columns:repeat('+g.cols+',1fr)">';
-    g.metrics.forEach(function(m){
+    var filtered=g.metrics.filter(function(m){var st=statusFor(m,d[m]);if(st==='red')redCount++;if(st==='amber')amberCount++;if(st==='green')greenCount++;return _dFilter==='all'||st===_dFilter;});
+    if(!filtered.length)return;
+    var cols=Math.min(filtered.length,g.cols);
+    html+='<div class="v56-dmg-group"><div class="v56-dmg-gtitle">'+g.key+'</div><div class="v56-dmg-row" style="grid-template-columns:repeat('+cols+',1fr)">';
+    filtered.forEach(function(m){
       var v=d[m],st=statusFor(m,v);
-      if(st==='red') redCount++;
       var valStr=m==='D2'?fmtYuan(v):m==='D9'?v.toFixed(0)+'天':fmtPct(v);
       var stColor=st==='red'?'#dc2626':st==='amber'?'#d97706':'#16a34a';
       var stLabel=st==='red'?'异常':st==='amber'?'关注':'正常';
