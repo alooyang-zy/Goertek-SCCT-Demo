@@ -476,16 +476,16 @@ function renderS4Kpis(p){
 
 // ═══════════════ 板块二：运作成本构成 (杜邦分析模型样式) ═══════════════
 function _dbNode(code,name,value,pct,color,level){
-  var borderC = level===1 ? '2px solid '+color : level===2 ? '2px solid '+color : '1.5px solid '+color+'99';
-  var bg = level===1 ? 'linear-gradient(135deg,'+color+'18,'+color+'08)' : level===2 ? 'linear-gradient(135deg,'+color+'14,'+color+'05)' : color+'0a';
+  var borderC = level===1 ? '2px solid '+color : '2px solid '+color;
+  var bg = level===1 ? color+'18' : color+'12';
   return '<div class="v56-db-node" style="border:'+borderC+';background:'+bg+';--dc:'+color+'">'+
-    '<div class="v56-db-code" style="color:'+color+';border-bottom:1px solid '+color+'30">'+code+' '+name+'</div>'+
+    '<div class="v56-db-code" style="color:'+color+';border-bottom:1px solid '+color+'40">'+code+' '+name+'</div>'+
     '<div class="v56-db-val">'+value+'</div>'+
     (pct?'<div class="v56-db-pct" style="color:'+color+'">'+pct+'</div>':'')+
   '</div>';
 }
 function _dbLeaf(code,name,value,pct,color){
-  return '<div class="v56-db-leaf" style="border-color:'+color+'66;background:'+color+'08;--dc:'+color+'">'+
+  return '<div class="v56-db-leaf" style="border-color:'+color+'88;background:'+color+'0e;--dc:'+color+'">'+
     '<div class="v56-db-lcode" style="color:'+color+'">'+code+'</div>'+
     '<div class="v56-db-lname">'+name+'</div>'+
     '<div class="v56-db-lval">'+value+'</div>'+
@@ -503,21 +503,14 @@ function renderCostTree(p){
   var pD=[{code:'P1',name:'策略储备库存',v:fmtWan(scaleValue(p.p.P1)),pct:fmtPct(p.p.P1/s*100)},{code:'P2',name:'供应资源提升',v:fmtWan(scaleValue(p.p.P2)),pct:fmtPct(p.p.P2/s*100)}];
   var colS='#4da3ff', colC='#06b6d4', colL='#ef4444', colP='#22c55e';
 
-  // 杜邦连线 SVG 生成器：直角折线
-  function _vConn(x1,y1,x2,y2,color){
-    var my=(y1+y2)/2;
-    return '<path d="M'+x1+','+y1+' L'+x1+','+my+' L'+x2+','+my+' L'+x2+','+y2+'" stroke="'+color+'" stroke-width="1.5" fill="none" opacity=".45"/>';
-  }
-
   // L2→L3 连线（每个分支：中心竖线→水平线→各叶子竖线）
+  var LEAF_W=96, LEAF_GAP=4, L2_GAP=16;
   function _branch(key,color,name,value,pct,items){
-    var n=items.length, leafW=96, gap=4, totalW=n*leafW+(n-1)*gap;
-    var halfW=totalW/2;
-    // 生成连线 SVG
-    var conn='<svg width="'+totalW+'" height="28" style="display:block;margin:0 auto">';
-    conn+='<line x1="'+halfW+'" y1="0" x2="'+halfW+'" y2="10" stroke="'+color+'" stroke-width="1.5" opacity=".45"/>';
-    conn+='<line x1="'+(leafW/2)+'" y1="10" x2="'+(totalW-leafW/2)+'" y2="10" stroke="'+color+'" stroke-width="1.2" opacity=".35"/>';
-    for(var i=0;i<n;i++){var cx=leafW/2+i*(leafW+gap); conn+='<line x1="'+cx+'" y1="10" x2="'+cx+'" y2="26" stroke="'+color+'" stroke-width="1.2" opacity=".45"/>';}
+    var n=items.length, totalW=n*LEAF_W+(n-1)*LEAF_GAP, halfW=totalW/2;
+    var conn='<svg width="'+totalW+'" height="28" style="display:block;margin:0 auto">'+
+      '<line x1="'+halfW+'" y1="0" x2="'+halfW+'" y2="10" stroke="'+color+'" stroke-width="1.5" opacity=".55"/>'+
+      '<line x1="'+(LEAF_W/2)+'" y1="10" x2="'+(totalW-LEAF_W/2)+'" y2="10" stroke="'+color+'" stroke-width="1.2" opacity=".45"/>';
+    for(var i=0;i<n;i++){var cx=LEAF_W/2+i*(LEAF_W+LEAF_GAP); conn+='<line x1="'+cx+'" y1="10" x2="'+cx+'" y2="26" stroke="'+color+'" stroke-width="1.2" opacity=".55"/>';}
     conn+='</svg>';
     return '<div class="v56-db-branch" id="v56-db-'+key+'">'+
       '<div class="v56-db-l2wrap" onclick="window._v56trToggle(\''+key+'\')" style="cursor:pointer">'+
@@ -533,21 +526,29 @@ function renderCostTree(p){
     '</div>';
   }
 
-  // L1→L2 连线 SVG
-  var l1l2='<svg width="700" height="36" style="display:block;margin:0 auto">'+
-    '<line x1="350" y1="0" x2="350" y2="14" stroke="#4da3ff" stroke-width="2" opacity=".4"/>'+
-    '<line x1="116" y1="14" x2="584" y2="14" stroke="#64748b" stroke-width="1.5" opacity=".3"/>'+
-    '<line x1="116" y1="14" x2="116" y2="34" stroke="'+colC+'" stroke-width="1.5" opacity=".5"/>'+
-    '<line x1="350" y1="14" x2="350" y2="34" stroke="'+colL+'" stroke-width="1.5" opacity=".5"/>'+
-    '<line x1="584" y1="14" x2="584" y2="34" stroke="'+colP+'" stroke-width="1.5" opacity=".5"/>'+
-    '<text x="350" y="30" text-anchor="middle" fill="#64748b" font-size="10" opacity=".6">S1 = C0 + L0 + P0</text>'+
+  // 计算三个分支的实际宽度，动态生成L1→L2连线
+  var cW=4*LEAF_W+3*LEAF_GAP;   // C分支宽
+  var lW=8*LEAF_W+7*LEAF_GAP;   // L分支宽
+  var pW=2*LEAF_W+1*LEAF_GAP;   // P分支宽
+  var totalL2W=cW+lW+pW+2*L2_GAP;
+  var cCenter=cW/2;
+  var lCenter=cW+L2_GAP+lW/2;
+  var pCenter=cW+L2_GAP+lW+L2_GAP+pW/2;
+  var svgW=Math.max(totalL2W,400);
+  var offsetX=(svgW-totalL2W)/2; // 居中偏移
+
+  var l1l2='<svg width="'+svgW+'" height="40" style="display:block;margin:0 auto">'+
+    '<line x1="'+(svgW/2)+'" y1="0" x2="'+(svgW/2)+'" y2="16" stroke="'+colS+'" stroke-width="2" opacity=".55"/>'+
+    '<line x1="'+(offsetX+cCenter)+'" y1="16" x2="'+(offsetX+pCenter)+'" y2="16" stroke="#64748b" stroke-width="1.5" opacity=".4"/>'+
+    '<line x1="'+(offsetX+cCenter)+'" y1="16" x2="'+(offsetX+cCenter)+'" y2="36" stroke="'+colC+'" stroke-width="1.5" opacity=".65"/>'+
+    '<line x1="'+(offsetX+lCenter)+'" y1="16" x2="'+(offsetX+lCenter)+'" y2="36" stroke="'+colL+'" stroke-width="1.5" opacity=".65"/>'+
+    '<line x1="'+(offsetX+pCenter)+'" y1="16" x2="'+(offsetX+pCenter)+'" y2="36" stroke="'+colP+'" stroke-width="1.5" opacity=".65"/>'+
+    '<text x="'+(svgW/2)+'" y="32" text-anchor="middle" fill="#64748b" font-size="10" opacity=".7">S1 = C0 + L0 + P0</text>'+
   '</svg>';
 
   var html='<div class="v56-db">'+
-    // Level 1: S1 Root
     '<div class="v56-db-l1">'+_dbNode('S1','供应链总成本',fmtWan(scaleValue(s)),fmtPct(total(p)/p.revenue*100),colS,1)+'</div>'+
     l1l2+
-    // Level 2 + Level 3 branches
     '<div class="v56-db-l2">'+
       _branch('C0',colC,'运营成本',fmtWan(scaleValue(c0(p))),fmtPct(c0(p)/s*100),cD)+
       _branch('L0',colL,'损失成本',fmtWan(scaleValue(l0(p))),fmtPct(l0(p)/s*100),lD)+
