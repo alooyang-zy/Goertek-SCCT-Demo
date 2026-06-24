@@ -281,7 +281,7 @@ function renderQuad(risks){
   });
   ch.setOption({
     tooltip:{trigger:'item',
-      formatter:function(p){var parts=(p.name||'').split(' ');return '<b>'+parts[0]+'</b> '+parts.slice(1).join(' ')+'<br/>敏捷性: '+p.value[0]+'%<br/>TTS: '+p.value[1]+'天<br/>VAR: ¥'+p.value[2]+'万<br/>象限: '+(quadLabels[quadMap[parts[0]]]||'C');}}
+      formatter:function(p){var parts=(p.name||'').split(' ');return '<b>'+parts[0]+'</b> '+parts.slice(1).join(' ')+'<br/>敏捷性: '+p.value[0]+'%<br/>TTS: '+p.value[1]+'天<br/>VAR: ¥'+p.value[2]+'万<br/>象限: '+(quadLabels[quadMap[parts[0]]]||'C');}
     },
     legend:{bottom:0,textStyle:{fontSize:10}},
     grid:{left:60,right:30,top:20,bottom:50},
