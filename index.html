@@ -39,11 +39,14 @@
     <a href="#" class="nav-item" data-page="forecast"><i class="fas fa-chart-line"></i><span>需求预测</span></a>
     <a href="#" class="nav-item" data-page="delivery"><i class="fas fa-reply"></i><span>交期答复</span></a>
     <a href="#" class="nav-item" data-page="supplydemand"><i class="fas fa-scale-balanced"></i><span>供需齐套</span><span class="badge">3</span></a>
+    <a href="#" class="nav-item" data-page="suppliercollab"><i class="fas fa-handshake"></i><span>供方协同</span></a>
 
+    <!-- 隐藏：供应协同组
     <div class="nav-group-title">供应协同</div>
     <a href="#" class="nav-item" data-page="supplier"><i class="fas fa-handshake"></i><span>库存协同</span></a>
     <a href="#" class="nav-item" data-page="supwip"><i class="fas fa-industry"></i><span>在制协同</span></a>
     <a href="#" class="nav-item" data-page="supquality"><i class="fas fa-check-double"></i><span>质量协同</span></a>
+    -->
 
     <div class="nav-group-title">风险闭环</div>
     <a href="#" class="nav-item" data-page="closedloop"><i class="fas fa-bell"></i><span>事件中心</span></a>
@@ -350,7 +353,27 @@
       <div class="sd-table-panel"><div class="sd-table-head"><span class="sd-table-title">CTB齐套明细</span><span id="sdTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="sd-table-wrap"><table><thead id="sdTHead"></thead><tbody id="sdTBody"></tbody></table></div></div>
     </section>
 
-    <!-- ====== 11.风险雷达预警 ====== -->
+    <!-- ====== 11.供方协同 ====== -->
+    <section class="page" id="page-suppliercollab">
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="scProjectSelect" onchange="initPage_suppliercollab()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">供方全维度协同 · 关键料库存/在制/质量/风险一体化分析</span></div>
+      <div class="sc-info-bar" id="scInfoBar"><span class="sc-info-name" id="scProjectName"></span><span class="sc-info-items" id="scInfoItems"></span></div>
+      <div class="sc-cards" id="scCards"></div>
+      <div class="sc-pipeline" id="scPipeline"></div>
+      <div class="sc-dual-panel">
+        <div class="sc-panel-card">
+          <div class="sc-panel-head"><i class="fas fa-industry"></i> 供方库存&在制</div>
+          <div class="sc-panel-body" style="padding:0;overflow-x:auto"><table class="data-table"><thead id="scWipTHead"></thead><tbody id="scWipTBody"></tbody></table></div>
+        </div>
+        <div class="sc-panel-card">
+          <div class="sc-panel-head"><i class="fas fa-chart-bar"></i> 质量协同绩效</div>
+          <div class="sc-panel-body"><div style="height:280px"><canvas id="scQualityChart"></canvas></div></div>
+        </div>
+      </div>
+      <div class="sc-risk-panel" id="scRiskPanel"><div class="sc-panel-head"><i class="fas fa-shield-halved"></i> 供方风险影响评估</div><div class="sc-risk-grid" id="scRiskGrid"></div></div>
+      <div class="sc-table-panel"><div class="sc-table-head"><span class="sc-table-title">关键物料供方协同明细</span><span id="scTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="sc-table-wrap"><table><thead id="scTHead"></thead><tbody id="scTBody"></tbody></table></div></div>
+    </section>
+
+    <!-- ====== 12.风险雷达预警 ====== -->
     <section class="page" id="page-risk">
       <div class="filter-bar" style="gap:0">
         <div class="filter-group"><label>项目:</label><select id="riskProjectSelect" onchange="initPage_risk()"></select></div>
@@ -465,6 +488,7 @@
 <script src="js/modules/forecast.js"></script>
 <script src="js/modules/delivery.js"></script>
 <script src="js/modules/supplydemand.js"></script>
+<script src="js/modules/suppliercollab.js"></script>
 <script src="js/modules/supplier.js"></script>
 <script src="js/modules/supwip.js"></script>
 <script src="js/modules/supquality.js"></script>
