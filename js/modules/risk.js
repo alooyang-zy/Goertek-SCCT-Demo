@@ -33,28 +33,27 @@ function allRisks(filter){
 
 // ═══ 主入口 ═══
 function initPage_risk(){
-  try{
-    var fp=(typeof getFilteredProjects==='function')?getFilteredProjects():(typeof projects!=='undefined'?projects:[]);
-    var sel=document.getElementById('riskProjectSelect');
-    if(sel&&typeof fillProjectSelect==='function') fillProjectSelect(sel,fp);
-    if(typeof consumeDrillDown==='function') consumeDrillDown('riskProjectSelect');
-    var pid=sel?sel.value:'';
-    var p=pid&&typeof projects!=='undefined'?projects.find(function(x){return x.id===pid;}):null;
-    if(!p&&fp.length){p=fp[0];pid=p.id;if(sel)sel.value=pid;}
+  var fp=(typeof getFilteredProjects==='function')?getFilteredProjects():(typeof projects!=='undefined'?projects:[]);
+  var sel=document.getElementById('riskProjectSelect');
+  if(sel&&typeof fillProjectSelect==='function') fillProjectSelect(sel,fp);
+  if(typeof consumeDrillDown==='function') consumeDrillDown('riskProjectSelect');
+  var pid=sel?sel.value:'';
+  var p=pid&&typeof projects!=='undefined'?projects.find(function(x){return x.id===pid;}):null;
+  if(!p&&fp.length){p=fp[0];pid=p.id;if(sel)sel.value=pid;}
 
-    var catF=document.getElementById('riskCatFilter');
-    var filter=catF?catF.value:'all';
-    var risks=allRisks(filter);
-    var n=risks.length||1;
+  var catF=document.getElementById('riskCatFilter');
+  var filter=catF?catF.value:'all';
+  var risks=allRisks(filter);
+  var n=risks.length||1;
 
-    var p1=0,p2=0,p3=0,ts=0,ta=0,trs=0,tts=0,ttr=0,alerts=0;
-    risks.forEach(function(r){
-      ts+=r.score; ta+=r.agility; trs+=r.resilience; tts+=r.tts; ttr+=r.ttr;
-      if(r.level==='P1')p1++; else if(r.level==='P2')p2++; else p3++;
-      if(r.tts<7)alerts++;
-    });
-    var avgS=Math.round(ts/n),avgA=Math.round(ta/n),avgR=Math.round(trs/n);
-    var avgTts=Math.round(tts/n*10)/10,avgTtr=Math.round(ttr/n*10)/10;
+  var p1=0,p2=0,p3=0,ts=0,ta=0,trs=0,tts=0,ttr=0,alerts=0;
+  risks.forEach(function(r){
+    ts+=r.score; ta+=r.agility; trs+=r.resilience; tts+=r.tts; ttr+=r.ttr;
+    if(r.level==='P1')p1++; else if(r.level==='P2')p2++; else p3++;
+    if(r.tts<7)alerts++;
+  });
+  var avgS=Math.round(ts/n),avgA=Math.round(ta/n),avgR=Math.round(trs/n);
+  var avgTts=Math.round(tts/n*10)/10,avgTtr=Math.round(ttr/n*10)/10;
 
     // Info inline
     var inf=document.getElementById('rrInfoInline');
@@ -78,7 +77,6 @@ function initPage_risk(){
       if(App.charts.rrQuad)App.charts.rrQuad.resize();
     },200);
 
-  }catch(e){console.error('risk init error:',e);}
 }
 
 // ── KPI Cards ──
