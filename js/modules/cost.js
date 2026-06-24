@@ -474,51 +474,84 @@ function renderS4Kpis(p){
   }).join('');
 }
 
-// ═══════════════ 板块二：运作成本构成 CLP三层树图(科技感组织架构) ═══════════════
-function _tBox(code,name,value,sub,color,cls){
-  return '<div class="v56-tb '+cls+'" style="--tc:'+color+'"><span class="v56-tb-code">'+code+'</span><span class="v56-tb-name">'+name+'</span><span class="v56-tb-val">'+value+'</span>'+(sub?'<span class="v56-tb-sub">'+sub+'</span>':'')+'</div>';
+// ═══════════════ 板块二：运作成本构成 (杜邦分析模型样式) ═══════════════
+function _dbNode(code,name,value,pct,color,level){
+  var borderC = level===1 ? '2px solid '+color : level===2 ? '2px solid '+color : '1.5px solid '+color+'99';
+  var bg = level===1 ? 'linear-gradient(135deg,'+color+'18,'+color+'08)' : level===2 ? 'linear-gradient(135deg,'+color+'14,'+color+'05)' : color+'0a';
+  return '<div class="v56-db-node" style="border:'+borderC+';background:'+bg+';--dc:'+color+'">'+
+    '<div class="v56-db-code" style="color:'+color+';border-bottom:1px solid '+color+'30">'+code+' '+name+'</div>'+
+    '<div class="v56-db-val">'+value+'</div>'+
+    (pct?'<div class="v56-db-pct" style="color:'+color+'">'+pct+'</div>':'')+
+  '</div>';
 }
-function _tLeaf(code,name,value,pct,color){
-  return '<div class="v56-tl" style="--tc:'+color+'"><span class="v56-tl-code">'+code+'</span><span class="v56-tl-name">'+name+'</span><span class="v56-tl-val">'+value+'</span><span class="v56-tl-pct">'+pct+'</span></div>';
+function _dbLeaf(code,name,value,pct,color){
+  return '<div class="v56-db-leaf" style="border-color:'+color+'66;background:'+color+'08;--dc:'+color+'">'+
+    '<div class="v56-db-lcode" style="color:'+color+'">'+code+'</div>'+
+    '<div class="v56-db-lname">'+name+'</div>'+
+    '<div class="v56-db-lval">'+value+'</div>'+
+    '<div class="v56-db-lpct" style="color:'+color+'">'+pct+'</div>'+
+  '</div>';
 }
 window._v56trToggle=function(key){
-  var el=document.getElementById('v56-tr-'+key); if(el) el.classList.toggle('collapsed');
+  var el=document.getElementById('v56-db-'+key); if(el) el.classList.toggle('collapsed');
 };
 
 function renderCostTree(p){
   var s=total(p);
-  var cD=[{code:'C1',name:'采购与供应商运营成本',v:fmtWan(scaleValue(p.c.C1)),pct:fmtPct(p.c.C1/s*100)},{code:'C2',name:'库存持有成本',v:fmtWan(scaleValue(p.c.C2)),pct:fmtPct(p.c.C2/s*100)},{code:'C3',name:'正常仓储与物流运营成本',v:fmtWan(scaleValue(p.c.C3)),pct:fmtPct(p.c.C3/s*100)},{code:'C4',name:'计划运营与协调成本',v:fmtWan(scaleValue(p.c.C4)),pct:fmtPct(p.c.C4/s*100)}];
-  var lD=[{code:'L1',name:'呆滞物料损失成本',v:fmtWan(scaleValue(p.l.L1)),pct:fmtPct(p.l.L1/s*100)},{code:'L2',name:'报废物料损失成本',v:fmtWan(scaleValue(p.l.L2)),pct:fmtPct(p.l.L2/s*100)},{code:'L3',name:'紧急采购现货溢价损失',v:fmtWan(scaleValue(p.l.L3)),pct:fmtPct(p.l.L3/s*100)},{code:'L4',name:'供应商份额偏差损失成本',v:fmtWan(scaleValue(p.l.L4)),pct:fmtPct(p.l.L4/s*100)},{code:'L5',name:'缺料停线损失成本',v:fmtWan(scaleValue(p.l.L5)),pct:fmtPct(p.l.L5/s*100)},{code:'L6',name:'跳票/突发品质不良异常处理',v:fmtWan(scaleValue(p.l.L6)),pct:fmtPct(p.l.L6/s*100)},{code:'L7',name:'加急运输与空运增量成本',v:fmtWan(scaleValue(p.l.L7)),pct:fmtPct(p.l.L7/s*100)},{code:'L8',name:'客户交付类罚款与索赔',v:fmtWan(scaleValue(p.l.L8)),pct:fmtPct(p.l.L8/s*100)}];
-  var pD=[{code:'P1',name:'策略储备库存投入成本',v:fmtWan(scaleValue(p.p.P1)),pct:fmtPct(p.p.P1/s*100)},{code:'P2',name:'供应资源与供应商能力提升',v:fmtWan(scaleValue(p.p.P2)),pct:fmtPct(p.p.P2/s*100)}];
+  var cD=[{code:'C1',name:'采购与供应商运营',v:fmtWan(scaleValue(p.c.C1)),pct:fmtPct(p.c.C1/s*100)},{code:'C2',name:'库存持有成本',v:fmtWan(scaleValue(p.c.C2)),pct:fmtPct(p.c.C2/s*100)},{code:'C3',name:'正常仓储与物流',v:fmtWan(scaleValue(p.c.C3)),pct:fmtPct(p.c.C3/s*100)},{code:'C4',name:'计划运营与协调',v:fmtWan(scaleValue(p.c.C4)),pct:fmtPct(p.c.C4/s*100)}];
+  var lD=[{code:'L1',name:'呆滞物料损失',v:fmtWan(scaleValue(p.l.L1)),pct:fmtPct(p.l.L1/s*100)},{code:'L2',name:'报废物料损失',v:fmtWan(scaleValue(p.l.L2)),pct:fmtPct(p.l.L2/s*100)},{code:'L3',name:'紧急采购溢价',v:fmtWan(scaleValue(p.l.L3)),pct:fmtPct(p.l.L3/s*100)},{code:'L4',name:'供应商份额偏差',v:fmtWan(scaleValue(p.l.L4)),pct:fmtPct(p.l.L4/s*100)},{code:'L5',name:'缺料停线损失',v:fmtWan(scaleValue(p.l.L5)),pct:fmtPct(p.l.L5/s*100)},{code:'L6',name:'跳票/品质异常',v:fmtWan(scaleValue(p.l.L6)),pct:fmtPct(p.l.L6/s*100)},{code:'L7',name:'加急运输空运',v:fmtWan(scaleValue(p.l.L7)),pct:fmtPct(p.l.L7/s*100)},{code:'L8',name:'客户交付索赔',v:fmtWan(scaleValue(p.l.L8)),pct:fmtPct(p.l.L8/s*100)}];
+  var pD=[{code:'P1',name:'策略储备库存',v:fmtWan(scaleValue(p.p.P1)),pct:fmtPct(p.p.P1/s*100)},{code:'P2',name:'供应资源提升',v:fmtWan(scaleValue(p.p.P2)),pct:fmtPct(p.p.P2/s*100)}];
   var colS='#4da3ff', colC='#06b6d4', colL='#ef4444', colP='#22c55e';
 
-  // L3 branches: horizontal bar connector + single row leaves
-  function _branch(key,color,items){
-    var count=items.length;
-    var leafW=108, gap=6, totalW=count*leafW+(count-1)*gap;
-    // SVG connector: center vertical + horizontal bar + N vertical drops
-    var svg='<svg width="'+totalW+'" height="22" class="v56-tl-conn">';
-    svg+='<line x1="'+(totalW/2)+'" y1="0" x2="'+(totalW/2)+'" y2="10" stroke="'+color+'" stroke-width="1.5" opacity=".5"/>';
-    svg+='<line x1="'+(leafW/2)+'" y1="10" x2="'+(totalW-leafW/2)+'" y2="10" stroke="'+color+'" stroke-width="1.2" opacity=".4"/>';
-    items.forEach(function(_,i){var cx=leafW/2+i*(leafW+gap); svg+='<line x1="'+cx+'" y1="10" x2="'+cx+'" y2="20" stroke="'+color+'" stroke-width="1.2" opacity=".5"/>';});
-    svg+='</svg>';
-    return '<div class="v56-tb-branch" id="v56-tr-'+key+'">'+
-      '<div class="v56-tb-l2box" onclick="window._v56trToggle(\''+key+'\')" style="cursor:pointer">'+_tBox(key, key==='C0'?'运营成本':key==='L0'?'损失成本':'前瞻投入', items.reduce(function(a,i){return a+parseFloat(i.v);},0).toFixed(1)+'万', '', color, 'l2')+'<i class="fas fa-chevron-up v56-tb-toggle"></i></div>'+
-      svg+
-      '<div class="v56-tl-row">'+items.map(function(it){return _tLeaf(it.code,it.name,it.v,it.pct,color);}).join('')+'</div>'+
+  // 杜邦连线 SVG 生成器：直角折线
+  function _vConn(x1,y1,x2,y2,color){
+    var my=(y1+y2)/2;
+    return '<path d="M'+x1+','+y1+' L'+x1+','+my+' L'+x2+','+my+' L'+x2+','+y2+'" stroke="'+color+'" stroke-width="1.5" fill="none" opacity=".45"/>';
+  }
+
+  // L2→L3 连线（每个分支：中心竖线→水平线→各叶子竖线）
+  function _branch(key,color,name,value,pct,items){
+    var n=items.length, leafW=96, gap=4, totalW=n*leafW+(n-1)*gap;
+    var halfW=totalW/2;
+    // 生成连线 SVG
+    var conn='<svg width="'+totalW+'" height="28" style="display:block;margin:0 auto">';
+    conn+='<line x1="'+halfW+'" y1="0" x2="'+halfW+'" y2="10" stroke="'+color+'" stroke-width="1.5" opacity=".45"/>';
+    conn+='<line x1="'+(leafW/2)+'" y1="10" x2="'+(totalW-leafW/2)+'" y2="10" stroke="'+color+'" stroke-width="1.2" opacity=".35"/>';
+    for(var i=0;i<n;i++){var cx=leafW/2+i*(leafW+gap); conn+='<line x1="'+cx+'" y1="10" x2="'+cx+'" y2="26" stroke="'+color+'" stroke-width="1.2" opacity=".45"/>';}
+    conn+='</svg>';
+    return '<div class="v56-db-branch" id="v56-db-'+key+'">'+
+      '<div class="v56-db-l2wrap" onclick="window._v56trToggle(\''+key+'\')" style="cursor:pointer">'+
+        _dbNode(key,name,value,pct,color,2)+
+        '<span class="v56-db-toggle"><i class="fas fa-minus"></i></span>'+
+      '</div>'+
+      '<div class="v56-db-l3wrap">'+
+        conn+
+        '<div class="v56-db-leafrow">'+
+          items.map(function(it){return _dbLeaf(it.code,it.name,it.v,it.pct,color);}).join('')+
+        '</div>'+
+      '</div>'+
     '</div>';
   }
 
-  // L1→L2 connector SVG
-  var l1l2='<svg width="780" height="28" class="v56-tl-conn-main"><line x1="390" y1="0" x2="390" y2="12" stroke="#4da3ff" stroke-width="2" opacity=".4"/><line x1="130" y1="12" x2="650" y2="12" stroke="#64748b" stroke-width="1.5" opacity=".35"/><line x1="130" y1="12" x2="130" y2="26" stroke="'+colC+'" stroke-width="1.5" opacity=".5"/><line x1="390" y1="12" x2="390" y2="26" stroke="'+colL+'" stroke-width="1.5" opacity=".5"/><line x1="650" y1="12" x2="650" y2="26" stroke="'+colP+'" stroke-width="1.5" opacity=".5"/></svg>';
+  // L1→L2 连线 SVG
+  var l1l2='<svg width="700" height="36" style="display:block;margin:0 auto">'+
+    '<line x1="350" y1="0" x2="350" y2="14" stroke="#4da3ff" stroke-width="2" opacity=".4"/>'+
+    '<line x1="116" y1="14" x2="584" y2="14" stroke="#64748b" stroke-width="1.5" opacity=".3"/>'+
+    '<line x1="116" y1="14" x2="116" y2="34" stroke="'+colC+'" stroke-width="1.5" opacity=".5"/>'+
+    '<line x1="350" y1="14" x2="350" y2="34" stroke="'+colL+'" stroke-width="1.5" opacity=".5"/>'+
+    '<line x1="584" y1="14" x2="584" y2="34" stroke="'+colP+'" stroke-width="1.5" opacity=".5"/>'+
+    '<text x="350" y="30" text-anchor="middle" fill="#64748b" font-size="10" opacity=".6">S1 = C0 + L0 + P0</text>'+
+  '</svg>';
 
-  var html='<div class="v56-tr-wrap">'+
-    '<div class="v56-tb-l1">'+_tBox('S1','供应链总成本',fmtWan(scaleValue(s)),fmtPct(total(p)/p.revenue*100),colS,'root')+'</div>'+
+  var html='<div class="v56-db">'+
+    // Level 1: S1 Root
+    '<div class="v56-db-l1">'+_dbNode('S1','供应链总成本',fmtWan(scaleValue(s)),fmtPct(total(p)/p.revenue*100),colS,1)+'</div>'+
     l1l2+
-    '<div class="v56-tb-l2">'+
-      _branch('C0',colC,cD)+
-      _branch('L0',colL,lD)+
-      _branch('P0',colP,pD)+
+    // Level 2 + Level 3 branches
+    '<div class="v56-db-l2">'+
+      _branch('C0',colC,'运营成本',fmtWan(scaleValue(c0(p))),fmtPct(c0(p)/s*100),cD)+
+      _branch('L0',colL,'损失成本',fmtWan(scaleValue(l0(p))),fmtPct(l0(p)/s*100),lD)+
+      _branch('P0',colP,'前瞻投入',fmtWan(scaleValue(p0(p))),fmtPct(p0(p)/s*100),pD)+
     '</div>'+
     '</div>';
 
