@@ -1,5 +1,5 @@
-// ===== 项目成本可视 V5.6 — 供应链总成本看板 =====
-// 基于《歌尔供应链控制塔项目_供应链总成本_原型设计V5.6.html》
+// ===== 项目成本可视 V5.6 — 供应链运作成本看板 =====
+// 基于《歌尔供应链控制塔项目_供应链运作成本_原型设计V5.6.html》
 // IIFE 模块，平台融合版
 (function(){
 "use strict";
@@ -7,11 +7,11 @@
 var periodMeta = { ytd:{factor:1,label:"累计至今",suffix:"累计"}, day:{factor:0.08,label:"今日",suffix:"今日"}, week:{factor:0.32,label:"本周",suffix:"本周"}, month:{factor:1,label:"本月",suffix:"本月"} };
 
 var metricNames = {
-  S1:"供应链总成本",S2:"供应链总成本率",S3:"总成本基线偏差",S4:"CLP成本结构占比",
+  S1:"供应链运作成本",S2:"供应链运作成本率",S3:"总成本基线偏差",S4:"CLP成本结构占比",
   C0:"供应链运营成本",C1:"采购与供应商运营成本",C2:"库存持有成本",C3:"正常仓储与物流运营成本",C4:"计划运营与协调成本",
   L0:"供应链损失成本",L1:"呆滞物料损失成本",L2:"报废物料损失成本",L3:"紧急采购现货溢价损失",L4:"供应商份额偏差损失成本",L5:"缺料停线损失成本",L6:"跳票/突发品质不良异常处理损失成本",L7:"加急运输与空运增量成本",L8:"客户交付类罚款与索赔",
   P0:"供应链前瞻投入成本",P1:"策略储备库存投入成本",P2:"供应资源与供应商能力提升投入成本",
-  D1:"供应链总成本采购强度",D2:"单位供应链总成本",D3:"损失成本占比",D4:"前瞻投入占比",D5:"采购与供应商运营成本率",D6:"库存持有成本率",D7:"正常仓储物流成本率",D8:"计划运营协调成本率",D9:"库存周转天数",D10:"损失成本率",D11:"呆滞报废损失率",D12:"紧急采购溢价率",D13:"缺料停线损失率",D14:"异常物流费用占比",D15:"客户交付索赔率",D16:"前瞻投入率",D17:"P类投入回报率"
+  D1:"供应链运作成本采购强度",D2:"单位供应链运作成本",D3:"损失成本占比",D4:"前瞻投入占比",D5:"采购与供应商运营成本率",D6:"库存持有成本率",D7:"正常仓储物流成本率",D8:"计划运营协调成本率",D9:"库存周转天数",D10:"损失成本率",D11:"呆滞报废损失率",D12:"紧急采购溢价率",D13:"缺料停线损失率",D14:"异常物流费用占比",D15:"客户交付索赔率",D16:"前瞻投入率",D17:"P类投入回报率"
 };
 
 var dGroups = [
@@ -23,7 +23,7 @@ var dGroups = [
 
 var projects = [
   {id:"XR-26-NPI-A01",name:"XR声学模组A01",bg:"消费电子BG",bu:"声学BU",customer:"海外客户A",stage:"PVT爬坡",owner:"IP-声学一部",revenue:620,procurement:360,output:12800,baseline:45.5,inventory:96,shipAmount:515,lineValue:118,standardTransport:4.4,emergencyPurchase:10.5,pBenefit:3.8,invDays:48,c:{C1:9.6,C2:11.8,C3:7.4,C4:4.9},l:{L1:5.8,L2:2.6,L3:2.9,L4:1.4,L5:2.7,L6:1.8,L7:1.9,L8:0.7},p:{P1:5.6,P2:2.2},trend:[42,43,44,45,47,48,50,51,53,54,55,54,53,52],cTrend:[30,31,32,32,33,34,34,34,35,35,35,34,34,34],lTrend:[8,8.5,9,9.5,10.8,11.6,12.7,13.4,14.5,15.2,16,15,14,19.8],actions:[{metric:"L1",reason:"客户预测下修后专用镜片库存进入无需求区间",action:"锁定客户买单清单，同步推动跨项目转用与退供谈判",owner:"IP/销售/采购",saving:4.8,due:"06-24",status:"处理中"},{metric:"L7",reason:"爬坡延误导致连续三批次空运追交",action:"把缺料风险提前到日计划会，空运申请需绑定责任事件",owner:"物流/IP",saving:1.3,due:"06-18",status:"已启动"}]},
-  {id:"AIR-25-MP-B09",name:"TWS整机B09",bg:"消费电子BG",bu:"整机BU",customer:"海外客户B",stage:"MP量产",owner:"IP-整机平台",revenue:1180,procurement:690,output:56200,baseline:62.0,inventory:138,shipAmount:980,lineValue:260,standardTransport:7.2,emergencyPurchase:8.8,pBenefit:3.0,invDays:32,c:{C1:13.2,C2:10.6,C3:11.9,C4:4.8},l:{L1:2.1,L2:1.2,L3:1.1,L4:0.9,L5:1.4,L6:1.1,L7:0.8,L8:0.3},p:{P1:2.1,P2:1.2},trend:[52,53,54,55,57,58,59,60,60,61,60,61,62,63],cTrend:[38,39,40,40,41,41,41,42,42,42,42,42,41,41],lTrend:[7,7,7.2,7.3,7.5,7.7,8,8.2,8.3,8.5,8.4,8.6,8.7,8.9],actions:[{metric:"D7",reason:"海外出货频次高，标准物流单位成本高于同类项目",action:"合并同客户同区域出货窗口，降低零散出运比例",owner:"物流",saving:1.1,due:"06-20",status:"执行中"},{metric:"D2",reason:"单位供应链总成本略高于量产稳定项目均值",action:"复盘仓储作业、采购管理和计划协同三项单位成本",owner:"IP/计划",saving:0.9,due:"06-25",status:"待评审"}]},
+  {id:"AIR-25-MP-B09",name:"TWS整机B09",bg:"消费电子BG",bu:"整机BU",customer:"海外客户B",stage:"MP量产",owner:"IP-整机平台",revenue:1180,procurement:690,output:56200,baseline:62.0,inventory:138,shipAmount:980,lineValue:260,standardTransport:7.2,emergencyPurchase:8.8,pBenefit:3.0,invDays:32,c:{C1:13.2,C2:10.6,C3:11.9,C4:4.8},l:{L1:2.1,L2:1.2,L3:1.1,L4:0.9,L5:1.4,L6:1.1,L7:0.8,L8:0.3},p:{P1:2.1,P2:1.2},trend:[52,53,54,55,57,58,59,60,60,61,60,61,62,63],cTrend:[38,39,40,40,41,41,41,42,42,42,42,42,41,41],lTrend:[7,7,7.2,7.3,7.5,7.7,8,8.2,8.3,8.5,8.4,8.6,8.7,8.9],actions:[{metric:"D7",reason:"海外出货频次高，标准物流单位成本高于同类项目",action:"合并同客户同区域出货窗口，降低零散出运比例",owner:"物流",saving:1.1,due:"06-20",status:"执行中"},{metric:"D2",reason:"单位供应链运作成本略高于量产稳定项目均值",action:"复盘仓储作业、采购管理和计划协同三项单位成本",owner:"IP/计划",saving:0.9,due:"06-25",status:"待评审"}]},
   {id:"SPK-25-MOD-C18",name:"智能音箱模组C18",bg:"智能硬件BG",bu:"声学BU",customer:"国内客户C",stage:"MP量产",owner:"IP-智能硬件",revenue:760,procurement:430,output:36500,baseline:43.2,inventory:82,shipAmount:630,lineValue:145,standardTransport:5.4,emergencyPurchase:5.4,pBenefit:1.9,invDays:29,c:{C1:10.7,C2:7.9,C3:8.6,C4:3.2},l:{L1:1.3,L2:0.8,L3:0.6,L4:0.4,L5:1.2,L6:0.7,L7:0.5,L8:0.1},p:{P1:1.6,P2:0.8},trend:[39,40,40,41,42,41,42,43,42,43,43,44,43,43],cTrend:[29,30,30,30,31,30,31,31,30,31,31,31,31,30],lTrend:[5,5,5,5,5.4,5.2,5.3,5.5,5.3,5.4,5.5,5.8,5.6,5.6],actions:[{metric:"D5",reason:"供应商认证与维护活动集中发生",action:"把共用供应商活动按受益项目拆分，避免单项目承担",owner:"采购",saving:0.8,due:"06-16",status:"已启动"},{metric:"L5",reason:"低频缺料停线，影响小时数可控",action:"纳入风险雷达观察，暂不生成专项工单",owner:"IP",saving:0.5,due:"06-19",status:"观察"}]},
   {id:"MIC-26-NPI-D05",name:"MEMS麦克风NPI D05",bg:"零组件BG",bu:"微电子BU",customer:"海外客户D",stage:"DVT试产",owner:"IP-微电子",revenue:280,procurement:155,output:5200,baseline:29.8,inventory:52,shipAmount:205,lineValue:65,standardTransport:2.3,emergencyPurchase:3.6,pBenefit:2.2,invDays:55,c:{C1:6.3,C2:5.8,C3:4.1,C4:3.7},l:{L1:1.0,L2:0.6,L3:0.7,L4:0.6,L5:0.5,L6:1.2,L7:0.4,L8:0.0},p:{P1:3.0,P2:4.6},trend:[25,26,27,28,29,31,30,31,32,32,33,34,33,34],cTrend:[18,18,19,19,20,20,20,20,21,21,21,21,20,20],lTrend:[4,4,4.2,4.5,4.6,4.8,4.6,4.9,5,5,5.1,5.2,5,5],actions:[{metric:"D16",reason:"备用源认证与样品测试集中发生，前瞻投入强度偏高",action:"与研发里程碑绑定，DVT后复盘P2投入收益",owner:"采购/研发",saving:1.2,due:"06-30",status:"执行中"},{metric:"D8",reason:"试产变更频次高，计划协调成本偏高",action:"建立NPI变更冻结窗口，超窗变更进入成本看板",owner:"计划/研发",saving:0.9,due:"06-21",status:"处理中"}]},
   {id:"AUTO-24-SENS-E12",name:"车载声学传感E12",bg:"汽车电子BG",bu:"车载BU",customer:"主机厂E",stage:"MP量产",owner:"IP-车载",revenue:930,procurement:560,output:18200,baseline:58.0,inventory:128,shipAmount:780,lineValue:220,standardTransport:6.2,emergencyPurchase:12.0,pBenefit:2.5,invDays:43,c:{C1:13.4,C2:12.1,C3:9.9,C4:4.6},l:{L1:2.4,L2:1.9,L3:2.7,L4:2.2,L5:2.1,L6:1.6,L7:1.2,L8:0.8},p:{P1:4.2,P2:1.9},trend:[55,56,57,58,58,60,59,61,62,62,63,62,63,62],cTrend:[37,38,38,39,39,40,39,40,41,40,41,40,40,40],lTrend:[12,12,12.4,12.6,12.8,13.4,13,13.5,14,14,14.1,14,14.2,14.9],actions:[{metric:"L4",reason:"车规器件供应商份额临时切换，替代报价高于原价",action:"恢复主力供应商周交付份额，备用源只保留风险缓冲",owner:"采购/质量",saving:1.7,due:"06-22",status:"处理中"},{metric:"L8",reason:"客户OTIF未达成产生预计索赔",action:"建立主机厂交付红线订单每日复盘",owner:"客服/IP",saving:0.6,due:"06-18",status:"已启动"}]},
@@ -31,7 +31,7 @@ var projects = [
   {id:"CAM-26-OPT-H22",name:"微型摄像模组H22",bg:"零组件BG",bu:"光学BU",customer:"国内客户H",stage:"EVT验证",owner:"IP-光学NPI",revenue:210,procurement:118,output:2800,baseline:24.2,inventory:46,shipAmount:168,lineValue:42,standardTransport:1.6,emergencyPurchase:2.1,pBenefit:1.5,invDays:61,c:{C1:4.8,C2:3.9,C3:3.2,C4:3.4},l:{L1:0.4,L2:0.3,L3:0.4,L4:0.2,L5:0.2,L6:0.8,L7:0.2,L8:0.0},p:{P1:2.2,P2:3.9},trend:[19,20,20,21,22,22,23,23,24,24,25,25,25,25],cTrend:[13,13.5,14,14,14.5,15,15,15,15.2,15.3,15.5,15.4,15.3,15.3],lTrend:[2,2,2.1,2.1,2.2,2.2,2.3,2.3,2.4,2.4,2.5,2.5,2.5,2.5],actions:[{metric:"P2",reason:"关键镜头备用源开发投入较高",action:"区分一次性认证投入与量产采购溢价，建立ROI追踪",owner:"采购/研发",saving:0.8,due:"06-30",status:"执行中"},{metric:"C4",reason:"EVT阶段变更频繁，计划协调成本偏高",action:"把BOM冻结点前置到试制评审节点",owner:"计划/研发",saving:0.5,due:"06-19",status:"处理中"}]},
   {id:"PAD-25-HAPT-F09",name:"平板触觉模组F09",bg:"智能硬件BG",bu:"精密结构BU",customer:"海外客户F",stage:"MP量产",owner:"IP-结构",revenue:540,procurement:310,output:24500,baseline:36.5,inventory:68,shipAmount:440,lineValue:108,standardTransport:3.7,emergencyPurchase:3.2,pBenefit:1.1,invDays:35,c:{C1:8.9,C2:6.4,C3:6.8,C4:2.7},l:{L1:1.1,L2:0.7,L3:0.5,L4:0.3,L5:0.6,L6:0.6,L7:0.4,L8:0.0},p:{P1:1.2,P2:0.6},trend:[31,32,32,33,34,34,35,35,35,36,35,35,36,36],cTrend:[23,23,24,24,24,25,25,25,25,25,25,25,25,25],lTrend:[3.5,3.6,3.6,3.7,3.8,3.8,3.9,4,4,4.1,4,4.1,4.2,4.2],actions:[{metric:"C3",reason:"跨仓调拨批次较多，标准物流费用偏高",action:"合并同客户同区域运输批次，降低单台仓配成本",owner:"物流",saving:0.7,due:"06-17",status:"执行中"},{metric:"C2",reason:"安全库存水位高于当前订单覆盖量",action:"把覆盖天数从9天下调到7天，观察断供风险",owner:"计划",saving:0.9,due:"06-20",status:"待评审"}]},
   {id:"VR-26-OPT-J31",name:"VR光学模组J31",bg:"智能硬件BG",bu:"光学BU",customer:"海外客户J",stage:"PVT爬坡",owner:"IP-VR光学",revenue:480,procurement:285,output:8600,baseline:38.5,inventory:88,shipAmount:390,lineValue:95,standardTransport:3.3,emergencyPurchase:6.8,pBenefit:2.6,invDays:58,c:{C1:7.4,C2:9.2,C3:5.8,C4:4.2},l:{L1:3.2,L2:1.1,L3:1.8,L4:1.0,L5:1.4,L6:1.5,L7:1.1,L8:0.2},p:{P1:4.9,P2:3.1},trend:[35,36,37,38,39,41,42,43,44,45,46,45,44,46],cTrend:[24,25,25,26,26,27,27,27,27,27,27,27,27,27],lTrend:[6,6.4,6.7,7.1,7.6,8.3,8.8,9.4,10,10.6,11,10.6,10.4,11.3],actions:[{metric:"D12",reason:"长周期光学件现货采购溢价高",action:"锁定未来四周需求，审批超框架价采购的触发原因",owner:"采购/IP",saving:1.4,due:"06-23",status:"处理中"},{metric:"D16",reason:"PVT阶段策略储备和供应能力提升投入同时发生",action:"按爬坡里程碑释放P1库存，P2投入纳入供应商能力复盘",owner:"计划/采购",saving:1.0,due:"06-27",status:"执行中"}]},
-  {id:"IOT-25-SENS-K08",name:"IoT传感器K08",bg:"零组件BG",bu:"微电子BU",customer:"国内客户K",stage:"MP量产",owner:"IP-IoT",revenue:390,procurement:225,output:43800,baseline:24.8,inventory:44,shipAmount:318,lineValue:72,standardTransport:2.1,emergencyPurchase:1.8,pBenefit:0.9,invDays:26,c:{C1:5.1,C2:3.8,C3:4.4,C4:1.9},l:{L1:0.6,L2:0.2,L3:0.2,L4:0.1,L5:0.3,L6:0.2,L7:0.1,L8:0.0},p:{P1:0.8,P2:0.5},trend:[22,22.4,22.7,23,23.2,23.4,23.6,23.8,24,24.2,24.4,24.6,24.7,24.8],cTrend:[14.8,15,15.1,15.1,15.2,15.2,15.3,15.3,15.3,15.4,15.4,15.3,15.2,15.2],lTrend:[1.2,1.2,1.3,1.3,1.4,1.4,1.5,1.5,1.6,1.6,1.6,1.7,1.6,1.7],actions:[{metric:"D2",reason:"单位供应链总成本低于组合均值，作为对标项目",action:"沉淀低仓储低损失的标准作业方式",owner:"IP/物流",saving:0.3,due:"06-26",status:"复盘中"},{metric:"D9",reason:"库存周转保持健康，暂无管理红灯",action:"维持当前安全库存策略",owner:"计划",saving:0.2,due:"06-30",status:"观察"}]}
+  {id:"IOT-25-SENS-K08",name:"IoT传感器K08",bg:"零组件BG",bu:"微电子BU",customer:"国内客户K",stage:"MP量产",owner:"IP-IoT",revenue:390,procurement:225,output:43800,baseline:24.8,inventory:44,shipAmount:318,lineValue:72,standardTransport:2.1,emergencyPurchase:1.8,pBenefit:0.9,invDays:26,c:{C1:5.1,C2:3.8,C3:4.4,C4:1.9},l:{L1:0.6,L2:0.2,L3:0.2,L4:0.1,L5:0.3,L6:0.2,L7:0.1,L8:0.0},p:{P1:0.8,P2:0.5},trend:[22,22.4,22.7,23,23.2,23.4,23.6,23.8,24,24.2,24.4,24.6,24.7,24.8],cTrend:[14.8,15,15.1,15.1,15.2,15.2,15.3,15.3,15.3,15.4,15.4,15.3,15.2,15.2],lTrend:[1.2,1.2,1.3,1.3,1.4,1.4,1.5,1.5,1.6,1.6,1.6,1.7,1.6,1.7],actions:[{metric:"D2",reason:"单位供应链运作成本低于组合均值，作为对标项目",action:"沉淀低仓储低损失的标准作业方式",owner:"IP/物流",saving:0.3,due:"06-26",status:"复盘中"},{metric:"D9",reason:"库存周转保持健康，暂无管理红灯",action:"维持当前安全库存策略",owner:"计划",saving:0.2,due:"06-30",status:"观察"}]}
 ];
 
 var thresholds = { D1:[12,16],D2:[28,48],D3:[18,28],D4:[10,18],D5:[2.2,3.2],D6:[8,12],D7:[1.3,1.8],D8:[0.8,1.3],D9:[45,70],D10:[1.6,3.2],D11:[6,11],D12:[18,28],D13:[1.2,2.2],D14:[12,22],D15:[0.05,0.12],D16:[1.2,2.4],D17:[45,25] };
@@ -92,7 +92,6 @@ function filteredProjects(){
   var projId = els.project.value;
   return projects.filter(function(p){
     if(projId && p.id !== projId) return false;
-    if(els.stage.value&&p.stage!==els.stage.value)return false;
     return true;
   });
 }
@@ -185,7 +184,7 @@ function renderKpis(list){
   var baseline=list.reduce(function(a,p){return a+p.baseline;},0);
   var dRedCount=list.reduce(function(cnt,p){var d=calcD(p);return cnt+Object.keys(d).filter(function(k){return statusFor(k,d[k])==="red";}).length;},0);
   var cards=[
-    {cls:"s",section:"S",label:periodMeta[els.period.value].suffix+" S1供应链总成本",value:fmtWan(scaleValue(s)),sub:"较基线 "+fmtPct((s-baseline)/baseline*100)},
+    {cls:"s",section:"S",label:periodMeta[els.period.value].suffix+" S1供应链运作成本",value:fmtWan(scaleValue(s)),sub:"较基线 "+fmtPct((s-baseline)/baseline*100)},
     {cls:"c",section:"C",label:"C0运营成本",value:fmtWan(scaleValue(c)),sub:"占S1 "+fmtPct(c/s*100)},
     {cls:"l",section:"L",label:"L0损失成本",value:fmtWan(scaleValue(l)),sub:"占S1 "+fmtPct(l/s*100)},
     {cls:"p",section:"P",label:"P0前瞻投入",value:fmtWan(scaleValue(pVal)),sub:"占S1 "+fmtPct(pVal/s*100)},
@@ -412,9 +411,8 @@ function initPage_cost(){
   container.innerHTML='<div class="v56-page">'+
     '<div class="filter-bar">'+
     '<div class="filter-group"><label>项目</label><select id="v56-projectFilter"></select></div>'+
-    '<span class="inv-proj-meta" id="v56-projMeta"></span>'+
     '<div class="filter-group"><label>统计范围</label><select id="v56-periodFilter"><option value="ytd" selected>累计至今</option><option value="month">本月累计</option><option value="week">本周累计</option><option value="day">今日发生</option></select></div>'+
-    '<div class="filter-group"><label>项目阶段</label><select id="v56-stageFilter"></select></div>'+
+    '<span class="inv-proj-meta" id="v56-projMeta"></span>'+
     '</div>'+
 
     // ═══ 板块一：供应链运作成本 4个KPI ═══
@@ -446,7 +444,6 @@ function initPage_cost(){
   if(typeof fillProjectSelect==='function'){ fillProjectSelect(els.project, fp); }
   else { els.project.innerHTML = '<option value="">— 选择项目 —</option>' + fp.map(function(p){return '<option value="'+p.id+'">'+p.name+' ['+p.bg+'·'+p.customer+']</option>';}).join(''); }
   if(typeof consumeDrillDown==='function') consumeDrillDown('v56-projectFilter');
-  fillSelect(els.stage,uniqueValues('stage'),'全部阶段');
   if(!els.project.value && fp.length) els.project.value = fp[0].id;
   selectedProjectId = els.project.value || projects[0].id;
 
@@ -462,8 +459,8 @@ function initPage_cost(){
 function renderS4Kpis(p){
   var s=total(p),s2=s/p.revenue*100,s3=(s-p.baseline)/p.baseline*100,cP=c0(p)/s*100,lP=l0(p)/s*100,pP=p0(p)/s*100;
   var cards=[
-    {code:'S1',name:'供应链总成本',value:fmtWan(scaleValue(s)),sub:'S1 = C0+L0+P0 | C0 '+fmtWan(scaleValue(c0(p)))+' · L0 '+fmtWan(scaleValue(l0(p)))+' · P0 '+fmtWan(scaleValue(p0(p))),st:s3>20?'red':s3>10?'amber':'green'},
-    {code:'S2',name:'供应链总成本率',value:fmtPct(s2),sub:'S2 = S1÷营业收入×100% | 营收 '+fmtWan(scaleValue(p.revenue)),st:s2>20?'red':s2>15?'amber':'green'},
+    {code:'S1',name:'供应链运作成本',value:fmtWan(scaleValue(s)),sub:'S1 = C0+L0+P0 | C0 '+fmtWan(scaleValue(c0(p)))+' · L0 '+fmtWan(scaleValue(l0(p)))+' · P0 '+fmtWan(scaleValue(p0(p))),st:s3>20?'red':s3>10?'amber':'green'},
+    {code:'S2',name:'供应链运作成本率',value:fmtPct(s2),sub:'S2 = S1÷营业收入×100% | 营收 '+fmtWan(scaleValue(p.revenue)),st:s2>20?'red':s2>15?'amber':'green'},
     {code:'S3',name:'总成本基线偏差',value:fmtPct(s3),sub:'S3 = (S1−基线)÷基线×100% | 基线 '+fmtWan(p.baseline),st:s3>20?'red':s3>10?'amber':'green'},
     {code:'S4',name:'CLP成本结构占比',value:cP.toFixed(0)+'% / '+lP.toFixed(0)+'% / '+pP.toFixed(0)+'%',sub:'C '+cP.toFixed(0)+'% · L '+lP.toFixed(0)+'% · P '+pP.toFixed(0)+'%',st:lP>30?'red':lP>18?'amber':'green'}
   ];
@@ -546,7 +543,7 @@ function renderCostTree(p){
   '</svg>';
 
   var html='<div class="v56-db">'+
-    '<div class="v56-db-l1">'+_dbNode('S1','供应链总成本',fmtWan(scaleValue(s)),fmtPct(total(p)/p.revenue*100),colS,1)+'</div>'+
+    '<div class="v56-db-l1">'+_dbNode('S1','供应链运作成本',fmtWan(scaleValue(s)),fmtPct(total(p)/p.revenue*100),colS,1)+'</div>'+
     l1l2+
     '<div class="v56-db-l2">'+
       _branch('C0',colC,'运营成本',fmtWan(scaleValue(c0(p))),fmtPct(c0(p)/s*100),cD)+
@@ -620,7 +617,7 @@ function renderDMatrix(p){
       var valStr=m==='D2'?fmtYuan(v):m==='D9'?v.toFixed(0)+'天':fmtPct(v);
       var stColor=st==='red'?'#dc2626':st==='amber'?'#d97706':'#16a34a';
       var stLabel=st==='red'?'异常':st==='amber'?'关注':'正常';
-      html+='<div class="v56-dmg-card '+st+'"><div class="v56-dmg-top"><span class="v56-dmg-code">'+m+'</span><span class="v56-dmg-name">'+metricNames[m]+'</span><span class="v56-dmg-status" style="color:'+stColor+'">'+stLabel+'</span></div><div class="v56-dmg-val" style="color:'+stColor+'">'+valStr+'</div><div class="v56-dmg-diag">'+dDiagnosis[m]+'</div><div class="v56-dmg-act"><i class="fas fa-lightbulb"></i> '+dActions[m]+'</div></div>';
+      html+='<div class="v56-dmg-card '+st+'"><div class="v56-dmg-top"><span class="v56-dmg-code">'+m+'</span><span class="v56-dmg-name">'+metricNames[m]+'</span><span class="v56-dmg-status" style="color:'+stColor+'">'+stLabel+'</span></div><div class="v56-dmg-val" style="color:'+stColor+'">'+valStr+'</div><div class="v56-dmg-diag">'+dDiagnosis[m]+'</div></div>';
     });
     html+='</div></div>';
   });
