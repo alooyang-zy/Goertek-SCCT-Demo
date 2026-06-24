@@ -132,13 +132,14 @@
 #page-cost .v56-db { display: flex; flex-direction: column; align-items: center; padding: 24px 8px; }
 
 #page-cost .v56-db-node {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  border-radius: 6px; padding: 14px 24px; text-align: center;
-  transition: all .2s; position: relative; min-width: 160px;
+  display: flex; flex-direction: column; border-radius: 6px; overflow: hidden;
+  text-align: center; transition: all .2s; min-width: 160px;
 }
-#page-cost .v56-db-node:hover { box-shadow: 0 0 14px color-mix(in srgb, var(--dc) 20%, transparent); }
-#page-cost .v56-db-l1 .v56-db-node { min-width: 320px; padding: 18px 44px; }
-#page-cost .v56-db-code { font-size: 15px; font-weight: 700; padding: 0 0 6px; width: 100%; text-align: center; border-bottom: 1px solid var(--dc); opacity: .5; }
+#page-cost .v56-db-node:hover { box-shadow: 0 0 14px color-mix(in srgb, var(--dc) 25%, transparent); }
+#page-cost .v56-db-l1 .v56-db-node { min-width: 320px; }
+#page-cost .v56-db-head { font-size: 15px; font-weight: 700; color: #ffffff; padding: 6px 20px; white-space: nowrap; }
+#page-cost .v56-db-l1 .v56-db-head { font-size: 16px; padding: 8px 32px; }
+#page-cost .v56-db-body { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 20px; background: var(--v56-panel); }
 #page-cost .v56-db-val { font-size: 28px; font-weight: 800; color: #1e293b; line-height: 1.2; }
 #page-cost .v56-db-l1 .v56-db-val { font-size: 32px; }
 #page-cost .v56-db-pct { font-size: 14px; font-weight: 700; }

@@ -472,11 +472,12 @@ function renderS4Kpis(p){
 
 // ═══════════════ 板块二：运作成本构成 (杜邦分析模型样式) ═══════════════
 function _dbNode(code,name,value,pct,color,level){
-  var bg = level===1 ? color+'0c' : color+'06';
-  return '<div class="v56-db-node" style="border:2px solid '+color+';background:'+bg+';--dc:'+color+'">'+
-    '<div class="v56-db-code" style="color:'+color+'">'+code+' '+name+'</div>'+
-    '<div class="v56-db-val">'+value+'</div>'+
-    (pct?'<div class="v56-db-pct" style="color:'+color+'">'+pct+'</div>':'')+
+  return '<div class="v56-db-node" style="border:2px solid '+color+';--dc:'+color+'">'+
+    '<div class="v56-db-head" style="background:'+color+'">'+code+' '+name+'</div>'+
+    '<div class="v56-db-body">'+
+      '<span class="v56-db-val">'+value+'</span>'+
+      (pct?'<span class="v56-db-pct" style="color:'+color+'">'+pct+'</span>':'')+
+    '</div>'+
   '</div>';
 }
 function _dbLeaf(code,name,value,pct,color){
