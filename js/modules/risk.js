@@ -251,28 +251,53 @@ window._rrSim=function(id,name){
   alert('【'+name+'】蒙特卡洛模拟\n\n中断持续时间: 14天 | 覆盖范围: 60%\n迭代次数: 100\n\nP10: -8% OTIF\nP50: -23% OTIF\nP90: -41% OTIF\n缺货概率: 34%\n\n（模拟功能后端API对接中）');
 };
 
-// ── Quadrant Scatter ──
+// ── Quadrant Scatter（敏捷性×韧性TTS）──
 function renderQuad(risks){
   var dom=document.getElementById('rrQuadChart'); if(!dom||!window.echarts) return;
-  dom.style.width='100%'; dom.style.height='360px';
-  var p1d=[],p2d=[],p3d=[];
+  dom.style.width='100%'; dom.style.height='400px';
+
+  // 用户指定的四象限归属
+  var quadMap = {
+    R04:'A',R06:'A',R09:'A',R12:'A',
+    R01:'B',R05:'B',
+    R11:'C',R08:'C',R13:'C',
+    R02:'D',R03:'D',R07:'D',R10:'D'
+  };
+  var quadColors = {A:'#22c55e',B:'#3b82f6',C:'#f97316',D:'#dc2626'};
+  var quadLabels = {A:'A·韧性强+敏捷弱',B:'B·韧性强+敏捷强',C:'C·韧性弱+敏捷弱',D:'D·韧性弱+敏捷强（优先处置）'};
+
+  var seriesData = {A:[],B:[],C:[],D:[]};
   risks.forEach(function(r){
-    if(r.tts>30||r.ttr>60)return;
-    var pt={name:r.name,value:[r.ttr,r.tts,r.var]};
-    if(r.level==='P1')p1d.push(pt); else if(r.level==='P2')p2d.push(pt); else p3d.push(pt);
+    var q = quadMap[r.id]||'C';
+    seriesData[q].push({name:r.id+' '+r.name,value:[r.agility,r.tts,r.var],itemStyle:{color:quadColors[q]}});
   });
+
   if(App.charts.rrQuad)try{App.charts.rrQuad.dispose();}catch(e){}
   var ch=echarts.init(dom);
+  var seriesArr = ['A','B','C','D'].filter(function(q){return seriesData[q].length>0;}).map(function(q){
+    return {name:quadLabels[q],type:'scatter',data:seriesData[q],
+      symbolSize:function(v){return Math.max(14,Math.min(45,v[2]/40));},
+      itemStyle:{color:quadColors[q],opacity:.85},
+      label:{show:true,formatter:function(p){return p.name.split(' ')[0];},position:'top',fontSize:9,fontWeight:700,color:quadColors[q]},
+      emphasis:{focus:'series',label:{fontSize:11}}
+    };
+  });
   ch.setOption({
-    tooltip:{trigger:'item',formatter:function(p){return '<b>'+p.name+'</b><br/>TTR: '+p.value[0]+'天<br/>TTS: '+p.value[1]+'天<br/>VAR: ¥'+p.value[2]+'万';}},
-    legend:{bottom:0},
-    grid:{left:55,right:20,top:20,bottom:40},
-    xAxis:{name:'TTR 恢复时间（天）',max:60},
-    yAxis:{name:'TTS 存活时间（天）',max:30},
-    series:[
-      {name:'P1高危',type:'scatter',data:p1d,symbolSize:function(v){return Math.max(10,Math.min(40,v[2]/50));},itemStyle:{color:'#dc2626',opacity:.8}},
-      {name:'P2中高',type:'scatter',data:p2d,symbolSize:function(v){return Math.max(8,Math.min(32,v[2]/50));},itemStyle:{color:'#f97316',opacity:.8}},
-      {name:'P3中等',type:'scatter',data:p3d,symbolSize:function(v){return Math.max(6,Math.min(26,v[2]/50));},itemStyle:{color:'#eab308',opacity:.8}},
+    tooltip:{trigger:'item',
+      formatter:function(p){var parts=p.name.split(' ');return '<b>'+parts[0]+'</b> '+parts.slice(1).join(' ')+'<br/>敏捷性: '+p.value[0]+'%<br/>TTS: '+p.value[1]+'天<br/>VAR: ¥'+p.value[2]+'万<br/>象限: '+quadLabels[quadMap[parts[0]]||'C']};}
+    },
+    legend:{bottom:0,textStyle:{fontSize:10}},
+    grid:{left:60,right:30,top:20,bottom:55},
+    xAxis:{name:'敏捷性 →（越高越好）',nameTextStyle:{fontSize:11,color:'var(--text-sec)'},min:20,max:80,axisLabel:{fontSize:10},splitLine:{lineStyle:{type:'dashed',color:function(p){return p.value===50?'#dc2626':'#e2e8f0';},width:function(p){return p.value===50?2:1;}}}},
+    yAxis:{name:'韧性TTS ← 越高越强',nameTextStyle:{fontSize:11,color:'var(--text-sec)'},min:0,max:50,axisLabel:{fontSize:10},splitLine:{lineStyle:{type:'dashed',color:function(p){return p.value===7||p.value===14?'#dc2626':'#e2e8f0';},width:function(p){return p.value===7||p.value===14?2:1;}}}},
+    series:seriesArr,
+    graphic:[
+      {type:'text',left:62,top:24,style:{text:'🔵 韧性强 (TTS>14d)',fill:'#3b82f6',fontSize:10,fontWeight:'bold'}},
+      {type:'text',left:62,bottom:62,style:{text:'🔴 韧性弱 (TTS<7d)',fill:'#dc2626',fontSize:10,fontWeight:'bold'}},
+      {type:'text',right:32,top:'middle',style:{text:'敏捷强 →',fill:'#3b82f6',fontSize:10,fontWeight:'bold'}},
+      {type:'text',left:68,top:'middle',style:{text:'← 敏捷弱',fill:'#f97316',fontSize:10,fontWeight:'bold'}},
+      // D象限优先处置标记
+      {type:'text',left:65+'%',top:58+'%',style:{text:'⚠ 优先处置区',fill:'#dc2626',fontSize:11,fontWeight:'bold'},z:100},
     ]
   });
   App.charts.rrQuad=ch;
