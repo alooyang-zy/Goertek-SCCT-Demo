@@ -191,8 +191,8 @@ function detailCatCount(catId, mats){
 function renderAll(){
   try {
     var fp = getFilteredProjects();
-    var sel = document.getElementById('materialProjectSelect');
-    if(sel) fillProjectSelect(sel, fp);
+    // 使用履约跟踪顶部项目选择器
+    var sel = document.getElementById('progressProjectSelect');
     var pid = sel&&sel.value ? sel.value : (fp.length?fp[0].id:null);
     if(!pid) return;
     var p = projects.find(function(x){return x.id===pid;});
@@ -206,7 +206,8 @@ function renderAll(){
 
     // ① Project info bar（合并到筛选行）
     var riskCount = allMats.filter(function(m){return (m.风险标签||[]).length>0;}).length;
-    document.getElementById('npiInfoInline').innerHTML = [
+    var infoEl = document.getElementById('npiInfoInline');
+    if(infoEl) infoEl.innerHTML = [
       '<span class="npi-info-item"><b>'+p.name+'</b></span>',
       '<span class="npi-info-item">BG/BU：<b>'+p.bg+'/'+p.bu+'</b></span>',
       '<span class="npi-info-item">客户：<b>'+p.customer+'</b></span>',
@@ -322,10 +323,6 @@ function renderAll(){
 // ═══════════════ 入口 ═══════════════
 window.initPage_material = function(){
   _activeDistTag = null; _matCache = {};
-  var fp = getFilteredProjects();
-  var sel = document.getElementById('materialProjectSelect');
-  if(sel) fillProjectSelect(sel, fp);
-  consumeDrillDown('materialProjectSelect');
   renderAll();
 };
 registerModule('material', initPage_material);

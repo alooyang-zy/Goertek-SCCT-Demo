@@ -203,11 +203,7 @@ window._prgSwitchTab = function(tabId){
     var npiContainer = document.getElementById('prg-npi-container');
     if(npiContainer){
       npiContainer.innerHTML =
-        '<div class="filter-bar" style="gap:0">'
-        + '<div class="filter-group"><label>项目:</label><select id="materialProjectSelect" onchange="initPage_material()"></select></div>'
-        + '<span id="npiInfoInline" style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:14px"></span>'
-        + '</div>'
-        + '<div class="npi-cards" id="npiCards"></div>'
+        '<div class="npi-cards" id="npiCards"></div>'
         + '<div class="npi-pipeline-panel"><div class="npi-stage-head"><span class="npi-pipeline-panel-title">项目物料进度百分比</span></div><div class="npi-pipeline" id="npiPipeline"></div></div>'
         + '<div class="npi-risk-panel"><div class="npi-risk-panel-header"><span class="npi-risk-panel-title">风险标签命中分布</span><span id="npiDistFilterHint" style="font-size:11px;color:var(--primary);display:none;">已筛选 · 点击标签取消</span></div><div class="npi-risk-categories" id="npiRiskDist"></div></div>'
         + '<div class="npi-table-panel"><div class="npi-table-head"><span class="npi-table-title">物料全链路明细状态</span><span id="npiTableCount" style="font-size:11px;color:var(--text-muted)"></span></div><div class="npi-table-wrap"><table><thead id="npiTHead"></thead><tbody id="npiTBody"></tbody></table></div></div>';
@@ -215,6 +211,10 @@ window._prgSwitchTab = function(tabId){
         setTimeout(function(){ initPage_material(); }, 50);
       }
     }
+  }
+  if(tabId === 'npi' && window._prgNpiInited){
+    // 切回NPI时刷新数据（项目可能已切换）
+    if(typeof initPage_material === 'function') initPage_material();
   }
 };
 
