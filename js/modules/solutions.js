@@ -101,7 +101,95 @@ var SOLUTIONS_DATA = [
       case:{id:'E-0821', date:'2026-06-22', desc:'EOL专用料消化，客户买单回收率85%'}
     }
   },
-  // ── E-0842 单源物料TTS<3天（处置中）──
+  // ── E-0841 贸易制裁新增物料（处置中，归因分析阶段）──
+  { eventId:'E-0841', eventTitle:'贸易制裁新增物料', priority:'P1', status:'处置中', owner:'赵敏', deadline:'06/25', progress:10, phase:'归因分析',
+    rootCause:'美国出口管制清单新增3个涉管制芯片料号，歌尔HW01/HW02/HW03三个项目在用。此前未建立涉管制物料前置审查机制，采购流程缺少ECCN分类校验环节，导致已下单物料面临清关风险。',
+    decision:{person:'-', time:'-', selected:'待决策'},
+    plans:[
+      {name:'方案A: 替代料切换', cost:'¥200万', time:'30天', effect:'高', recommend:false, desc:'切换至非管制替代料，需重新认证'},
+      {name:'方案B: 库存消化+客户沟通', cost:'¥50万', time:'14天', effect:'中', recommend:false, desc:'优先消耗在途库存并争取客户宽限'},
+      {name:'方案C: 申请出口许可', cost:'¥10万', time:'45天', effect:'低', recommend:false, desc:'向BIS申请出口许可，周期长且不确定'}
+    ],
+    tasks:[
+      {name:'核查受影响物料清单', owner:'合规组', deadline:'06/24', status:'进行中'},
+      {name:'评估替代料可行性', owner:'研发', deadline:'06/25', status:'待开始'},
+      {name:'客户沟通预警', owner:'销售', deadline:'06/25', status:'待开始'}
+    ],
+    timeline:[
+      {time:'06/24 07:15', user:'赵敏', text:'人工上报，启动合规评估'},
+      {time:'06/24 09:00', user:'合规组', text:'确认3个料号涉管制，影响3个项目'}
+    ],
+    metrics:[
+      {name:'受影响项目数', current:3, target:0, unit:'个', trend:[3,3,3,2,2,1,0]},
+      {name:'替代料覆盖度', current:15, target:80, unit:'%', trend:[15,20,30,45,60,75,80]}
+    ],
+    aiAdvice:{
+      short:['立即冻结涉管制料号新增采购订单','启动客户沟通，争取交付宽限期'],
+      mid:['加速替代料认证，聚焦3个核心料号','评估供应商产地切换可行性'],
+      long:['建立ECCN前置审查机制，纳入采购审批流程'],
+      case:{id:'E-0698', date:'2025-09-10', desc:'贸易合规事件，处置周期21天'}
+    }
+  },
+  // ── E-0838 需求预测偏差（处置中，方案制定阶段）──
+  { eventId:'E-0838', eventTitle:'需求预测偏差连续3周>15%', priority:'P2', status:'处置中', owner:'张敏', deadline:'06/27', progress:25, phase:'方案制定',
+    rootCause:'HW01项目客户PO与预测持续偏差，连续3周MAPE超15%。客户端需求波动叠加歌尔内部S&OP评审周期过长（月度），无法及时调整备料计划，导致已备物料¥320万存在积压风险。',
+    decision:{person:'-', time:'-', selected:'待决策'},
+    plans:[
+      {name:'方案A: 冻结备料+S&OP紧急评审', cost:'¥0', time:'3天', effect:'高', recommend:true, desc:'立即冻结HW01新增备料，启动S&OP紧急评审调整计划'},
+      {name:'方案B: 滚动预测+安全库存下调', cost:'¥5万', time:'7天', effect:'中', recommend:false, desc:'改为周度滚动预测，安全库存从14天降至7天'},
+      {name:'方案C: 客户预测协同机制', cost:'¥3万', time:'14天', effect:'中', recommend:false, desc:'与客户建立周度预测协同会议，提升预测准确率'}
+    ],
+    tasks:[
+      {name:'冻结HW01新增备料PR', owner:'采购组', deadline:'06/23', status:'已完成'},
+      {name:'组织S&OP紧急评审会', owner:'张敏', deadline:'06/25', status:'进行中'},
+      {name:'评估已备物料跨项目转用', owner:'计划部', deadline:'06/26', status:'待开始'},
+      {name:'与客户建立周度协同机制', owner:'销售', deadline:'06/27', status:'待开始'}
+    ],
+    timeline:[
+      {time:'06/22 09:00', user:'系统', text:'规则触发：MAPE>15%连续3周'},
+      {time:'06/22 10:30', user:'张敏', text:'触发S&OP紧急评审，冻结新增备料'}
+    ],
+    metrics:[
+      {name:'预测MAPE', current:18, target:10, unit:'%', trend:[18,17,16,14,12,11,10]},
+      {name:'备料积压风险', current:320, target:100, unit:'万', trend:[320,280,240,200,160,120,100]}
+    ],
+    aiAdvice:{
+      short:['立即冻结HW01新增备料，防止积压扩大','启动S&OP紧急评审调整MPS计划'],
+      mid:['将S&OP评审从月度改为周度滚动','与客户建立周度预测协同机制'],
+      long:['引入AI需求预测模型，提升预测准确率至90%以上'],
+      case:{id:'E-0745', date:'2026-02-20', desc:'预测偏差处置，S&OP改周度后MAPE降至8%'}
+    }
+  },
+  // ── E-0835 大客户审计Major NC（处置中，方案制定阶段）──
+  { eventId:'E-0835', eventTitle:'大客户审计发现Major NC', priority:'P1', status:'处置中', owner:'陈晨', deadline:'06/30', progress:30, phase:'方案制定',
+    rootCause:'Apple质量审计发现AP01产线存在Major不符合项：SPC控制图未按客户要求频次更新，首件检验记录缺失3批次。根因为产线质量系统与客户审计标准存在差异，且无专人跟踪客户特殊要求。',
+    decision:{person:'-', time:'-', selected:'待决策'},
+    plans:[
+      {name:'方案A: 全面整改+系统升级', cost:'¥80万', time:'20天', effect:'高', recommend:true, desc:'SPC系统升级+补齐检验记录+培训考核'},
+      {name:'方案B: 临时补救+客户沟通', cost:'¥15万', time:'7天', effect:'中', recommend:false, desc:'人工补齐记录，申请客户宽限整改期'},
+      {name:'方案C: 外部咨询+差距分析', cost:'¥30万', time:'14天', effect:'中', recommend:false, desc:'引入第三方咨询做全面差距分析'}
+    ],
+    tasks:[
+      {name:'成立专项整改小组', owner:'陈晨', deadline:'06/21', status:'已完成'},
+      {name:'SPC系统升级方案评审', owner:'IT/质量', deadline:'06/28', status:'进行中'},
+      {name:'补齐缺失检验记录', owner:'质量部', deadline:'06/25', status:'待开始'},
+      {name:'客户特殊要求清单梳理', owner:'质量部', deadline:'06/30', status:'待开始'}
+    ],
+    timeline:[
+      {time:'06/20 16:00', user:'陈晨', text:'收到Apple审计报告，含2项Major NC'},
+      {time:'06/21 09:00', user:'陈晨', text:'成立专项整改小组，启动差距分析'}
+    ],
+    metrics:[
+      {name:'Major NC关闭数', current:0, target:2, unit:'项', trend:[0,0,1,1,2,2,2]},
+      {name:'整改完成率', current:15, target:100, unit:'%', trend:[0,5,15,40,70,90,100]}
+    ],
+    aiAdvice:{
+      short:['30天内必须关闭Major NC，否则影响客户准入','优先补齐缺失记录，展示整改诚意'],
+      mid:['SPC系统升级为自动化采集，杜绝人工遗漏','建立客户特殊要求跟踪矩阵'],
+      long:['引入QMS数字化平台，实现审计要求自动映射'],
+      case:{id:'E-0701', date:'2025-08-15', desc:'Apple审计整改，20天关闭Major NC'}
+    }
+  },
   { eventId:'E-0842', eventTitle:'单源物料TTS<3天', priority:'P1', status:'处置中', owner:'王磊', deadline:'06/26', progress:20, phase:'任务分解',
     rootCause:'供应商XX产能受限且歌尔仅有该单一供应商，2024年Q3双源计划中止后资源被抽调至NPI项目，第二货源认证进度仅60%。',
     decision:{person:'赵总', time:'2026-06-24 14:30', selected:'方案A+方案B组合'},
@@ -137,6 +225,38 @@ var SOLUTIONS_DATA = [
     }
   },
   // ── E-0839 供应商延期7天（处置中，方案制定阶段）──
+  // ── E-0831 供应商延期3天（处置中，任务分解阶段）──
+  { eventId:'E-0831', eventTitle:'供应商延期3天', priority:'P2', status:'处置中', owner:'李强', deadline:'06/27', progress:80, phase:'任务分解',
+    rootCause:'HW02项目麦克风模组供应商因设备故障延期3天，该供应商为唯一供应源。延期已导致HW02工单齐套率降至82%，产线面临换线风险。',
+    decision:{person:'李强', time:'2026-06-21 10:30', selected:'方案A: 供应商加急+部分到货'},
+    plans:[
+      {name:'方案A: 供应商加急+部分到货', cost:'¥8万', time:'2天', effect:'高', recommend:true, desc:'供应商分2批加急交付，空运首批2K PCS'},
+      {name:'方案B: 产线换线缓冲', cost:'¥15万', time:'3天', effect:'中', recommend:false, desc:'产线换产其他项目缓冲3天等待到货'}
+    ],
+    tasks:[
+      {name:'联系供应商确认分批交付', owner:'李强', deadline:'06/21', status:'已完成'},
+      {name:'安排空运物流', owner:'物流组', deadline:'06/22', status:'已完成'},
+      {name:'首批到货IQC检验', owner:'IQC', deadline:'06/24', status:'进行中'},
+      {name:'第二批到货验证', owner:'IQC', deadline:'06/26', status:'待开始'},
+      {name:'恢复HW02工单排产', owner:'计划部', deadline:'06/27', status:'待开始'}
+    ],
+    timeline:[
+      {time:'06/21 08:00', user:'系统', text:'规则触发：供应商延期3天'},
+      {time:'06/21 10:00', user:'李强', text:'联系供应商确认分批交付方案'},
+      {time:'06/22 14:00', user:'物流组', text:'首批2K PCS空运发出'},
+      {time:'06/24 10:00', user:'IQC', text:'首批到货检验中'}
+    ],
+    metrics:[
+      {name:'交期偏差', current:3, target:0, unit:'天', trend:[3,2,1,0,0,0,0]},
+      {name:'HW02齐套率', current:82, target:95, unit:'%', trend:[82,85,89,92,94,95,95]}
+    ],
+    aiAdvice:{
+      short:['分批到货可缓解产线压力','同步评估替代料作为长期方案'],
+      mid:['该供应商设备故障需8D报告','评估是否引入第二供应商'],
+      long:['麦克风模组纳入双源策略，降低单源风险'],
+      case:{id:'E-0780', date:'2026-03-10', desc:'供应商设备故障延期，分批到货5天恢复'}
+    }
+  },
   { eventId:'E-0839', eventTitle:'供应商延期7天', priority:'P2', status:'处置中', owner:'李强', deadline:'06/28', progress:65, phase:'执行反馈',
     rootCause:'关键供应商产能临时受限，交期承诺推迟7天。该供应商为SW03项目声学模组唯一供应源，产能弹性不足。',
     decision:{person:'李强', time:'2026-06-23 16:30', selected:'方案A: 加急排产+空运'},
