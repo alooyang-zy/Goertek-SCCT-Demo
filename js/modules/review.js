@@ -123,6 +123,87 @@ var REVIEW_DATA = [
     summary:'ECN需提前D-7完成影响评估，BOM变更冻结窗口必须纳入项目里程碑。',
     tags:['ECN','BOM','NPI','R02'],
     relatedCases:['E-0789']
+  },
+  // ── E-0831 供应商延期3天（待复盘）──
+  { eventId:'E-0831', title:'供应商延期3天', closeDate:'06/23', status:'待复盘', days:2.5, effectiveness:'A', score:90,
+    timeline:[
+      {time:'06/21 08:00', stage:'发现', text:'规则触发：供应商延期', duration:'2小时'},
+      {time:'06/21 10:00', stage:'响应', text:'李强接单联系供应商', duration:'1小时'},
+      {time:'06/21 10:30', stage:'决策', text:'方案A分批加急', duration:'2天'},
+      {time:'06/23 18:00', stage:'验证关闭', text:'IQC验证通过', duration:'总计2.5天'}
+    ],
+    why:[
+      '供应商设备故障导致延期3天',
+      '该料号为单源供应，无备用方案',
+      '双源认证计划推迟，资源被NPI占用'
+    ],
+    rootCauseTags:['流程根因：单源物料无应急预案','制度根因：双源认证未纳入考核'],
+    metrics:[
+      {name:'交期偏差', expected:'0天', actual:'3天', eval:'未达成'},
+      {name:'齐套恢复', expected:'≤3天', actual:'2.5天', eval:'达成'},
+      {name:'处置成本', expected:'¥10万', actual:'¥8万', eval:'优于预期'}
+    ],
+    improvements:[
+      {action:'麦克风模组启动双源认证', owner:'采购组', deadline:'07/30', status:'进行中'},
+      {action:'建立单源物料应急联络机制', owner:'计划部', deadline:'07/15', status:'待启动'}
+    ],
+    summary:'单源物料设备故障需有应急预案，分批加急可有效缩短齐套恢复时间。',
+    tags:['单源风险','设备故障','R06'],
+    relatedCases:['E-0839']
+  },
+  // ── E-0832 物流干线延误3天（待复盘）──
+  { eventId:'E-0832', title:'物流干线延误3天', closeDate:'06/20', status:'待复盘', days:2.0, effectiveness:'B', score:78,
+    timeline:[
+      {time:'06/18 08:00', stage:'发现', text:'规则触发：干线到港延误', duration:'2小时'},
+      {time:'06/18 10:00', stage:'响应', text:'物流组接单评估空运', duration:'1小时'},
+      {time:'06/18 11:00', stage:'决策', text:'决定改空运追交', duration:'2天'},
+      {time:'06/20 16:00', stage:'验证关闭', text:'空运到货OTD追回2天', duration:'总计2天'}
+    ],
+    why:[
+      '海运干线港口拥堵导致延误3天',
+      '物流预警机制不完善，延误后才发现',
+      '缺少干线实时跟踪和自动预警'
+    ],
+    rootCauseTags:['系统根因：缺少干线实时跟踪','流程根因：延误发现滞后'],
+    metrics:[
+      {name:'OTD偏差', expected:'0天', actual:'1天', eval:'基本达成'},
+      {name:'额外成本', expected:'¥15万', actual:'¥18万', eval:'略超预期'},
+      {name:'追回天数', expected:'2天', actual:'2天', eval:'达成'}
+    ],
+    improvements:[
+      {action:'引入物流干线实时跟踪系统', owner:'物流组', deadline:'08/01', status:'待启动'},
+      {action:'建立海运延误>1天自动预警', owner:'系统组', deadline:'07/20', status:'进行中'}
+    ],
+    summary:'海运干线延误需实时跟踪预警，改空运可有效追交但成本较高。',
+    tags:['物流延误','空运追交','R10'],
+    relatedCases:['E-0770']
+  },
+  // ── E-0818 产能利用率顶格预警（已归档）──
+  { eventId:'E-0818', title:'产能利用率顶格预警', closeDate:'06/13', status:'已归档', days:3.0, effectiveness:'A', score:88,
+    timeline:[
+      {time:'06/10 06:00', stage:'发现', text:'规则触发：利用率>95%连续3天', duration:'3小时'},
+      {time:'06/10 09:00', stage:'响应', text:'计划部接单启动委外评估', duration:'1小时'},
+      {time:'06/10 10:00', stage:'决策', text:'委外分流20%产能', duration:'3天'},
+      {time:'06/13 16:00', stage:'验证关闭', text:'利用率降至88%', duration:'总计3天'}
+    ],
+    why:[
+      'AW03产线连续3天利用率超95%',
+      '需求突增未及时触发委外预案',
+      '产能预警阈值设置不合理（95%才触发）'
+    ],
+    rootCauseTags:['流程根因：委外预案启动滞后','制度根因：产能预警阈值过高'],
+    metrics:[
+      {name:'产能利用率', expected:'≤90%', actual:'88%', eval:'达成'},
+      {name:'委外成本', expected:'¥10万', actual:'¥8万', eval:'优于预期'},
+      {name:'交付影响', expected:'无影响', actual:'无影响', eval:'达成'}
+    ],
+    improvements:[
+      {action:'产能预警阈值从95%降至88%', owner:'系统组', deadline:'07/01', status:'已完成'},
+      {action:'建立产能>85%自动委外评估机制', owner:'计划部', deadline:'07/15', status:'已完成'}
+    ],
+    summary:'产能利用率达85%即应启动委外评估，避免等到95%顶格才处置。',
+    tags:['产能顶格','委外分流','R03'],
+    relatedCases:['E-0835']
   }
 ];
 

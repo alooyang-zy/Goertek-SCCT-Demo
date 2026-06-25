@@ -69,39 +69,65 @@ var SOLUTIONS_DATA = [
       case:{id:'E-0821', date:'2026-06-22', desc:'EOL专用料消化，客户买单回收率85%'}
     }
   },
-  // ── E-0848 成品呆滞（待复盘，处置已完成）──
-  { eventId:'E-0848', eventTitle:'成品库存呆滞预警（EOL尾品>60天）', priority:'P2', status:'待复盘', owner:'周涛', deadline:'06/20', progress:100, phase:'执行反馈',
-    rootCause:'SP01智能音箱EOL通知发出后未及时启动成品消化，成品库存库龄预警阈值60天过高，缺少EOL成品多路径消化标准流程。',
-    decision:{person:'刘总监', time:'2026-06-05 14:30', selected:'三路径组合消化'},
+  // ── E-0843 来料IQC批量不合格（处置中，归因分析阶段）──
+  { eventId:'E-0843', eventTitle:'来料IQC批量不合格', priority:'P1', status:'处置中', owner:'陈晨', deadline:'06/26', progress:20, phase:'归因分析',
+    rootCause:'SW04项目来料蓝牙模块2K PCS IQC不合格率8.5%（标准<2%）。初步分析为供应商焊线工艺偏移，SPC未及时监控发现。',
+    decision:{person:'-', time:'-', selected:'待决策'},
     plans:[
-      {name:'方案A: 客户尾单回购', cost:'¥0', time:'5天', effect:'高', recommend:true, desc:'客户按EOL协议回购4K台，回收¥120万'},
-      {name:'方案B: 内部促销', cost:'¥20万', time:'10天', effect:'中', recommend:true, desc:'员工内购+渠道促销5K台，回收¥100万'},
-      {name:'方案C: 拆解回收', cost:'¥15万', time:'5天', effect:'低', recommend:false, desc:'拆解3K台回收元器件，回收¥65万'}
+      {name:'方案A: 8D分析+供应商整改', cost:'¥5万', time:'7天', effect:'高', recommend:false, desc:'要求供应商8D分析并提交整改方案'},
+      {name:'方案B: 紧急换源+替代料', cost:'¥30万', time:'5天', effect:'中', recommend:false, desc:'启动备用源紧急交付'},
+      {name:'方案C: 特采降级使用', cost:'¥8万', time:'2天', effect:'低', recommend:false, desc:'风险评估后特采，需客户同意'}
     ],
     tasks:[
-      {name:'客户尾单回购谈判', owner:'销售组', deadline:'06/10', status:'已完成'},
-      {name:'内部促销方案执行', owner:'市场部', deadline:'06/15', status:'已完成'},
-      {name:'拆解回收执行', owner:'仓储组', deadline:'06/20', status:'已完成'}
+      {name:'隔离不合格批次', owner:'IQC', deadline:'06/24', status:'已完成'},
+      {name:'要求供应商启动8D', owner:'SQE', deadline:'06/25', status:'进行中'},
+      {name:'评估备用源交付能力', owner:'采购', deadline:'06/26', status:'待开始'}
     ],
     timeline:[
-      {time:'06/05 14:00', user:'周涛', text:'接单，制定三路径消化方案'},
-      {time:'06/10 10:00', user:'销售组', text:'客户尾单回购4K台，回收¥120万'},
-      {time:'06/15 16:00', user:'市场部', text:'内部促销5K台完成，回收¥100万'},
-      {time:'06/20 18:00', user:'仓储组', text:'拆解回收3K台，回收¥65万，处置完成'}
+      {time:'06/24 14:00', user:'系统', text:'规则触发：IQC不合格率>5%'},
+      {time:'06/24 15:00', user:'陈晨', text:'接单，隔离批次2K PCS'},
+      {time:'06/25 09:00', user:'SQE', text:'已要求供应商启动8D分析'}
     ],
     metrics:[
-      {name:'成品库存', current:0, target:0, unit:'K台', trend:[12,8,3,0,0,0,0]},
-      {name:'回收金额', current:285, target:285, unit:'万', trend:[0,120,220,285,285,285,285]},
-      {name:'回收率', current:79, target:80, unit:'%', trend:[0,33,61,79,79,79,79]}
+      {name:'不合格率', current:8.5, target:2, unit:'%', trend:[8.5,7,5,4,3,2.5,2]},
+      {name:'隔离批次量', current:2000, target:0, unit:'PCS', trend:[2000,2000,1500,800,200,0,0]}
     ],
     aiAdvice:{
-      short:['三路径消化已执行完毕','报废损失¥75万在可接受范围内'],
-      mid:['EOL成品应提前30天启动消化，避免库龄超60天才处置'],
-      long:['建立EOL成品库存预警机制，库龄>30天即触发消化评估'],
-      case:{id:'E-0821', date:'2026-06-22', desc:'EOL专用料消化，客户买单回收率85%'}
+      short:['隔离批次防止流入产线','要求供应商24小时内提交初步8D'],
+      mid:['评估备用源能否在5天内交付','对该供应商加强SPC监控频次'],
+      long:['建立来料SPC实时监控，不合格率>3%自动预警'],
+      case:{id:'E-0762', date:'2026-02-28', desc:'IQC批量不合格8D处置，7天关闭'}
     }
   },
-  // ── E-0841 贸易制裁新增物料（处置中，归因分析阶段）──
+  // ── E-0836 Tier2供应商隐性断链（处置中，方案制定阶段）──
+  { eventId:'E-0836', eventTitle:'Tier2供应商隐性断链', priority:'P1', status:'处置中', owner:'王磊', deadline:'07/01', progress:30, phase:'方案制定',
+    rootCause:'AW02项目核心供应商的二级供应商（晶圆代工厂）产能受限，传导周期约4周。Tier2可视率仅45%，此前未建立Tier2监控机制。',
+    decision:{person:'-', time:'-', selected:'待决策'},
+    plans:[
+      {name:'方案A: 安全库存拉升至8周', cost:'¥200万', time:'3天', effect:'高', recommend:true, desc:'立即拉高安全库存覆盖传导周期'},
+      {name:'方案B: 备用Tier1供应商', cost:'¥80万', time:'14天', effect:'中', recommend:false, desc:'认证备用Tier1供应商，绕过受限Tier2'},
+      {name:'方案C: Tier2产能协调', cost:'¥10万', time:'30天', effect:'低', recommend:false, desc:'与Tier1协商协调Tier2排产优先级'}
+    ],
+    tasks:[
+      {name:'确认Tier2产能恢复时间', owner:'王磊', deadline:'06/24', status:'已完成'},
+      {name:'安全库存拉升评估', owner:'计划部', deadline:'06/27', status:'进行中'},
+      {name:'备用Tier1供应商认证', owner:'采购/SQE', deadline:'07/01', status:'待开始'}
+    ],
+    timeline:[
+      {time:'06/23 10:00', user:'王磊', text:'人工上报Tier2产能预警'},
+      {time:'06/24 14:00', user:'王磊', text:'确认Tier2需4周恢复，启动安全库存评估'}
+    ],
+    metrics:[
+      {name:'安全库存覆盖周数', current:3, target:8, unit:'周', trend:[3,3,4,5,6,7,8]},
+      {name:'Tier2可视率', current:45, target:80, unit:'%', trend:[45,50,55,62,70,75,80]}
+    ],
+    aiAdvice:{
+      short:['立即拉升安全库存至8周覆盖传导周期','启动备用Tier1供应商认证'],
+      mid:['建立Tier2穿透监控，覆盖核心物料上游','与Tier1签订Tier2披露协议'],
+      long:['将Tier2可视率纳入供应商考核，目标>80%'],
+      case:{id:'E-0733', date:'2025-12-10', desc:'Tier2断链处置，安全库存8周覆盖，14天关闭'}
+    }
+  },
   { eventId:'E-0841', eventTitle:'贸易制裁新增物料', priority:'P1', status:'处置中', owner:'赵敏', deadline:'06/25', progress:10, phase:'归因分析',
     rootCause:'美国出口管制清单新增3个涉管制芯片料号，歌尔HW01/HW02/HW03三个项目在用。此前未建立涉管制物料前置审查机制，采购流程缺少ECCN分类校验环节，导致已下单物料面临清关风险。',
     decision:{person:'-', time:'-', selected:'待决策'},
@@ -302,8 +328,7 @@ function initPage_solutions(){
   container.innerHTML =
     '<div class="filter-bar">'
       +'<div class="filter-group"><label>优先级:</label><select id="solPriorityFilter"><option value="">全部</option><option value="P1">P1-紧急</option><option value="P2">P2-重要</option><option value="P3">P3-常规</option></select></div>'
-      +'<div class="filter-group"><label>状态:</label><select id="solStatusFilter"><option value="">全部</option><option value="处置中">处置中</option><option value="待复盘">待复盘</option><option value="已归档">已归档</option></select></div>'
-      +'<span style="font-size:11px;color:var(--text-muted);margin-left:12px;">事件作战室 · 归因分析→方案制定→任务分解→执行反馈</span>'
+      +'<span style="font-size:11px;color:var(--text-muted);margin-left:12px;">事件作战室 · 仅显示处置中事件 · 归因分析→方案制定→任务分解→执行反馈</span>'
       +'<button class="cl-btn cl-btn-primary" style="margin-left:auto" onclick="window._solNew()">+ 新建方案</button>'
     +'</div>'
     +'<div id="solOverview"></div>'
@@ -318,7 +343,6 @@ function initPage_solutions(){
     +'</div>';
 
   document.getElementById('solPriorityFilter').onchange = renderAll;
-  document.getElementById('solStatusFilter').onchange = renderAll;
   renderAll();
 }
 
@@ -330,8 +354,8 @@ function renderAll(){
 
 function getFiltered(){
   var pf = document.getElementById('solPriorityFilter').value;
-  var sf = document.getElementById('solStatusFilter').value;
-  return SOLUTIONS_DATA.filter(function(e){return(!pf||e.priority===pf)&&(!sf||e.status===sf);});
+  // 方案对策只显示处置中的事件
+  return SOLUTIONS_DATA.filter(function(e){return e.status==='处置中' && (!pf||e.priority===pf);});
 }
 
 function renderOverview(){

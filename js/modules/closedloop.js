@@ -94,6 +94,47 @@ var EVENTS = [
       {time:'06/25 14:00', text:'复盘完成，状态：待复盘→已归档', type:'done'}
     ],
     impactPath:'EOL预测偏差 → 库存积压 → 已消化'
+  },
+  // ── 新增：更多待响应事件 ──
+  { id:'E-0852', title:'在制WIP超期预警（>7天未流转）', priority:'P2', source:'自动触发', riskCode:'R04', projects:['HW03'], owner:'李强', deadline:'06/30', status:'待响应', desc:'HW03项目在制库存中3个工单停留超7天未流转，WIP金额¥95万。可能存在工序瓶颈或质量拦截。', materials:['半成品主板(5K PCS)','半成品模组(3K PCS)'], potentialLoss:95, discoveredAt:'2026-06-25 07:00',
+    timeline:[{time:'06/25 07:00', text:'规则自动触发：WIP停留>7天', type:'auto'}],
+    impactPath:'工序瓶颈/质量拦截 → WIP积压 → 资金占用¥95万'
+  },
+  // ── 新增：更多处置中事件 ──
+  { id:'E-0843', title:'来料IQC批量不合格', priority:'P1', source:'自动触发', riskCode:'R07', projects:['SW04'], owner:'陈晨', deadline:'06/26', status:'处置中', desc:'SW04项目来料蓝牙模块2K PCS IQC不合格，不合格率8.5%（标准<2%）。已隔离，需8D分析。', materials:['蓝牙模块(2K PCS)'], potentialLoss:150, discoveredAt:'2026-06-24 14:00',
+    timeline:[
+      {time:'06/24 14:00', text:'规则自动触发：IQC不合格率>5%', type:'auto'},
+      {time:'06/24 15:00', text:'陈晨接单，隔离批次，状态：待响应→处置中', type:'owner'},
+      {time:'06/25 09:00', text:'已要求供应商启动8D分析', type:'done'}
+    ],
+    impactPath:'来料不合格 → 批次隔离 → SW04齐套缺口 → 产线待料'
+  },
+  { id:'E-0836', title:'Tier2供应商隐性断链', priority:'P1', source:'人工上报', riskCode:'R09', projects:['AW02'], owner:'王磊', deadline:'07/01', status:'处置中', desc:'AW02项目核心供应商的二级供应商（晶圆代工厂）产能受限，传导周期约4周。Tier2可视率仅45%。', materials:['专用芯片(8K PCS)'], potentialLoss:1050, discoveredAt:'2026-06-23 10:00',
+    timeline:[
+      {time:'06/23 10:00', text:'人工上报：Tier2产能预警', type:'manual'},
+      {time:'06/23 11:00', text:'王磊接单，启动穿透排查，状态：待响应→处置中', type:'owner'},
+      {time:'06/24 14:00', text:'已确认Tier2产能受限，需4周恢复', type:'done'}
+    ],
+    impactPath:'Tier2产能受限 → 一级供应商缺料 → AW02断供风险（4周传导周期）'
+  },
+  // ── 新增：更多待复盘事件 ──
+  { id:'E-0832', title:'物流干线延误3天', priority:'P2', source:'自动触发', riskCode:'R10', projects:['HW04'], owner:'物流组', deadline:'06/22', status:'待复盘', desc:'HW04成品海运延误3天，已通过改空运追回2天，额外成本¥18万。', materials:['成品(8K台)'], potentialLoss:60, discoveredAt:'2026-06-18 08:00',
+    timeline:[
+      {time:'06/18 08:00', text:'规则触发：干线到港延误', type:'auto'},
+      {time:'06/18 10:00', text:'物流组接单，评估空运方案，状态：待响应→处置中', type:'owner'},
+      {time:'06/20 16:00', text:'改空运到货，OTD追回2天，状态：处置中→待复盘', type:'done'}
+    ],
+    impactPath:'海运延误 → 改空运追交 → 额外成本¥18万 → OTD达成'
+  },
+  // ── 新增：更多已归档事件 ──
+  { id:'E-0818', title:'产能利用率顶格预警', priority:'P2', source:'自动触发', riskCode:'R03', projects:['AW03'], owner:'计划部', deadline:'06/15', status:'已归档', desc:'AW03产线产能利用率连续3天超95%，已启动委外分流。复盘完成。', materials:[''], potentialLoss:80, discoveredAt:'2026-06-10 06:00',
+    timeline:[
+      {time:'06/10 06:00', text:'规则触发：利用率>95%连续3天', type:'auto'},
+      {time:'06/10 09:00', text:'计划部接单，启动委外评估，状态：待响应→处置中', type:'owner'},
+      {time:'06/13 16:00', text:'委外分流20%产能，利用率降至88%，状态：处置中→待复盘', type:'done'},
+      {time:'06/16 10:00', text:'复盘完成，状态：待复盘→已归档', type:'done'}
+    ],
+    impactPath:'产能顶格 → 委外分流20% → 利用率降至88% → 已归档'
   }
 ];
 
