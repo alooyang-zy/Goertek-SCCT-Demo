@@ -96,6 +96,7 @@ var SOLUTIONS_DATA = [
       case:{id:'E-0821', date:'2026-06-22', desc:'EOL专用料消化，客户买单回收率85%'}
     }
   },
+  { eventId:'E-0842', eventTitle:'单源物料TTS<3天', priority:'P1', status:'执行中', owner:'王磊', deadline:'06/26', progress:20,
     decision:{person:'赵总', time:'2026-06-24 14:30', selected:'方案A+方案B组合'},
     plans:[
       {name:'方案A: 紧急空运补货', cost:'¥80万', time:'3天', effect:'高', recommend:true, desc:'紧急空运500K pcs，预计06/26到货'},

@@ -301,6 +301,7 @@ function initPage_closedloop(){
   var container = document.getElementById('page-closedloop');
   if(!container) return;
   consumeDrillDown('closedloopProjectSelect');
+  if(!selectedEvent && EVENTS.length) selectedEvent = EVENTS[0];
   renderStatusBoard();
   renderEventList();
   renderDetailDrawer();
