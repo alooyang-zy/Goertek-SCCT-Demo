@@ -45,14 +45,18 @@ var currentRiskFilter = 'all';
 
 // ═══════════════ 入口 ═══════════════
 function renderProgressPage(){
-  var fp=getFilteredProjects();
   var sel=document.getElementById('progressProjectSelect');
   if(sel){var cur=sel.value;
-    sel.innerHTML='<option value="">全部项目</option>'+fp.map(function(p){return '<option value="'+p.id+'">'+p.name+' ['+p.bg+'·'+p.customer+']</option>'}).join('');
-    if(cur&&fp.some(function(p){return p.id==cur}))sel.value=cur;
+    sel.innerHTML=PROJECT_META.map(function(p){return '<option value="'+p.id+'">'+p.name+' ['+p.bg+'·'+p.customer+']</option>'}).join('');
+    if(cur&&PROJECT_META.some(function(p){return p.id===cur;}))sel.value=cur;
+    else if(PROJECT_META.length) sel.value=PROJECT_META[0].id;
   }
   consumeDrillDown('progressProjectSelect');
   loadOrders();
+  // 同步刷新NPI（如果已初始化）
+  if(window._prgNpiInited && typeof initPage_material==='function'){
+    setTimeout(function(){ initPage_material(); }, 50);
+  }
 }
 
 function loadOrders(){
@@ -60,15 +64,15 @@ function loadOrders(){
   var pid=sel?sel.value:'';
   var info=document.getElementById('prgHeroInfo');
   if(info){
-    if(pid){
-      var proj=projects.find(function(p){return p.id===pid;});
-      if(proj) info.innerHTML='<span style="font-weight:700;color:var(--primary)">'+proj.name+'</span> · 客户：<b>'+proj.customer+'</b> · BG：<b>'+proj.bg+'</b> · 产品：<b>'+proj.productLine+'</b> · 生命周期：<b>'+proj.lifecycle+'</b>';
+    var p = pid ? metadata(pid) : null;
+    if(p){
+      info.innerHTML='<span style="font-weight:700;color:var(--primary)">'+p.name+'</span> · 客户：<b>'+p.customer+'</b> · BG：<b>'+p.bg+'</b> · 产品：<b>'+p.model+'</b> · 阶段：<b>'+p.phase+'</b>';
     } else {
-      info.innerHTML='全项目视角 · 共'+PROJECT_META.length+'个项目 · '+ORDERS.length+'个订单';
+      info.innerHTML='请选择项目';
     }
   }
 
-  // 按项目过滤订单（如果不选项目则全部）
+  // 按选中项目过滤订单
   var filtered = pid ? ORDERS.filter(function(o){return o.projectId===pid;}) : ORDERS.slice();
 
   // 按风险过滤

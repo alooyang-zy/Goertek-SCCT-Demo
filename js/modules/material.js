@@ -88,9 +88,16 @@ function statusPill(v){
 
 // ═══════════════ 物料数据生成 ═══════════════
 var _matCache = {};
+function findProject(pid){
+  var p = projects.find(function(x){return x.id===pid;});
+  if(p) return p;
+  // 兼容履约跟踪页面的PROJECT_META项目ID（PJ-*格式）
+  if(typeof metadata==='function'){ var pm=metadata(pid); if(pm) return {id:pm.id,name:pm.name,bg:pm.bg,bu:pm.bg,productLine:pm.model,customer:pm.customer,engStage:pm.phase,lifecycle:pm.phase,lifecycleRaw:pm.phase}; }
+  return null;
+}
 function getMaterials(pid){
   if(!_matCache[pid]){
-    var p = projects.find(function(x){return x.id===pid;});
+    var p = findProject(pid);
     if(!p){ _matCache[pid]=[]; return []; }
     var seed = parseInt(pid.replace(/\D/g,'')||'1');
     var parts = [
@@ -195,7 +202,7 @@ function renderAll(){
     var sel = document.getElementById('progressProjectSelect');
     var pid = sel&&sel.value ? sel.value : (fp.length?fp[0].id:null);
     if(!pid) return;
-    var p = projects.find(function(x){return x.id===pid;});
+    var p = findProject(pid);
     if(!p) return;
 
     var allMats = getMaterials(pid);
