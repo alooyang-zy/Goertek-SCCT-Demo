@@ -3,6 +3,74 @@
 "use strict";
 
 var REVIEW_DATA = [
+  // ── 库存类：E-0850 EOL专用料高Aging呆滞（待复盘，与事件中心/方案对策串联）──
+  { eventId:'E-0850', title:'EOL项目专用料高Aging预警（>90天呆滞）', closeDate:'07/02', status:'待复盘', days:9.0, effectiveness:'A-', score:88,
+    timeline:[
+      {time:'06/23 06:00', stage:'发现', text:'规则触发：DOI>90天 AND EOL项目', duration:'3.5小时'},
+      {time:'06/23 09:30', stage:'响应', text:'吴芳接单启动呆滞评估', duration:'6.5小时'},
+      {time:'06/24 16:00', stage:'决策', text:'方案A+B+C组合批准', duration:'8天'},
+      {time:'06/28 10:00', stage:'客户回购', text:'客户回购3个料号完成', duration:'4天'},
+      {time:'07/01 16:00', stage:'转用完成', text:'AU03跨项目转用完成', duration:'1天'},
+      {time:'07/02 17:00', stage:'验证关闭', text:'呆滞金额降至¥95万，关闭事件', duration:'总计9.0天'}
+    ],
+    why:[
+      'EOL项目AU01/AU02专用料库龄超90天，8个料号呆滞¥520万',
+      'EOL启动时未同步冻结新增采购，导致后期仍有备料入库',
+      'EOL物料消化计划未纳入项目管理里程碑，无专人跟踪',
+      '控制塔上线前缺少DOI自动预警机制，库龄超期才发现',
+      'EOL物料库龄分级预警机制缺失（无90/150/180天分级）'
+    ],
+    rootCauseTags:['流程根因：EOL启动时未冻结采购','制度根因：EOL消化计划未纳入项目考核','系统根因：缺少DOI分级自动预警'],
+    metrics:[
+      {name:'呆滞金额', expected:'降至¥150万', actual:'降至¥95万', eval:'优于预期'},
+      {name:'库龄>180天料号', expected:'清零', actual:'清零', eval:'达成'},
+      {name:'消化回收率', expected:'≥70%', actual:'82%', eval:'优于预期'},
+      {name:'处置成本', expected:'¥13万', actual:'¥11万', eval:'优于预期'},
+      {name:'处置时长', expected:'14天', actual:'9天', eval:'优于预期'}
+    ],
+    improvements:[
+      {action:'EOL启动时自动冻结新增采购PR/PO', owner:'系统组', deadline:'07/30', status:'进行中'},
+      {action:'建立DOI分级预警：90天提醒/150天预警/180天呆滞', owner:'系统组', deadline:'08/15', status:'待启动'},
+      {action:'EOL物料消化计划纳入项目移交检查清单', owner:'PMO', deadline:'08/01', status:'待启动'}
+    ],
+    summary:'EOL项目启动时必须同步冻结采购并制定消化计划，DOI>90天即应触发分级预警，库龄>180天料号优先推动客户回购。',
+    tags:['EOL呆滞','高Aging','库存风险','R04'],
+    relatedCases:['E-0848','E-0821']
+  },
+  // ── 库存类：E-0848 成品呆滞（已复盘，与事件中心串联）──
+  { eventId:'E-0848', title:'成品库存呆滞预警（EOL尾品>60天）', closeDate:'06/20', status:'待复盘', days:15.0, effectiveness:'B+', score:79,
+    timeline:[
+      {time:'06/05 09:00', stage:'发现', text:'规则触发：EOL成品DOI>60天', duration:'5小时'},
+      {time:'06/05 14:00', stage:'响应', text:'周涛接单制定三路径方案', duration:'0.5小时'},
+      {time:'06/05 14:30', stage:'决策', text:'三路径消化方案批准', duration:'5天'},
+      {time:'06/10 10:00', stage:'客户回购', text:'客户回购4K台', duration:'5天'},
+      {time:'06/15 16:00', stage:'内部促销', text:'促销5K台完成', duration:'5天'},
+      {time:'06/20 18:00', stage:'验证关闭', text:'拆解回收3K台，关闭', duration:'总计15天'}
+    ],
+    why:[
+      'SP01智能音箱EOL成品1.2万台积压，库龄超60天',
+      'EOL通知发出后未及时启动成品消化计划',
+      '成品库存库龄预警阈值设置过高（60天才触发）',
+      '缺少EOL成品多路径消化标准流程'
+    ],
+    rootCauseTags:['流程根因：EOL成品消化启动滞后','制度根因：成品库龄预警阈值不合理','系统根因：缺少EOL成品自动消化流程'],
+    metrics:[
+      {name:'成品库存', expected:'清零', actual:'清零', eval:'达成'},
+      {name:'回收金额', expected:'¥250万', actual:'¥285万', eval:'优于预期'},
+      {name:'回收率', expected:'≥70%', actual:'79%', eval:'达成'},
+      {name:'报废损失', expected:'¥110万', actual:'¥75万', eval:'优于预期'},
+      {name:'处置时长', expected:'10天', actual:'15天', eval:'略超预期'}
+    ],
+    improvements:[
+      {action:'EOL成品库龄预警阈值从60天降至30天', owner:'系统组', deadline:'07/15', status:'已完成'},
+      {action:'建立EOL成品三路径消化标准SOP', owner:'仓储部', deadline:'07/30', status:'进行中'},
+      {action:'EOL通知发出后7天内必须启动消化评估', owner:'PMO', deadline:'08/01', status:'待启动'}
+    ],
+    summary:'EOL成品应在库龄30天即触发预警，7天内启动三路径消化（客户回购+促销+拆解），避免积压至60天才处置。',
+    tags:['EOL呆滞','成品库存','高Aging','R04'],
+    relatedCases:['E-0821','E-0850']
+  },
+  // ── 供应类 ──
   { eventId:'E-0842', title:'单源物料TTS<3天', closeDate:'06/27', status:'待复盘', days:3.3, effectiveness:'B+', score:85,
     timeline:[
       {time:'06/24 08:32', stage:'发现', text:'规则触发', duration:'43分钟'},

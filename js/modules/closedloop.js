@@ -3,7 +3,35 @@
 "use strict";
 
 // ═══════════════ 事件数据 ═══════════════
+// 库存类事件链：E-0850(处置中)→方案对策→闭环复盘，E-0851(待响应)→方案对策，E-0848(已关闭)→闭环复盘
 var EVENTS = [
+  // ── 库存类：高Aging/呆滞（主线，贯穿三页面）──
+  { id:'E-0850', title:'EOL项目专用料高Aging预警（>90天呆滞）', priority:'P1', source:'自动触发', riskCode:'R04', projects:['AU01','AU02'], owner:'吴芳', deadline:'06/28', status:'处置中', desc:'EOL项目AU01/AU02的8个专用料号库龄已超90天，其中3个超180天，呆滞金额达¥520万。客户已下修预测，现有库存无需求覆盖。需在2周内完成消化方案，否则将触发呆滞报废。', materials:['外壳组件V5.0(8K PCS)','FPC排线V1.2(15K PCS)','专用镜片(5K PCS)','电池模组(12K PCS)','硅胶密封圈(20K PCS)','导热垫片(10K PCS)','螺丝包(30K PCS)','专用IC(3K PCS)'], potentialLoss:520, discoveredAt:'2026-06-23 06:00',
+    timeline:[
+      {time:'06/23 06:00', text:'规则自动触发：DOI>90天 AND EOL项目', type:'auto'},
+      {time:'06/23 09:30', text:'吴芳接单确认，启动呆滞评估', type:'owner'},
+      {time:'06/24 10:00', text:'完成8个料号影响分析，3个超180天需优先处置', type:'done'},
+      {time:'06/24 15:00', text:'已与客户沟通买单清单，等待回复', type:'done'}
+    ],
+    impactPath:'EOL预测下修 → 专用料库龄>90天 → 呆滞¥520万 → 若不处置将触发报废¥380万'
+  },
+  { id:'E-0851', title:'原材料DOI超标预警（>120天高Aging）', priority:'P2', source:'自动触发', riskCode:'R04', projects:['HW01','HW02'], owner:'张敏', deadline:'07/05', status:'待响应', desc:'HW01/HW02项目共用原材料中5个料号DOI超过120天，总金额¥185万。其中蓝牙模块库存可覆盖6个月需求，电源管理IC可覆盖8个月。需评估是否冻结新增采购并推动跨项目转用。', materials:['蓝牙模块(25K PCS)','电源管理IC(18K PCS)','MEMS麦克风(30K PCS)','Type-C连接器(50K PCS)','FPC排线(40K PCS)'], potentialLoss:185, discoveredAt:'2026-06-25 08:00',
+    timeline:[
+      {time:'06/25 08:00', text:'规则自动触发：DOI>120天', type:'auto'}
+    ],
+    impactPath:'需求下修 → 原材料超采 → DOI>120天 → 资金占用¥185万 → 存在跌价风险'
+  },
+  { id:'E-0848', title:'成品库存呆滞预警（EOL尾品>60天）', priority:'P2', source:'自动触发', riskCode:'R04', projects:['SP01'], owner:'周涛', deadline:'06/20', status:'已关闭', desc:'SP01智能音箱EOL项目成品库存1.2万台，库龄超60天，金额¥360万。通过客户尾单回购+内部促销+拆解回收三路径消化，最终回收¥285万，报废损失¥75万。', materials:['智能音箱成品(12K台)'], potentialLoss:360, discoveredAt:'2026-06-05 09:00',
+    timeline:[
+      {time:'06/05 09:00', text:'规则自动触发：EOL成品DOI>60天', type:'auto'},
+      {time:'06/05 14:00', text:'周涛接单，制定三路径消化方案', type:'owner'},
+      {time:'06/10 10:00', text:'客户尾单回购4K台，回收¥120万', type:'done'},
+      {time:'06/15 16:00', text:'内部促销5K台，回收¥100万', type:'done'},
+      {time:'06/20 18:00', text:'拆解回收3K台，回收¥65万，关闭事件', type:'done'}
+    ],
+    impactPath:'EOL成品积压 → 三路径消化 → 回收¥285万/报废¥75万 → 已关闭'
+  },
+  // ── 供应类 ──
   { id:'E-0842', title:'单源物料TTS<3天', priority:'P1', source:'自动触发', riskCode:'R08', projects:['AW01'], owner:'王磊', deadline:'06/26', status:'处置中', desc:'供应商XX当前库存仅可支撑2.8天，第二货源认证尚未完成（进度60%）。', materials:['NAND Flash A1-2024（3个料号）'], potentialLoss:480, discoveredAt:'2026-06-24 08:32',
     timeline:[
       {time:'06/24 08:32', text:'规则自动触发', type:'auto'},

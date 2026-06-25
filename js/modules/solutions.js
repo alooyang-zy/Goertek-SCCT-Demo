@@ -3,7 +3,99 @@
 "use strict";
 
 var SOLUTIONS_DATA = [
-  { eventId:'E-0842', eventTitle:'单源物料TTS<3天', priority:'P1', status:'执行中', owner:'王磊', deadline:'06/26', progress:20,
+  // ── 库存类：E-0850 EOL专用料高Aging呆滞（主线，处置中）──
+  { eventId:'E-0850', eventTitle:'EOL项目专用料高Aging预警（>90天呆滞）', priority:'P1', status:'执行中', owner:'吴芳', deadline:'06/28', progress:45,
+    decision:{person:'刘总监', time:'2026-06-24 16:00', selected:'方案A+方案B+方案C组合执行'},
+    plans:[
+      {name:'方案A: 客户买单回购', cost:'¥0', time:'7天', effect:'高', recommend:true, desc:'推动客户按EOL协议回购3个超180天料号，预计回收¥180万'},
+      {name:'方案B: 跨项目转用', cost:'¥5万', time:'3天', effect:'中', recommend:true, desc:'将通用料（螺丝包/密封圈/导热垫片）转用至AU03新项目，消化¥120万'},
+      {name:'方案C: 供应商退货', cost:'¥8万', time:'10天', effect:'中', recommend:false, desc:'与供应商协商退货专用IC和FPC排线，预计回收¥90万，需支付8%手续费'},
+      {name:'方案D: 报废处理', cost:'¥380万', time:'1天', effect:'低', recommend:false, desc:'无法消化的料号直接报废，损失¥380万（最后手段）'}
+    ],
+    tasks:[
+      {name:'梳理8个料号的库存明细和库龄分布', owner:'吴芳', deadline:'06/24', status:'已完成'},
+      {name:'与客户沟通EOL买单回购清单', owner:'销售组', deadline:'06/25', status:'进行中'},
+      {name:'评估AU03项目转用可行性', owner:'计划部', deadline:'06/25', status:'进行中'},
+      {name:'供应商退货谈判（专用IC/FPC）', owner:'采购组', deadline:'06/26', status:'待开始'},
+      {name:'无法消化料号报废审批', owner:'财务部', deadline:'06/27', status:'待开始'},
+      {name:'更新EOL物料消化周报', owner:'吴芳', deadline:'06/28', status:'待开始'}
+    ],
+    timeline:[
+      {time:'06/24 15:00', user:'吴芳', text:'已与客户沟通买单清单，客户初步同意回购3个料号，等待正式确认'},
+      {time:'06/24 10:00', user:'吴芳', text:'完成8个料号影响分析：3个超180天（外壳/FPC/专用镜片）需优先处置，5个90-180天可转用'},
+      {time:'06/24 16:00', user:'刘总监', text:'批准方案A+B+C组合，授权跨项目转用及供应商退货谈判'}
+    ],
+    metrics:[
+      {name:'呆滞金额', current:520, target:150, unit:'万', trend:[520,480,420,380,320,280,150]},
+      {name:'库龄>180天料号数', current:3, target:0, unit:'个', trend:[3,3,2,2,1,1,0]},
+      {name:'消化回收率', current:35, target:75, unit:'%', trend:[0,8,15,25,30,35,75]}
+    ],
+    aiAdvice:{
+      short:['优先推动客户买单回购，EOL协议中有回购条款可依据','通用料（螺丝包/密封圈）立即启动跨项目转用评估'],
+      mid:['建立EOL项目物料库龄分级预警（90/150/180天三级）','EOL启动时同步冻结新增采购，仅允许消耗现有库存'],
+      long:['将EOL呆滞率纳入项目移交考核指标，NPI→MP转移时需评估遗留库存风险'],
+      case:{id:'E-0848', date:'2026-06-20', desc:'SP01成品呆滞三路径消化，回收率79%，关闭用时15天'}
+    }
+  },
+  // ── 库存类：E-0851 原材料DOI超标（制定中）──
+  { eventId:'E-0851', eventTitle:'原材料DOI超标预警（>120天高Aging）', priority:'P2', status:'制定中', owner:'张敏', deadline:'07/05', progress:10,
+    decision:{person:'-', time:'-', selected:'待决策'},
+    plans:[
+      {name:'方案A: 冻结采购+跨项目转用', cost:'¥0', time:'5天', effect:'中', recommend:false, desc:'冻结5个料号新增采购，推动HW03/HW04项目转用消化'},
+      {name:'方案B: 供应商协商退换', cost:'¥12万', time:'14天', effect:'中', recommend:false, desc:'与供应商协商退换或折价回收，预计回收¥120万'},
+      {name:'方案C: 降级使用至低端产品', cost:'¥3万', time:'21天', effect:'低', recommend:false, desc:'评估蓝牙模块/电源IC降级用于低端产品线的可行性'}
+    ],
+    tasks:[
+      {name:'核查5个料号在途订单和未来需求', owner:'张敏', deadline:'06/26', status:'进行中'},
+      {name:'评估跨项目转用可行性', owner:'计划部', deadline:'06/28', status:'待开始'},
+      {name:'供应商退换谈判方案准备', owner:'采购组', deadline:'07/01', status:'待开始'}
+    ],
+    timeline:[
+      {time:'06/25 08:00', user:'系统', text:'规则自动触发：DOI>120天预警'},
+      {time:'06/25 09:00', user:'张敏', text:'接单确认，启动库存核查'}
+    ],
+    metrics:[
+      {name:'超龄料号数', current:5, target:0, unit:'个', trend:[5,5,4,3,2,1,0]},
+      {name:'资金占用', current:185, target:50, unit:'万', trend:[185,180,160,130,100,70,50]}
+    ],
+    aiAdvice:{
+      short:['立即冻结5个料号的新增PR/PO，防止库存继续膨胀','优先推动通用料（Type-C/FPC）跨项目转用'],
+      mid:['建立DOI分级预警机制：90天提醒/120天预警/150天严重/180天呆滞','将DOI指标纳入采购员月度考核'],
+      long:['推动需求预测与采购计划联动，避免因预测偏差导致系统性超采'],
+      case:{id:'E-0821', date:'2026-06-22', desc:'EOL专用料消化，客户买单回收率85%'}
+    }
+  },
+  // ── 库存类：E-0848 成品呆滞（已完成）──
+  { eventId:'E-0848', eventTitle:'成品库存呆滞预警（EOL尾品>60天）', priority:'P2', status:'已完成', owner:'周涛', deadline:'06/20', progress:100,
+    decision:{person:'刘总监', time:'2026-06-05 14:30', selected:'三路径组合消化'},
+    plans:[
+      {name:'方案A: 客户尾单回购', cost:'¥0', time:'5天', effect:'高', recommend:true, desc:'客户按EOL协议回购4K台，回收¥120万'},
+      {name:'方案B: 内部促销', cost:'¥20万', time:'10天', effect:'中', recommend:true, desc:'员工内购+渠道促销5K台，回收¥100万'},
+      {name:'方案C: 拆解回收', cost:'¥15万', time:'5天', effect:'低', recommend:false, desc:'拆解3K台回收元器件，回收¥65万'}
+    ],
+    tasks:[
+      {name:'客户尾单回购谈判', owner:'销售组', deadline:'06/10', status:'已完成'},
+      {name:'内部促销方案执行', owner:'市场部', deadline:'06/15', status:'已完成'},
+      {name:'拆解回收执行', owner:'仓储组', deadline:'06/20', status:'已完成'}
+    ],
+    timeline:[
+      {time:'06/05 14:00', user:'周涛', text:'接单，制定三路径消化方案'},
+      {time:'06/10 10:00', user:'销售组', text:'客户尾单回购4K台，回收¥120万'},
+      {time:'06/15 16:00', user:'市场部', text:'内部促销5K台完成，回收¥100万'},
+      {time:'06/20 18:00', user:'仓储组', text:'拆解回收3K台，回收¥65万，事件关闭'}
+    ],
+    metrics:[
+      {name:'成品库存', current:0, target:0, unit:'K台', trend:[12,8,3,0,0,0,0]},
+      {name:'回收金额', current:285, target:285, unit:'万', trend:[0,120,220,285,285,285,285]},
+      {name:'回收率', current:79, target:80, unit:'%', trend:[0,33,61,79,79,79,79]}
+    ],
+    aiAdvice:{
+      short:['三路径消化已执行完毕','报废损失¥75万在可接受范围内'],
+      mid:['EOL成品应提前30天启动消化，避免库龄超60天才处置'],
+      long:['建立EOL成品库存预警机制，库龄>30天即触发消化评估'],
+      case:{id:'E-0821', date:'2026-06-22', desc:'EOL专用料消化，客户买单回收率85%'}
+    }
+  },
     decision:{person:'赵总', time:'2026-06-24 14:30', selected:'方案A+方案B组合'},
     plans:[
       {name:'方案A: 紧急空运补货', cost:'¥80万', time:'3天', effect:'高', recommend:true, desc:'紧急空运500K pcs，预计06/26到货'},
