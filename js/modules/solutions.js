@@ -4,7 +4,7 @@
 
 var SOLUTIONS_DATA = [
   // ── 库存类：E-0850 EOL专用料高Aging呆滞（主线，处置中）──
-  { eventId:'E-0850', eventTitle:'EOL项目专用料高Aging预警（>90天呆滞）', priority:'P1', status:'执行中', owner:'吴芳', deadline:'06/28', progress:45,
+  { eventId:'E-0850', eventTitle:'EOL项目专用料高Aging预警（>90天呆滞）', priority:'P1', status:'处置中', owner:'吴芳', deadline:'06/28', progress:45,
     decision:{person:'刘总监', time:'2026-06-24 16:00', selected:'方案A+方案B+方案C组合执行'},
     plans:[
       {name:'方案A: 客户买单回购', cost:'¥0', time:'7天', effect:'高', recommend:true, desc:'推动客户按EOL协议回购3个超180天料号，预计回收¥180万'},
@@ -38,7 +38,7 @@ var SOLUTIONS_DATA = [
     }
   },
   // ── 库存类：E-0851 原材料DOI超标（制定中）──
-  { eventId:'E-0851', eventTitle:'原材料DOI超标预警（>120天高Aging）', priority:'P2', status:'制定中', owner:'张敏', deadline:'07/05', progress:10,
+  { eventId:'E-0851', eventTitle:'原材料DOI超标预警（>120天高Aging）', priority:'P2', status:'待响应', owner:'张敏', deadline:'07/05', progress:10,
     decision:{person:'-', time:'-', selected:'待决策'},
     plans:[
       {name:'方案A: 冻结采购+跨项目转用', cost:'¥0', time:'5天', effect:'中', recommend:false, desc:'冻结5个料号新增采购，推动HW03/HW04项目转用消化'},
@@ -66,7 +66,7 @@ var SOLUTIONS_DATA = [
     }
   },
   // ── 库存类：E-0848 成品呆滞（已完成）──
-  { eventId:'E-0848', eventTitle:'成品库存呆滞预警（EOL尾品>60天）', priority:'P2', status:'已完成', owner:'周涛', deadline:'06/20', progress:100,
+  { eventId:'E-0848', eventTitle:'成品库存呆滞预警（EOL尾品>60天）', priority:'P2', status:'待复盘', owner:'周涛', deadline:'06/20', progress:100,
     decision:{person:'刘总监', time:'2026-06-05 14:30', selected:'三路径组合消化'},
     plans:[
       {name:'方案A: 客户尾单回购', cost:'¥0', time:'5天', effect:'高', recommend:true, desc:'客户按EOL协议回购4K台，回收¥120万'},
@@ -96,7 +96,7 @@ var SOLUTIONS_DATA = [
       case:{id:'E-0821', date:'2026-06-22', desc:'EOL专用料消化，客户买单回收率85%'}
     }
   },
-  { eventId:'E-0842', eventTitle:'单源物料TTS<3天', priority:'P1', status:'执行中', owner:'王磊', deadline:'06/26', progress:20,
+  { eventId:'E-0842', eventTitle:'单源物料TTS<3天', priority:'P1', status:'处置中', owner:'王磊', deadline:'06/26', progress:20,
     decision:{person:'赵总', time:'2026-06-24 14:30', selected:'方案A+方案B组合'},
     plans:[
       {name:'方案A: 紧急空运补货', cost:'¥80万', time:'3天', effect:'高', recommend:true, desc:'紧急空运500K pcs，预计06/26到货'},
@@ -129,7 +129,7 @@ var SOLUTIONS_DATA = [
       case:{id:'E-0712', date:'2025-11-18', desc:'单源类似处置，关闭用时14天，有效率92%'}
     }
   },
-  { eventId:'E-0841', eventTitle:'贸易制裁新增物料', priority:'P1', status:'制定中', owner:'赵敏', deadline:'06/25', progress:10,
+  { eventId:'E-0841', eventTitle:'贸易制裁新增物料', priority:'P1', status:'待响应', owner:'赵敏', deadline:'06/25', progress:10,
     decision:{person:'-', time:'-', selected:'待决策'},
     plans:[
       {name:'方案A: 替代料切换', cost:'¥200万', time:'30天', effect:'高', recommend:false, desc:'切换至非管制替代料'},
@@ -154,7 +154,7 @@ var SOLUTIONS_DATA = [
       case:{id:'E-0698', date:'2025-09-10', desc:'贸易合规事件，处置周期21天'}
     }
   },
-  { eventId:'E-0839', eventTitle:'供应商延期7天', priority:'P2', status:'执行中', owner:'李强', deadline:'06/28', progress:65,
+  { eventId:'E-0839', eventTitle:'供应商延期7天', priority:'P2', status:'处置中', owner:'李强', deadline:'06/28', progress:65,
     decision:{person:'李强', time:'2026-06-23 16:30', selected:'方案A: 加急排产+空运'},
     plans:[
       {name:'方案A: 加急排产+空运', cost:'¥12万', time:'4天', effect:'高', recommend:true, desc:'供应商加急排产，部分空运到货'},
@@ -187,7 +187,7 @@ var currentTab = 'overview';
 var viewMode = 'kanban'; // kanban | list
 
 function priorityColor(p){ return p==='P1'?'var(--danger)':p==='P2'?'var(--warning)':'var(--info)'; }
-function statusColor(s){ return s==='制定中'?'var(--text-muted)':s==='执行中'?'var(--primary)':s==='验证中'?'var(--warning)':'var(--success)'; }
+function statusColor(s){ return s==='待响应'?'var(--danger)':s==='处置中'?'var(--warning)':s==='待验证'?'var(--info)':s==='已关闭'?'var(--success)':s==='待复盘'?'#8b5cf6':'var(--text-muted)'; }
 
 function initPage_solutions(){
   var container = document.getElementById('page-solutions');
@@ -247,7 +247,7 @@ function renderBoard(){
   var el = document.getElementById('solBoard');
   if(!el) return;
   var filtered = getFiltered();
-  var cols = ['制定中','执行中','验证中','已完成'];
+  var cols = ['待响应','处置中','待验证','已关闭','待复盘','已复盘'];
 
   if(viewMode==='kanban'){
     el.innerHTML = '<div class="sol-kanban">'+cols.map(function(c){

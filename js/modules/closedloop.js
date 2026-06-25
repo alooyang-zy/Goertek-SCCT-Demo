@@ -3,7 +3,7 @@
 "use strict";
 
 // ═══════════════ 事件数据 ═══════════════
-// 库存类事件链：E-0850(处置中)→方案对策→闭环复盘，E-0851(待响应)→方案对策，E-0848(已关闭)→闭环复盘
+// 库存类事件链：E-0850(处置中)→方案对策→闭环复盘，E-0851(待响应)→方案对策，E-0848(待复盘)→闭环复盘，E-0821(已复盘)
 var EVENTS = [
   // ── 库存类：高Aging/呆滞（主线，贯穿三页面）──
   { id:'E-0850', title:'EOL项目专用料高Aging预警（>90天呆滞）', priority:'P1', source:'自动触发', riskCode:'R04', projects:['AU01','AU02'], owner:'吴芳', deadline:'06/28', status:'处置中', desc:'EOL项目AU01/AU02的8个专用料号库龄已超90天，其中3个超180天，呆滞金额达¥520万。客户已下修预测，现有库存无需求覆盖。需在2周内完成消化方案，否则将触发呆滞报废。', materials:['外壳组件V5.0(8K PCS)','FPC排线V1.2(15K PCS)','专用镜片(5K PCS)','电池模组(12K PCS)','硅胶密封圈(20K PCS)','导热垫片(10K PCS)','螺丝包(30K PCS)','专用IC(3K PCS)'], potentialLoss:520, discoveredAt:'2026-06-23 06:00',
@@ -21,7 +21,7 @@ var EVENTS = [
     ],
     impactPath:'需求下修 → 原材料超采 → DOI>120天 → 资金占用¥185万 → 存在跌价风险'
   },
-  { id:'E-0848', title:'成品库存呆滞预警（EOL尾品>60天）', priority:'P2', source:'自动触发', riskCode:'R04', projects:['SP01'], owner:'周涛', deadline:'06/20', status:'已关闭', desc:'SP01智能音箱EOL项目成品库存1.2万台，库龄超60天，金额¥360万。通过客户尾单回购+内部促销+拆解回收三路径消化，最终回收¥285万，报废损失¥75万。', materials:['智能音箱成品(12K台)'], potentialLoss:360, discoveredAt:'2026-06-05 09:00',
+  { id:'E-0848', title:'成品库存呆滞预警（EOL尾品>60天）', priority:'P2', source:'自动触发', riskCode:'R04', projects:['SP01'], owner:'周涛', deadline:'06/20', status:'待复盘', desc:'SP01智能音箱EOL项目成品库存1.2万台，库龄超60天，金额¥360万。通过客户尾单回购+内部促销+拆解回收三路径消化，最终回收¥285万，报废损失¥75万。', materials:['智能音箱成品(12K台)'], potentialLoss:360, discoveredAt:'2026-06-05 09:00',
     timeline:[
       {time:'06/05 09:00', text:'规则自动触发：EOL成品DOI>60天', type:'auto'},
       {time:'06/05 14:00', text:'周涛接单，制定三路径消化方案', type:'owner'},
@@ -73,7 +73,7 @@ var EVENTS = [
     ],
     impactPath:'供应商延期 → 在途物料紧张 → 已缓解'
   },
-  { id:'E-0825', title:'NPI工程变更影响BOM', priority:'P1', source:'人工上报', riskCode:'R02', projects:['XR01'], owner:'周涛', deadline:'06/24', status:'已关闭', desc:'ECN导致BOM变动，已冻结变更窗口并重新备料。', materials:['专用镜片'], potentialLoss:680, discoveredAt:'2026-06-18 10:00',
+  { id:'E-0825', title:'NPI工程变更影响BOM', priority:'P1', source:'人工上报', riskCode:'R02', projects:['XR01'], owner:'周涛', deadline:'06/24', status:'已复盘', desc:'ECN导致BOM变动，已冻结变更窗口并重新备料。', materials:['专用镜片'], potentialLoss:680, discoveredAt:'2026-06-18 10:00',
     timeline:[
       {time:'06/18 10:00', text:'人工上报', type:'manual'},
       {time:'06/18 14:00', text:'冻结BOM变更窗口', type:'owner'},
@@ -81,7 +81,7 @@ var EVENTS = [
     ],
     impactPath:'ECN → BOM变动 → 物料呆滞/重排'
   },
-  { id:'E-0821', title:'EOL库存消化滞后', priority:'P3', source:'自动触发', riskCode:'R04', projects:['AU01'], owner:'吴芳', deadline:'07/05', status:'已关闭', desc:'EOL项目专用料消化率低于80%，已协商客户买单。', materials:['EOL专用料'], potentialLoss:480, discoveredAt:'2026-06-15 09:00',
+  { id:'E-0821', title:'EOL库存消化滞后', priority:'P3', source:'自动触发', riskCode:'R04', projects:['AU01'], owner:'吴芳', deadline:'07/05', status:'已复盘', desc:'EOL项目专用料消化率低于80%，已协商客户买单。', materials:['EOL专用料'], potentialLoss:480, discoveredAt:'2026-06-15 09:00',
     timeline:[
       {time:'06/15 09:00', text:'规则自动触发', type:'auto'},
       {time:'06/18 10:00', text:'客户买单清单确认', type:'owner'},
@@ -91,41 +91,47 @@ var EVENTS = [
   }
 ];
 
-var STATUS_LIST = ['待响应','处置中','待验证','已关闭'];
+// 统一状态流转：待响应 → 处置中 → 待验证 → 已关闭 → 待复盘 → 已复盘
+var STATUS_LIST = ['待响应','处置中','待验证','已关闭','待复盘','已复盘'];
 var selectedEvent = null;
 var currentStatusFilter = 'all';
 
 // ═══════════════ 工具函数 ═══════════════
 function priorityColor(p){ return p==='P1'?'var(--danger)':p==='P2'?'var(--warning)':'var(--info)'; }
-function statusColor(s){ return s==='待响应'?'var(--danger)':s==='处置中'?'var(--warning)':s==='待验证'?'var(--warning)':'var(--success)'; }
+function statusColor(s){ return s==='待响应'?'var(--danger)':s==='处置中'?'var(--warning)':s==='待验证'?'var(--info)':s==='已关闭'?'var(--success)':s==='待复盘'?'#8b5cf6':'var(--text-muted)'; }
 function sourceIcon(s){ return s==='自动触发'?'fa-robot':s==='人工上报'?'fa-user-pen':'fa-file-import'; }
 function isOverdue(d){ return d==='06/24' || d==='06/25'; } // 简化判断
 
 // ═══════════════ 入口 ═══════════════
 function initPage_closedloop(){
+  ensurePageStructure();
   var container = document.getElementById('page-closedloop');
   if(!container) return;
-
-  // 消费穿透跳转
   consumeDrillDown('closedloopProjectSelect');
-
+  if(!selectedEvent && EVENTS.length) selectedEvent = EVENTS[0];
   renderStatusBoard();
   renderEventList();
   renderDetailDrawer();
 }
 
 function renderStatusBoard(){
-  var counts = {待响应:0,处置中:0,待验证:0,已关闭:0};
-  EVENTS.forEach(function(e){ counts[e.status]++; });
-  var overdue = EVENTS.filter(function(e){return e.status!=='已关闭' && isOverdue(e.deadline);}).length;
-  var newThisWeek = EVENTS.filter(function(e){return e.source==='自动触发' && e.status==='处置中';}).length;
-  var avgClose = Math.round(EVENTS.filter(function(e){return e.status==='已关闭';}).length * 3.8 / 4 * 10)/10;
-  var closedThisMonth = EVENTS.filter(function(e){return e.status==='已关闭';}).length;
+  var counts = {};
+  STATUS_LIST.forEach(function(s){counts[s]=0;});
+  EVENTS.forEach(function(e){ if(counts[e.status]!==undefined) counts[e.status]++; });
+  var overdue = EVENTS.filter(function(e){return ['待响应','处置中'].indexOf(e.status)>=0 && isOverdue(e.deadline);}).length;
+  var inProgress = EVENTS.filter(function(e){return e.status==='处置中';}).length;
+  var pendingReview = EVENTS.filter(function(e){return e.status==='待复盘';}).length;
+  var closedThisMonth = EVENTS.filter(function(e){return ['已关闭','待复盘','已复盘'].indexOf(e.status)>=0;}).length;
 
   var el = document.getElementById('clStatusBoard');
   if(!el) return;
   el.innerHTML = STATUS_LIST.map(function(s){
-    var meta = s==='待响应'?'🔴 超期'+overdue+'件':s==='处置中'?'🟠 本周新增'+newThisWeek:s==='待验证'?'🟡 平均'+avgClose+'天':'本月关闭'+closedThisMonth+'件';
+    var meta = s==='待响应'?'🔴 超期'+overdue+'件待接单'
+      :s==='处置中'?'🟠 处置中'+inProgress+'件'
+      :s==='待验证'?'🟡 等待效果验证'
+      :s==='已关闭'?'✅ 本月关闭'+closedThisMonth+'件'
+      :s==='待复盘'?'🔵 待复盘'+pendingReview+'件'
+      :'📚 经验已沉淀';
     return '<div class="cl-status-card '+(currentStatusFilter===s?'active':'')+'" data-status="'+s+'" onclick="window._clFilterStatus(\''+s+'\')">'
       +'<div class="cl-status-label">'+s+'</div>'
       +'<div class="cl-status-num">'+counts[s]+' <span>件</span></div>'

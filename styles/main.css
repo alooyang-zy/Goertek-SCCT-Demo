@@ -1599,7 +1599,7 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .sc-card-accent.amber~.sc-card-value{color:var(--warning)}
 
 /* ===== 风险闭环 — 5.1 事件中心 ===== */
-.cl-status-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.cl-status-board{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
 .cl-status-card{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius);padding:16px 20px;cursor:pointer;transition:var(--transition);box-shadow:var(--shadow)}
 .cl-status-card:hover,.cl-status-card.active{border-color:var(--primary);box-shadow:var(--shadow-md)}
 .cl-status-label{font-size:12px;color:var(--text-sec);font-weight:600}
@@ -1667,7 +1667,7 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .sol-view-toggle{display:flex;gap:8px;margin-bottom:12px}
 .sol-view-toggle button{padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:12px;cursor:pointer}
 .sol-view-toggle button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.sol-kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;min-height:400px}
+.sol-kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;min-height:400px}
 .sol-kanban-col{background:var(--bg);border-radius:8px;padding:10px}
 .sol-kanban-header{font-size:12px;font-weight:700;color:var(--text-sec);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
 .sol-kanban-count{background:var(--card);padding:2px 8px;border-radius:99px;font-size:11px}

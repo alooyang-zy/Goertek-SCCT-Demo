@@ -4,7 +4,7 @@
 
 var REVIEW_DATA = [
   // ── 库存类：E-0850 EOL专用料高Aging呆滞（待复盘，与事件中心/方案对策串联）──
-  { eventId:'E-0850', title:'EOL项目专用料高Aging预警（>90天呆滞）', closeDate:'07/02', status:'待复盘', days:9.0, effectiveness:'A-', score:88,
+  { eventId:'E-0850', title:'EOL项目专用料高Aging预警（>90天呆滞）', closeDate:'07/02', status:'已关闭', days:9.0, effectiveness:'A-', score:88,
     timeline:[
       {time:'06/23 06:00', stage:'发现', text:'规则触发：DOI>90天 AND EOL项目', duration:'3.5小时'},
       {time:'06/23 09:30', stage:'响应', text:'吴芳接单启动呆滞评估', duration:'6.5小时'},
@@ -155,7 +155,7 @@ function renderQueue(){
   if(!el) return;
   el.innerHTML = REVIEW_DATA.map(function(r){
     var active = selectedReview && selectedReview.eventId===r.eventId?'active':'';
-    var due = r.status==='待复盘'?'复盘截止：06/30':'';
+    var due = r.status==='待复盘'?'复盘截止：07/10':'';
     return '<div class="rv-queue-item '+active+'" onclick="window._rvSelect(\''+r.eventId+'\')">'
       +'<div class="rv-queue-title">'+r.title+'</div>'
       +'<div class="rv-queue-meta">'+r.eventId+' · 关闭时间 '+r.closeDate+' · 处置 '+r.days+'天</div>'
