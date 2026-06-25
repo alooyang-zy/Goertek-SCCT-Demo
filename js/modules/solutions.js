@@ -406,7 +406,7 @@ function renderDetail(){
       +'</div>'
       +'<div class="sol-detail-body">'+renderTabContent(s)+'</div>'
       +'<div class="sol-ai-panel">'+renderAI(s.aiAdvice)+'</div>'
-      + (s.status==='待复盘'?'<div style="padding:12px 16px;text-align:center"><button class="cl-btn cl-btn-primary" onclick="switchPage(\'review\')">处置完成，进入闭环复盘 →</button></div>':'')
+      + (s.status==='处置中'?'<div style="padding:12px 16px;text-align:center"><button class="cl-btn cl-btn-primary" onclick="window._solComplete(\''+s.eventId+'\')">处置完成，进入闭环复盘 →</button></div>':'')
     +'</div>';
 }
 
@@ -499,6 +499,19 @@ window._solSelect = function(eid){
 window._solTab = function(tab){ currentTab=tab; renderDetail(); };
 window._solView = function(mode){ viewMode=mode; renderBoard(); };
 window._solNew = function(){ alert('新建方案（后续对接表单）'); };
+
+// 处置完成：处置中 → 待复盘，然后跳转闭环复盘
+window._solComplete = function(eid){
+  var s = SOLUTIONS_DATA.find(function(e){return e.eventId===eid;});
+  if(s){
+    s.status='待复盘';
+    s.progress=100;
+    s.timeline.push({time:'现在', user:'系统', text:'处置完成，状态：处置中→待复盘'});
+  }
+  // 同步更新事件中心状态
+  if(typeof window._clSyncStatus==='function') window._clSyncStatus(eid,'待复盘');
+  switchPage('review');
+};
 
 window.initPage_solutions = initPage_solutions;
 

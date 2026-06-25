@@ -169,8 +169,7 @@ function renderEventList(){
       var flow = STATUS_FLOW[e.status]||{};
       var actionBtn = '';
       if(e.status==='待响应') actionBtn='<button class="cl-btn-sm cl-btn-primary" onclick="event.stopPropagation();window._clTake(\''+e.id+'\')">接单</button>';
-      else if(e.status==='处置中') actionBtn='<button class="cl-btn-sm cl-btn-warn" onclick="event.stopPropagation();window._clUrge(\''+e.id+'\')">催办</button> <button class="cl-btn-sm cl-btn-primary" onclick="event.stopPropagation();window._clComplete(\''+e.id+'\')">处置完成</button>';
-      else if(e.status==='待复盘') actionBtn='<button class="cl-btn-sm cl-btn-primary" onclick="event.stopPropagation();switchPage(\'review\')">去复盘</button>';
+      else if(e.status==='处置中') actionBtn='<button class="cl-btn-sm cl-btn-warn" onclick="event.stopPropagation();window._clUrge(\''+e.id+'\')">催办</button>';
       return '<tr class="'+(selectedEvent&&selectedEvent.id===e.id?'active':'')+' '+overdueClass+'" onclick="window._clSelectEvent(\''+e.id+'\')">'
         +'<td><span class="cl-pill" style="background:'+priorityColor(e.priority)+'">'+e.priority+'</span></td>'
         +'<td>'+e.id+'</td>'
@@ -226,7 +225,6 @@ function renderDetailDrawer(){
         +(e.status==='待复盘'?'<button class="cl-btn cl-btn-primary" onclick="switchPage(\'review\')">进入闭环复盘 →</button>':'')
         +(e.status==='已归档'?'<button class="cl-btn" onclick="switchPage(\'knowledge\')">查看知识中心</button>':'')
         +'<button class="cl-btn" onclick="switchPage(\'sandtable\')">跳转沙盘模拟</button>'
-        +(e.status!=='已归档'?'<button class="cl-btn cl-btn-danger" onclick="window._clUpgrade(\''+e.id+'\')">升级事件</button>':'')
       +'</div>'
     +'</div>';
 }
@@ -266,6 +264,12 @@ window._clTake = function(id){
 window._clComplete = function(id){
   var e = EVENTS.find(function(x){return x.id===id;});
   if(e){ e.status='待复盘'; e.timeline.push({time:'现在', text:'处置完成，状态：处置中→待复盘', type:'done'}); renderStatusBoard(); renderEventList(); renderDetailDrawer(); }
+};
+
+// 供方案对策页面同步状态调用
+window._clSyncStatus = function(id, newStatus){
+  var e = EVENTS.find(function(x){return x.id===id;});
+  if(e){ e.status=newStatus; e.timeline.push({time:'现在', text:'状态变更为：'+newStatus, type:'done'}); }
 };
 
 window._clUrge = function(id){
