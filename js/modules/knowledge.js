@@ -292,7 +292,7 @@ function renderSuppliers(){
 
 function renderSupplierDetail(s){
   return '<div style="margin-bottom:12px"><button class="cl-btn" onclick="window._kbSup(null)">← 返回供应商列表</button></div>'
-    +'<div class="chart-card"><div class="card-header"><h3>'+s.name+' · 供应商画像</h3><span class="cl-pill" style="background:'+s.resilience>=80?'var(--success-bg)':'var(--warning-bg)+';color:'+s.resilience>=80?'var(--success)':'var(--warning)+'">'+s.grade+' ('+s.resilience+')</span></div><div class="card-body">'
+    +'<div class="chart-card"><div class="card-header"><h3>'+s.name+' · 供应商画像</h3><span class="cl-pill" style="background:'+(s.resilience>=80?'var(--success-bg)':'var(--warning-bg)')+';color:'+(s.resilience>=80?'var(--success)':'var(--warning)')+'">'+s.grade+' ('+s.resilience+')</span></div><div class="card-body">'
     +'<div class="kb-detail-section"><div class="kb-detail-title">基础档案</div>'
     +'<div class="kb-info-grid">'
     +'<div><label>战略等级</label><span>'+s.tier+'</span></div>'
