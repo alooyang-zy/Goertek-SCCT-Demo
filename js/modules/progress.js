@@ -98,17 +98,17 @@ function renderOrderKpi(os){
   var redCount=os.filter(function(o){return o.risk==='red';}).length;
   var yellowCount=os.filter(function(o){return o.risk==='yellow';}).length;
 
-  el.innerHTML=[
-    {l:'订单总数',v:os.length+' 个',sub:'订单量 '+fmt(ordered)+' 件 · 金额 '+amount(orderAmount),c:'blue',ic:'fa-clipboard-list'},
-    {l:'已交付量',v:fmt(delivered)+' 件',sub:pct(delivered,ordered)+' · 未交付 '+fmt(undelivered)+' 件',c:'green',ic:'fa-circle-check'},
-    {l:'齐套数量',v:fmt(available+completable)+' 件',sub:'库存可满足 '+fmt(available)+' + 可完工 '+fmt(completable),c:(available+completable)>=undelivered?'green':'amber',ic:'fa-boxes-stacked'},
-    {l:'可用库存量',v:fmt(usable)+' 件',sub:'Hold冻结 '+fmt(hold)+' 件',c:'blue',ic:'fa-warehouse'},
-    {l:'承诺缺口量',v:fmt(gap)+' 件',sub:gap>0?'⚠ 齐套+可完工<未交付':'✅ 无缺口',c:gap>0?'red':'green',ic:'fa-triangle-exclamation'},
-    {l:'超期订单量',v:fmt(overdue)+' 件',sub:'红风险 '+redCount+' · 黄风险 '+yellowCount,c:overdue>0?'red':'green',ic:'fa-clock'}
+  el.innerHTML='<div class="npi-cards">'+
+    [
+    {l:'订单总数',p:'当前范围内销售订单',v:os.length+' 个',s:'订单量 '+fmt(ordered)+' 件 · 金额 '+amount(orderAmount),a:'blue',ic:'fa-clipboard-list'},
+    {l:'已交付量',p:'已完成客户交付',v:fmt(delivered)+' 件',s:pct(delivered,ordered)+' · 未交付 '+fmt(undelivered)+' 件',a:'green',ic:'fa-circle-check'},
+    {l:'齐套数量',p:'库存可满足+承诺期可完工',v:fmt(available+completable)+' 件',s:'库存可满足 '+fmt(available)+' · 可完工 '+fmt(completable),a:(available+completable)>=undelivered?'green':'amber',ic:'fa-boxes-stacked'},
+    {l:'可用库存量',p:'扣除Hold等不可发状态',v:fmt(usable)+' 件',s:'Hold冻结 '+fmt(hold)+' 件',a:'blue',ic:'fa-warehouse'},
+    {l:'承诺缺口量',p:'齐套+可完工 < 未交付',v:fmt(gap)+' 件',s:gap>0?'⚠ 存在缺口':'✅ 无缺口',a:gap>0?'red':'green',ic:'fa-triangle-exclamation'},
+    {l:'超期订单量',p:'依据承诺交期判定',v:fmt(overdue)+' 件',s:'红风险 '+redCount+' · 黄风险 '+yellowCount,a:overdue>0?'red':'green',ic:'fa-clock'}
   ].map(function(k){
-    var color='var(--'+(k.c==='blue'?'primary':k.c)+')';
-    return '<div class="prg-ov-card '+k.c+'"><div style="display:flex;justify-content:space-between;align-items:center"><div class="prg-ov-label">'+k.l+'</div><i class="fas '+k.ic+'" style="color:'+color+';font-size:14px"></i></div><div class="prg-ov-value">'+k.v+'</div><div class="prg-ov-sub">'+k.sub+'</div></div>';
-  }).join('');
+    return '<div class="npi-card"><div class="npi-card-accent '+k.a+'"></div><div class="npi-card-purpose">'+k.p+'</div><div class="npi-card-label">'+k.l+'</div><div class="npi-card-value">'+k.v+'</div><div class="npi-card-sub">'+k.s+'</div></div>';
+  }).join('')+'</div>';
 }
 
 // ── 风险标签栏 ──
