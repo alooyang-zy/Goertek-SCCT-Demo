@@ -1,236 +1,184 @@
-// Module: progress — 履约跟踪 v10.0 (订单履约跟踪 + NPI物料跟踪)
+// Module: progress — 履约跟踪 v10.1 (订单履约跟踪 + NPI物料跟踪)
+// 订单履约数据结构参考：项目履行全景追踪Demo-V1.8
 (function(){
 "use strict";
 
-// ═══════════════ 数据生成 ═══════════════
+// ═══════════════ 工具函数 ═══════════════
+function fmt(n){ return Number(n||0).toLocaleString('zh-CN'); }
+function amount(n){ return '¥'+Number(n||0).toLocaleString('zh-CN',{maximumFractionDigits:1})+'万'; }
+function pct(a,b){ return b?((a/b)*100).toFixed(1)+'%':'0.0%'; }
 function hashStr(str){var h=5381;for(var i=0;i<str.length;i++)h=((h<<5)+h)+str.charCodeAt(i);return (h>>>0);}
 function sRand(seed,min,max,decimal){var s=seed;s=(s*1664525+1013904223)&0xffffffff;var r=(s>>>0)/0xffffffff;var v=min+r*(max-min);return decimal?parseFloat(v.toFixed(decimal)):Math.round(v);}
 
-var _orderCache = {};
-function getOrders(pid){
-  if(_orderCache[pid]) return _orderCache[pid];
-  var p = projects.find(function(x){return x.id===pid;});
-  if(!p) return [];
-  var seed = hashStr(pid);
-  var isNPI = p.lifecycleRaw==='NPI', isRamp = p.lifecycleRaw==='Ramp-up';
-  var perfMod = isNPI?0.82:isRamp?0.91:0.96;
+// ═══════════════ 订单数据（参考V1.8的orders+projectMeta） ═══════════════
+var PROJECT_META = [
+  { id:"PJ-A01-2605", name:"A01 智能整机项目", property:"重大项目", bg:"智能声学BG", customer:"客户A", model:"TWS整机-A01", material:"FG-A01-300", phase:"量产", month:"2026-05", unitPrice:0.148, risk:"red", riskNodes:["2.5","3.6","4.7","5.6"], riskCopy:"库存需按项目需求匹配，当前可满足量不足，影响承诺交期。" },
+  { id:"PJ-C07-2605", name:"C07 组件拉动项目", property:"重大项目", bg:"精密零件BG", customer:"客户C", model:"结构组件-C07", material:"FG-C07-112", phase:"爬坡", month:"2026-05", unitPrice:0.036, risk:"red", riskNodes:["2.5","3.6","3.7"], riskCopy:"IQC待检占用备料窗口，VMI库存覆盖不足。" },
+  { id:"PJ-E15-2605", name:"E15 声学模组项目", property:"重点项目", bg:"智能声学BG", customer:"客户E", model:"声学模组-E15", material:"FG-E15-510", phase:"试产", month:"2026-05", unitPrice:0.052, risk:"yellow", riskNodes:["2.5","3.2"], riskCopy:"计划单缺料，供应商要货计划回复待确认。" },
+  { id:"PJ-B18-2606", name:"B18 可穿戴项目", property:"重点项目", bg:"智能硬件BG", customer:"客户B", model:"智能手表-B18", material:"FG-B18-028", phase:"量产", month:"2026-06", unitPrice:0.226, risk:"yellow", riskNodes:["5.2"], riskCopy:"拣配批次需要拆分，仓配执行方案待确认。" },
+  { id:"PJ-D22-2606", name:"D22 精密件项目", property:"常规项目", bg:"精密零件BG", customer:"客户D", model:"精密件-D22", material:"FG-D22-077", phase:"量产", month:"2026-06", unitPrice:0.021, risk:"green", riskNodes:[], riskCopy:"链路节点执行正常，无显著履约卡点。" },
+  { id:"PJ-F09-2606", name:"F09 车载模组项目", property:"常规项目", bg:"智能硬件BG", customer:"客户F", model:"车载模组-F09", material:"FG-F09-688", phase:"爬坡", month:"2026-06", unitPrice:0.184, risk:"green", riskNodes:[], riskCopy:"当前承诺交期与库存可满足量匹配。" }
+];
 
-  // 风险标签池
-  var riskPool = [
-    {tag:'缺料风险',color:'danger',desc:'关键物料齐套率<85%'},
-    {tag:'交期风险',color:'warning',desc:'承诺交期晚于客户需求'},
-    {tag:'质量风险',color:'danger',desc:'IQC或FQC不合格率偏高'},
-    {tag:'产能瓶颈',color:'warning',desc:'产线利用率>95%'},
-    {tag:'物流延误',color:'warning',desc:'干线运输延迟>2天'},
-    {tag:'需求变更',color:'info',desc:'客户PO变更未关闭'},
-    {tag:'EOL呆滞',color:'danger',desc:'成品/物料库龄超期'},
-    {tag:'单源风险',color:'danger',desc:'关键料号单源供应'}
-  ];
+var ORDERS = [
+  { no:"SO-A01-0521", projectId:"PJ-A01-2605", demandDate:"2026-05-23", promiseDate:"2026-05-25", qty:6400, delivered:4400, available:980, completable:380, overdue:420, risk:"red", node:"4.7 成品库存" },
+  { no:"SO-A01-0528", projectId:"PJ-A01-2605", demandDate:"2026-05-30", promiseDate:"2026-05-30", qty:4800, delivered:2800, available:940, completable:360, overdue:260, risk:"red", node:"5.6 交付达成与客户签收" },
+  { no:"SO-C07-0518", projectId:"PJ-C07-2605", demandDate:"2026-05-20", promiseDate:"2026-05-22", qty:3600, delivered:2200, available:430, completable:270, overdue:420, risk:"red", node:"3.5 检验入库" },
+  { no:"SO-C07-0526", projectId:"PJ-C07-2605", demandDate:"2026-05-29", promiseDate:"2026-05-29", qty:3300, delivered:2000, available:480, completable:250, overdue:0, risk:"yellow", node:"2.5 物料齐套" },
+  { no:"SO-E15-0527", projectId:"PJ-E15-2605", demandDate:"2026-06-03", promiseDate:"2026-06-05", qty:4200, delivered:1300, available:1210, completable:1260, overdue:0, risk:"yellow", node:"2.5 物料齐套" },
+  { no:"SO-B18-0605", projectId:"PJ-B18-2606", demandDate:"2026-06-08", promiseDate:"2026-06-10", qty:5200, delivered:1200, available:2380, completable:1460, overdue:0, risk:"yellow", node:"5.2 出货拣配" },
+  { no:"SO-D22-0603", projectId:"PJ-D22-2606", demandDate:"2026-06-12", promiseDate:"2026-06-12", qty:8600, delivered:4600, available:2190, completable:1810, overdue:0, risk:"green", node:"5.1 发货指令" },
+  { no:"SO-F09-0610", projectId:"PJ-F09-2606", demandDate:"2026-06-18", promiseDate:"2026-06-19", qty:2900, delivered:900, available:1120, completable:880, overdue:0, risk:"green", node:"4.5 成品入库" }
+];
 
-  var orderCount = 8 + Math.floor(sRand(seed,0,8));
-  var orders = [];
-  for(var i=0;i<orderCount;i++){
-    var s = seed + i*997;
-    var qty = sRand(s, 500, 50000);
-    var delivered = Math.round(qty * (0.5 + sRand(s+1,0,0.5,2)) * perfMod);
-    var otd = sRand(s+2, Math.round(75*perfMod), 99, 1);
-    var statusRoll = sRand(s+3,1,100);
-    var status, statusColor, progress;
-    if(delivered>=qty){status='已交付';statusColor='success';progress=100;}
-    else if(delivered>qty*0.8){status='交付中';statusColor='primary';progress=Math.round(delivered/qty*100);}
-    else if(delivered>qty*0.3){status='生产中';statusColor='warning';progress=Math.round(delivered/qty*100);}
-    else{status='待生产';statusColor='text-muted';progress=Math.round(delivered/qty*100);}
+var riskLabel = { red:"红风险", yellow:"黄风险", green:"绿风险", gray:"待统一" };
+var riskColor = { red:"var(--danger)", yellow:"var(--warning)", green:"var(--success)", gray:"var(--text-muted)" };
+var riskBg = { red:"var(--danger-bg)", yellow:"var(--warning-bg)", green:"var(--success-bg)", gray:"var(--border-light)" };
 
-    var hasRisk = sRand(s+4,1,100) > (perfMod*100-10);
-    var riskTag = hasRisk ? riskPool[sRand(s+5,0,riskPool.length-1)] : null;
-    var riskLevel = 'normal';
-    if(riskTag){
-      riskLevel = riskTag.color==='danger'?'danger':'warning';
-    }
-    var customerPO = 'PO-' + p.customer.substring(0,2).toUpperCase() + '-' + String(sRand(s+6,10000,99999));
-    var soNum = 'SO-' + pid.replace(/\D/g,'') + '-' + String(i+1).padStart(2,'0');
-    var reqDate = '2026-06-' + String(sRand(s+7,5,28)).padStart(2,'0');
-    var commitDate = sRand(s+8,1,100) > 80 ? '2026-06-' + String(sRand(s+9,28,30)).padStart(2,'0') : reqDate;
-    var isLate = commitDate > reqDate;
-    var lineItems = 1 + Math.floor(sRand(s+10,0,4));
-    var materials = ['主板组件','显示屏模组','电池模组','外壳组件','声学模组','FPC排线','螺丝包'];
-    var lineData = [];
-    for(var j=0;j<lineItems;j++){
-      var ls = s + j*131;
-      lineData.push({
-        lineNo: j+1,
-        material: materials[sRand(ls,0,materials.length-1)],
-        reqQty: sRand(ls+1,100,5000),
-        readyQty: sRand(ls+2,0,100,2),
-        kitStatus: sRand(ls+3,1,100)>85?'齐套':sRand(ls+4,1,100)>60?'部分齐套':'缺料',
-        supplier: ['联发科','ADI','歌尔微','ATL','蓝思','立讯','鹏鼎'][sRand(ls+5,0,6)],
-        eta: '2026-06-' + String(sRand(ls+6,10,28)).padStart(2,'0')
-      });
-    }
-    orders.push({
-      idx:i, soNum:soNum, customerPO:customerPO, customer:p.customer,
-      product:p.productLine, qty:qty, delivered:delivered, unit:'PCS',
-      status:status, statusColor:statusColor, progress:progress,
-      reqDate:reqDate, commitDate:commitDate, isLate:isLate,
-      otd:otd, riskTag:riskTag, riskLevel:riskLevel,
-      lines:lineData, potentialLoss: hasRisk ? sRand(s+11,20,500) : 0
-    });
-  }
-  _orderCache[pid] = orders;
-  return orders;
-}
+function usableStock(o){ return Math.round(o.available*1.35); }
+function holdStock(o){ if(o.risk==='red') return Math.round(o.available*0.18); if(o.risk==='yellow') return Math.round(o.available*0.08); return 0; }
+function metadata(id){ return PROJECT_META.find(function(p){return p.id===id;}); }
+function toneBadge(tone){ return '<span class="prg-badge '+tone+'" style="background:'+riskBg[tone]+';color:'+riskColor[tone]+'">'+riskLabel[tone]+'</span>'; }
 
 // ═══════════════ 状态 ═══════════════
-var _phCollapsed={};
+var currentRiskFilter = 'all';
 
 // ═══════════════ 入口 ═══════════════
 function renderProgressPage(){
   var fp=getFilteredProjects();
   var sel=document.getElementById('progressProjectSelect');
   if(sel){var cur=sel.value;
-    sel.innerHTML=fp.map(function(p){return '<option value="'+p.id+'">'+p.name+' ['+p.bg+'·'+p.customer+']</option>'}).join('');
+    sel.innerHTML='<option value="">全部项目</option>'+fp.map(function(p){return '<option value="'+p.id+'">'+p.name+' ['+p.bg+'·'+p.customer+']</option>'}).join('');
     if(cur&&fp.some(function(p){return p.id==cur}))sel.value=cur;
-    else if(fp.length)sel.value=fp[0].id;
   }
   consumeDrillDown('progressProjectSelect');
-  var pid=sel?sel.value:'';
-  var proj=pid?fp.find(function(p){return p.id==pid}):null;
-  if(!proj&&fp.length){proj=fp[0];if(sel)sel.value=proj.id;}
-  if(proj) loadProject(proj);
+  loadOrders();
 }
 
-function loadProject(proj){
-  if(!proj)return;
-  // 项目信息条
+function loadOrders(){
+  var sel=document.getElementById('progressProjectSelect');
+  var pid=sel?sel.value:'';
   var info=document.getElementById('prgHeroInfo');
   if(info){
-    info.innerHTML='<span style="font-weight:700;color:var(--primary)">'+proj.name+'</span>'
-      +' · 客户：<b>'+proj.customer+'</b>'
-      +' · BG：<b>'+proj.bg+'</b>'
-      +' · 产品线：<b>'+proj.productLine+'</b>'
-      +' · 阶段：<b>'+proj.engStage+'</b>'
-      +' · 生命周期：<b>'+proj.lifecycle+'</b>';
+    if(pid){
+      var proj=projects.find(function(p){return p.id===pid;});
+      if(proj) info.innerHTML='<span style="font-weight:700;color:var(--primary)">'+proj.name+'</span> · 客户：<b>'+proj.customer+'</b> · BG：<b>'+proj.bg+'</b> · 产品：<b>'+proj.productLine+'</b> · 生命周期：<b>'+proj.lifecycle+'</b>';
+    } else {
+      info.innerHTML='全项目视角 · 共'+PROJECT_META.length+'个项目 · '+ORDERS.length+'个订单';
+    }
   }
-  var orders = getOrders(proj.id);
-  renderOrderKpi(orders, proj);
-  renderRiskTags(orders);
-  renderOrderDetail(orders);
+
+  // 按项目过滤订单（如果不选项目则全部）
+  var filtered = pid ? ORDERS.filter(function(o){return o.projectId===pid;}) : ORDERS.slice();
+
+  // 按风险过滤
+  if(currentRiskFilter!=='all'){
+    filtered = filtered.filter(function(o){return o.risk===currentRiskFilter;});
+  }
+
+  renderOrderKpi(filtered);
+  renderRiskTags(filtered);
+  renderOrderTable(filtered);
 }
 
 // ── KPI指标卡 ──
-function renderOrderKpi(orders, proj){
+function renderOrderKpi(os){
   var el=document.getElementById('prgOrderKpi');
   if(!el) return;
-  var total=orders.length;
-  var delivered=orders.filter(function(o){return o.status==='已交付';}).length;
-  var inProgress=orders.filter(function(o){return o.status==='交付中'||o.status==='生产中';}).length;
-  var waiting=orders.filter(function(o){return o.status==='待生产';}).length;
-  var riskOrders=orders.filter(function(o){return o.riskTag;}).length;
-  var avgOtd=Math.round(orders.reduce(function(s,o){return s+o.otd;},0)/total*10)/10;
-  var totalQty=orders.reduce(function(s,o){return s+o.qty;},0);
-  var deliveredQty=orders.reduce(function(s,o){return s+o.delivered;},0);
-  var fulfillmentRate=Math.round(deliveredQty/totalQty*100*10)/10;
-  var lateOrders=orders.filter(function(o){return o.isLate;}).length;
+  var ordered=os.reduce(function(n,o){return n+o.qty;},0);
+  var delivered=os.reduce(function(n,o){return n+o.delivered;},0);
+  var undelivered=ordered-delivered;
+  var available=os.reduce(function(n,o){return n+o.available;},0);
+  var usable=os.reduce(function(n,o){return n+usableStock(o);},0);
+  var hold=os.reduce(function(n,o){return n+holdStock(o);},0);
+  var completable=os.reduce(function(n,o){return n+o.completable;},0);
+  var overdue=os.reduce(function(n,o){return n+o.overdue;},0);
+  var gap=os.reduce(function(n,o){return n+Math.max(o.qty-o.delivered-o.available-o.completable,0);},0);
+  var orderAmount=os.reduce(function(n,o){var p=metadata(o.projectId);return n+o.qty*(p?p.unitPrice:0);},0);
+  var redCount=os.filter(function(o){return o.risk==='red';}).length;
+  var yellowCount=os.filter(function(o){return o.risk==='yellow';}).length;
 
   el.innerHTML=[
-    {l:'订单总数',v:total,sub:'已交付'+delivered+' · 交付中'+inProgress+' · 待生产'+waiting,c:'blue',ic:'fa-clipboard-list'},
-    {l:'履约完成率',v:fulfillmentRate+'%',sub:'已交付'+deliveredQty.toLocaleString()+' / 总量'+totalQty.toLocaleString()+' PCS',c:'green',ic:'fa-circle-check'},
-    {l:'平均OTD',v:avgOtd+'%',sub:(avgOtd>=90?'✅ 达标':'⚠️ 低于90%目标'),c:avgOtd>=90?'green':'amber',ic:'fa-truck-fast'},
-    {l:'风险订单',v:riskOrders,sub:'占总订单'+Math.round(riskOrders/total*100)+'%',c:riskOrders>0?'red':'green',ic:'fa-triangle-exclamation'},
-    {l:'交期延迟',v:lateOrders,sub:'承诺晚于需求日期',c:lateOrders>0?'amber':'green',ic:'fa-clock'},
-    {l:'潜在损失',v:'¥'+orders.reduce(function(s,o){return s+o.potentialLoss;},0)+'万',sub:'风险订单预估损失',c:'red',ic:'fa-coins'}
+    {l:'订单总数',v:os.length+' 个',sub:'订单量 '+fmt(ordered)+' 件 · 金额 '+amount(orderAmount),c:'blue',ic:'fa-clipboard-list'},
+    {l:'已交付量',v:fmt(delivered)+' 件',sub:pct(delivered,ordered)+' · 未交付 '+fmt(undelivered)+' 件',c:'green',ic:'fa-circle-check'},
+    {l:'齐套数量',v:fmt(available+completable)+' 件',sub:'库存可满足 '+fmt(available)+' + 可完工 '+fmt(completable),c:(available+completable)>=undelivered?'green':'amber',ic:'fa-boxes-stacked'},
+    {l:'可用库存量',v:fmt(usable)+' 件',sub:'Hold冻结 '+fmt(hold)+' 件',c:'blue',ic:'fa-warehouse'},
+    {l:'承诺缺口量',v:fmt(gap)+' 件',sub:gap>0?'⚠ 齐套+可完工<未交付':'✅ 无缺口',c:gap>0?'red':'green',ic:'fa-triangle-exclamation'},
+    {l:'超期订单量',v:fmt(overdue)+' 件',sub:'红风险 '+redCount+' · 黄风险 '+yellowCount,c:overdue>0?'red':'green',ic:'fa-clock'}
   ].map(function(k){
-    var color='var(--'+(k.c==='blue'?'primary':k.c===''?'primary':k.c)+')';
+    var color='var(--'+(k.c==='blue'?'primary':k.c)+')';
     return '<div class="prg-ov-card '+k.c+'"><div style="display:flex;justify-content:space-between;align-items:center"><div class="prg-ov-label">'+k.l+'</div><i class="fas '+k.ic+'" style="color:'+color+';font-size:14px"></i></div><div class="prg-ov-value">'+k.v+'</div><div class="prg-ov-sub">'+k.sub+'</div></div>';
   }).join('');
 }
 
-// ── 风险订单标签 ──
-function renderRiskTags(orders){
+// ── 风险标签栏 ──
+function renderRiskTags(os){
   var el=document.getElementById('prgOrderRiskTags');
   if(!el) return;
-  var riskOrders=orders.filter(function(o){return o.riskTag;});
-  if(!riskOrders.length){
-    el.innerHTML='<div style="padding:14px;background:var(--success-bg);border:1px solid var(--success);border-radius:8px;display:flex;align-items:center;gap:8px;margin-bottom:14px"><i class="fas fa-circle-check" style="color:var(--success)"></i><span style="color:var(--success);font-weight:600">当前项目无风险订单</span></div>';
-    return;
-  }
-  // 按风险类型分组统计
-  var tagMap={};
-  riskOrders.forEach(function(o){
-    if(!o.riskTag) return;
-    if(!tagMap[o.riskTag.tag]) tagMap[o.riskTag.tag]={count:0,color:o.riskTag.color,desc:o.riskTag.desc,orders:[]};
-    tagMap[o.riskTag.tag].count++;
-    tagMap[o.riskTag.tag].orders.push(o.soNum);
-  });
-  el.innerHTML='<div style="padding:14px;background:var(--danger-bg);border:1px solid var(--danger);border-radius:8px;margin-bottom:14px">'
-    +'<div style="font-weight:700;color:var(--danger);margin-bottom:10px;font-size:13px"><i class="fas fa-triangle-exclamation"></i> 风险订单标签（'+riskOrders.length+'个风险订单）</div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    +Object.keys(tagMap).map(function(tag){
-      var t=tagMap[tag];
-      return '<span class="prg-risk-pill '+t.color+'" onclick="window._prgFilterRisk(\''+tag+'\')" style="cursor:pointer">'+tag+' ('+t.count+')</span>';
-    }).join('')
-    +'</div></div>';
+  var red=os.filter(function(o){return o.risk==='red';}).length;
+  var yellow=os.filter(function(o){return o.risk==='yellow';}).length;
+  var green=os.filter(function(o){return o.risk==='green';}).length;
+  el.innerHTML='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'
+    +'<span class="prg-risk-pill '+(currentRiskFilter==='all'?'active':'')+'" onclick="window._prgFilterRisk(\'all\')" style="cursor:pointer">全部 ('+os.length+')</span>'
+    +'<span class="prg-risk-pill danger '+(currentRiskFilter==='red'?'active':'')+'" onclick="window._prgFilterRisk(\'red\')" style="cursor:pointer;background:'+riskBg.red+';color:'+riskColor.red+';border:1px solid '+riskColor.red+'">🔴 红风险 ('+red+')</span>'
+    +'<span class="prg-risk-pill '+(currentRiskFilter==='yellow'?'active':'')+'" onclick="window._prgFilterRisk(\'yellow\')" style="cursor:pointer;background:'+riskBg.yellow+';color:'+riskColor.yellow+';border:1px solid '+riskColor.yellow+'">🟡 黄风险 ('+yellow+')</span>'
+    +'<span class="prg-risk-pill '+(currentRiskFilter==='green'?'active':'')+'" onclick="window._prgFilterRisk(\'green\')" style="cursor:pointer;background:'+riskBg.green+';color:'+riskColor.green+';border:1px solid '+riskColor.green+'">🟢 绿风险 ('+green+')</span>'
+    +'</div>';
 }
 
-window._prgFilterRisk = function(tag){
-  var rows = document.querySelectorAll('#prgOrderDetail table tbody tr');
-  rows.forEach(function(r){
-    if(r.dataset.risk===tag || tag==='') r.style.display='';
-    else r.style.display='none';
-  });
+window._prgFilterRisk = function(risk){
+  currentRiskFilter = currentRiskFilter===risk?'all':risk;
+  loadOrders();
 };
 
-// ── 订单明细行 ──
-function renderOrderDetail(orders){
+// ── 订单明细表（参考V1.8的renderOrderTable） ──
+function renderOrderTable(os){
   var el=document.getElementById('prgOrderDetail');
   if(!el) return;
+  var rows = os.map(function(o){
+    var p=metadata(o.projectId);
+    var undelivered=o.qty-o.delivered;
+    var gap=Math.max(undelivered-o.available-o.completable,0);
+    var usable=usableStock(o);
+    var hold=holdStock(o);
+    var orderAmount=o.qty*(p?p.unitPrice:0);
+    return '<tr>'
+      +'<td>'+toneBadge(o.risk)+'</td>'
+      +'<td style="font-weight:600;color:var(--primary)">'+o.no+'</td>'
+      +'<td><div class="cell-main">'+(p?p.id:'')+'</div><div class="cell-sub" style="font-size:10px;color:var(--text-muted)">'+(p?p.name:'')+'</div></td>'
+      +'<td>'+(p?p.bg:'')+'</td>'
+      +'<td>'+(p?p.customer:'')+'</td>'
+      +'<td><div>'+(p?p.model:'')+'</div><div class="cell-sub" style="font-size:10px;color:var(--text-muted)">'+(p?p.material:'')+'</div></td>'
+      +'<td>'+o.demandDate+'</td>'
+      +'<td style="'+(o.promiseDate>o.demandDate?'color:var(--danger);font-weight:600':'')+'">'+o.promiseDate+(o.promiseDate>o.demandDate?' ⚠':'')+'</td>'
+      +'<td class="number">'+amount(orderAmount)+'</td>'
+      +'<td class="number">'+fmt(o.qty)+'</td>'
+      +'<td class="number" style="color:var(--success);font-weight:600">'+fmt(o.delivered)+'</td>'
+      +'<td class="number" style="color:'+(undelivered>0?'var(--warning)':'var(--text-muted)')+';font-weight:600">'+fmt(undelivered)+'</td>'
+      +'<td class="number">'+fmt(usable)+'</td>'
+      +'<td class="number">'+fmt(o.available)+'</td>'
+      +'<td class="number" style="color:'+(hold>0?'var(--warning)':'var(--text-muted)')+'">'+fmt(hold)+'</td>'
+      +'<td class="number" style="color:'+(gap>0?'var(--danger)':'var(--success)')+';font-weight:700">'+fmt(gap)+'</td>'
+      +'<td class="number" style="color:'+(o.overdue>0?'var(--danger)':'var(--success)')+';font-weight:'+(o.overdue>0?'700':'400')+'">'+fmt(o.overdue)+'</td>'
+      +'<td><span style="font-size:10px;color:var(--text-muted)">'+o.node+'</span></td>'
+      +'</tr>';
+  }).join('');
+
   el.innerHTML =
     '<div class="chart-card" style="margin-bottom:0">'
-    +'<div class="card-header"><h3><i class="fas fa-list"></i> 订单履约明细</h3><span style="font-size:11px;color:var(--text-muted)">共'+orders.length+'个订单 · 点击行展开明细</span></div>'
+    +'<div class="card-header"><h3><i class="fas fa-list"></i> 订单履约明细</h3><span style="font-size:11px;color:var(--text-muted)">共'+os.length+'个订单 · 按风险状态排序</span></div>'
     +'<div class="card-body" style="padding:0;overflow-x:auto">'
     +'<table class="prg-order-table">'
     +'<thead><tr>'
-    +'<th>SO号</th><th>客户PO</th><th>客户</th><th>产品</th><th>订单量</th><th>已交付</th><th>进度</th><th>需求日期</th><th>承诺日期</th><th>OTD</th><th>状态</th><th>风险标签</th>'
+    +'<th>风险状态</th><th>订单号</th><th>所属项目</th><th>BG</th><th>客户</th><th>产品型号 / 成品料号</th>'
+    +'<th>需求交期</th><th>承诺交期</th><th class="number">订单金额</th><th class="number">订单数量</th><th class="number">已交付量</th>'
+    +'<th class="number">未交付量</th><th class="number">可用库存量</th><th class="number">库存可满足量</th><th class="number">Hold冻结</th>'
+    +'<th class="number">承诺缺口量</th><th class="number">超期量</th><th>风险节点</th>'
     +'</tr></thead><tbody>'
-    + orders.map(function(o){
-      var lateMark = o.isLate?'<span style="color:var(--danger);font-weight:700">⚠ '+o.commitDate+'</span>':o.commitDate;
-      var riskBadge = o.riskTag?'<span class="cl-pill" style="background:var(--'+o.riskTag.color+'-bg);color:var(--'+o.riskTag.color+')">'+o.riskTag.tag+'</span>':'<span style="color:var(--success)">✓</span>';
-      var progressColor = o.progress===100?'var(--success)':o.progress>=60?'var(--primary)':o.progress>=30?'var(--warning)':'var(--danger)';
-      return '<tr class="prg-order-row" data-risk="'+(o.riskTag?o.riskTag.tag:'')+'" onclick="window._prgToggleOrder('+o.idx+')">'
-        +'<td style="font-weight:600;color:var(--primary)">'+o.soNum+'</td>'
-        +'<td>'+o.customerPO+'</td>'
-        +'<td>'+o.customer+'</td>'
-        +'<td>'+o.product+'</td>'
-        +'<td>'+o.qty.toLocaleString()+'</td>'
-        +'<td>'+o.delivered.toLocaleString()+'</td>'
-        +'<td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:5px;background:var(--border-light);border-radius:3px;overflow:hidden"><div style="width:'+o.progress+'%;height:100%;background:'+progressColor+';border-radius:3px"></div></div><span style="font-size:10px;color:var(--text-muted)">'+o.progress+'%</span></div></td>'
-        +'<td>'+o.reqDate+'</td>'
-        +'<td>'+lateMark+'</td>'
-        +'<td><span style="font-weight:700;color:'+(o.otd>=90?'var(--success)':o.otd>=80?'var(--warning)':'var(--danger)')+'">'+o.otd+'%</span></td>'
-        +'<td><span class="cl-pill" style="background:var(--'+o.statusColor+'-bg);color:var(--'+o.statusColor+')">'+o.status+'</span></td>'
-        +'<td>'+riskBadge+'</td>'
-        +'</tr>'
-        +'<tr class="prg-order-expand" id="prg-expand-'+o.idx+'" style="display:none">'
-        +'<td colspan="12" style="padding:0;background:var(--bg)">'
-        +'<div style="padding:12px 20px">'
-        +'<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">📋 行项目明细（'+o.lines.length+'行）</div>'
-        +'<table class="prg-line-table"><thead><tr><th>行号</th><th>物料</th><th>需求量</th><th>齐套率</th><th>齐套状态</th><th>供应商</th><th>预计到货</th></tr></thead><tbody>'
-        +o.lines.map(function(l){
-          var kitColor = l.kitStatus==='齐套'?'var(--success)':l.kitStatus==='部分齐套'?'var(--warning)':'var(--danger)';
-          return '<tr><td>'+l.lineNo+'</td><td style="font-weight:600">'+l.material+'</td><td>'+l.reqQty.toLocaleString()+'</td><td><span style="color:'+kitColor+';font-weight:700">'+l.readyQty+'%</span></td><td><span class="cl-pill" style="background:'+kitColor+'20;color:'+kitColor+'">'+l.kitStatus+'</span></td><td>'+l.supplier+'</td><td>'+l.eta+'</td></tr>';
-        }).join('')
-        +'</tbody></table>'
-        +(o.riskTag?'<div style="margin-top:10px;padding:8px 12px;background:var(--'+o.riskTag.color+'-bg);border-radius:6px;font-size:11px;color:var(--'+o.riskTag.color+')"><b>⚠️ '+o.riskTag.tag+'</b>：'+o.riskTag.desc+' · 潜在损失¥'+o.potentialLoss+'万</div>':'')
-        +'</div></div></td></tr>';
-    }).join('')
+    + (rows || '<tr><td colspan="18" style="text-align:center;padding:30px;color:var(--text-muted)">当前筛选范围内无订单数据</td></tr>')
     +'</tbody></table>'
     +'</div></div>';
 }
-
-window._prgToggleOrder = function(idx){
-  var row = document.getElementById('prg-expand-'+idx);
-  if(row) row.style.display = row.style.display==='none'?'table-row':'none';
-};
 
 // ═══════════════ Tab切换 ═══════════════
 window._prgSwitchTab = function(tabId){

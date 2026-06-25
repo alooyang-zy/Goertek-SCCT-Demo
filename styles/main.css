@@ -1819,6 +1819,15 @@ body.fullscreen-mode .page-container{padding:10px 14px}
 .prg-line-table{width:100%;border-collapse:collapse;font-size:11px}
 .prg-line-table th{padding:6px 8px;text-align:left;color:var(--text-muted);font-size:10px;font-weight:600;border-bottom:1px solid var(--border-light)}
 .prg-line-table td{padding:6px 8px;border-bottom:1px solid var(--border-light)}
+.prg-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap}
+.prg-badge.red{background:var(--danger-bg);color:var(--danger)}
+.prg-badge.yellow{background:var(--warning-bg);color:var(--warning)}
+.prg-badge.green{background:var(--success-bg);color:var(--success)}
+.prg-badge.gray{background:var(--border-light);color:var(--text-muted)}
+.prg-risk-pill.active{outline:2px solid var(--primary);outline-offset:1px;font-weight:700}
+.prg-order-table .number{text-align:right;font-variant-numeric:tabular-nums}
+.prg-order-table .cell-main{font-weight:600;color:var(--text)}
+.prg-order-table .cell-sub{color:var(--text-muted)}
 
 .sc-card-accent.cyan~.sc-card-value{color:var(--info)}
 /* Pipeline */
