@@ -151,7 +151,6 @@ function renderOrderTable(os){
       +'<td><div>'+(p?p.model:'')+'</div><div class="cell-sub" style="font-size:10px;color:var(--text-muted)">'+(p?p.material:'')+'</div></td>'
       +'<td>'+o.demandDate+'</td>'
       +'<td style="'+(o.promiseDate>o.demandDate?'color:var(--danger);font-weight:600':'')+'">'+o.promiseDate+(o.promiseDate>o.demandDate?' ⚠':'')+'</td>'
-      +'<td class="number">'+amount(orderAmount)+'</td>'
       +'<td class="number">'+fmt(o.qty)+'</td>'
       +'<td class="number" style="color:var(--success);font-weight:600">'+fmt(o.delivered)+'</td>'
       +'<td class="number" style="color:'+(undelivered>0?'var(--warning)':'var(--text-muted)')+';font-weight:600">'+fmt(undelivered)+'</td>'
@@ -171,11 +170,11 @@ function renderOrderTable(os){
     +'<table class="prg-order-table">'
     +'<thead><tr>'
     +'<th>风险状态</th><th>订单号</th><th>所属项目</th><th>BG</th><th>客户</th><th>产品型号 / 成品料号</th>'
-    +'<th>需求交期</th><th>承诺交期</th><th class="number">订单金额</th><th class="number">订单数量</th><th class="number">已交付量</th>'
+    +'<th>需求交期</th><th>承诺交期</th><th class="number">订单数量</th><th class="number">已交付量</th>'
     +'<th class="number">未交付量</th><th class="number">可用库存量</th><th class="number">库存可满足量</th><th class="number">Hold冻结</th>'
     +'<th class="number">承诺缺口量</th><th class="number">超期量</th><th>风险节点</th>'
     +'</tr></thead><tbody>'
-    + (rows || '<tr><td colspan="18" style="text-align:center;padding:30px;color:var(--text-muted)">当前筛选范围内无订单数据</td></tr>')
+    + (rows || '<tr><td colspan="17" style="text-align:center;padding:30px;color:var(--text-muted)">当前筛选范围内无订单数据</td></tr>')
     +'</tbody></table>'
     +'</div></div>';
 }
