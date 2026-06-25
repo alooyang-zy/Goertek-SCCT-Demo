@@ -21,14 +21,60 @@ var PROJECT_META = [
 ];
 
 var ORDERS = [
-  { no:"SO-A01-0521", projectId:"PJ-A01-2605", demandDate:"2026-05-23", promiseDate:"2026-05-25", qty:6400, delivered:4400, available:980, completable:380, overdue:420, risk:"red", node:"4.7 成品库存" },
-  { no:"SO-A01-0528", projectId:"PJ-A01-2605", demandDate:"2026-05-30", promiseDate:"2026-05-30", qty:4800, delivered:2800, available:940, completable:360, overdue:260, risk:"red", node:"5.6 交付达成与客户签收" },
-  { no:"SO-C07-0518", projectId:"PJ-C07-2605", demandDate:"2026-05-20", promiseDate:"2026-05-22", qty:3600, delivered:2200, available:430, completable:270, overdue:420, risk:"red", node:"3.5 检验入库" },
-  { no:"SO-C07-0526", projectId:"PJ-C07-2605", demandDate:"2026-05-29", promiseDate:"2026-05-29", qty:3300, delivered:2000, available:480, completable:250, overdue:0, risk:"yellow", node:"2.5 物料齐套" },
-  { no:"SO-E15-0527", projectId:"PJ-E15-2605", demandDate:"2026-06-03", promiseDate:"2026-06-05", qty:4200, delivered:1300, available:1210, completable:1260, overdue:0, risk:"yellow", node:"2.5 物料齐套" },
-  { no:"SO-B18-0605", projectId:"PJ-B18-2606", demandDate:"2026-06-08", promiseDate:"2026-06-10", qty:5200, delivered:1200, available:2380, completable:1460, overdue:0, risk:"yellow", node:"5.2 出货拣配" },
-  { no:"SO-D22-0603", projectId:"PJ-D22-2606", demandDate:"2026-06-12", promiseDate:"2026-06-12", qty:8600, delivered:4600, available:2190, completable:1810, overdue:0, risk:"green", node:"5.1 发货指令" },
-  { no:"SO-F09-0610", projectId:"PJ-F09-2606", demandDate:"2026-06-18", promiseDate:"2026-06-19", qty:2900, delivered:900, available:1120, completable:880, overdue:0, risk:"green", node:"4.5 成品入库" }
+  // ── A01 智能整机项目（红风险）── 进行中
+  { no:"SO-A01-0521", projectId:"PJ-A01-2605", demandDate:"2026-05-23", promiseDate:"2026-05-25", qty:6400, delivered:4400, available:980, completable:380, overdue:420, risk:"red", node:"4.7 成品库存", status:"进行中" },
+  { no:"SO-A01-0528", projectId:"PJ-A01-2605", demandDate:"2026-05-30", promiseDate:"2026-05-30", qty:4800, delivered:2800, available:940, completable:360, overdue:260, risk:"red", node:"5.6 交付达成与客户签收", status:"进行中" },
+  // A01 已关闭
+  { no:"SO-A01-0501", projectId:"PJ-A01-2605", demandDate:"2026-04-15", promiseDate:"2026-04-15", qty:5200, delivered:5200, available:0, completable:0, overdue:0, risk:"green", node:"5.6 交付达成与客户签收", status:"已关闭" },
+  { no:"SO-A01-0418", projectId:"PJ-A01-2605", demandDate:"2026-03-28", promiseDate:"2026-03-30", qty:3800, delivered:3800, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-A01-0405", projectId:"PJ-A01-2605", demandDate:"2026-03-10", promiseDate:"2026-03-12", qty:4500, delivered:4500, available:0, completable:0, overdue:0, risk:"yellow", node:"5.6 交付达成与客户签收", status:"已关闭" },
+  { no:"SO-A01-0322", projectId:"PJ-A01-2605", demandDate:"2026-02-25", promiseDate:"2026-02-25", qty:6000, delivered:6000, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-A01-0315", projectId:"PJ-A01-2605", demandDate:"2026-02-10", promiseDate:"2026-02-12", qty:3200, delivered:3200, available:0, completable:0, overdue:80, risk:"yellow", node:"5.6 交付达成与客户签收", status:"已关闭" },
+  { no:"SO-A01-0228", projectId:"PJ-A01-2605", demandDate:"2026-01-20", promiseDate:"2026-01-22", qty:4800, delivered:4800, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-A01-0210", projectId:"PJ-A01-2605", demandDate:"2026-01-05", promiseDate:"2026-01-05", qty:5500, delivered:5500, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-A01-0115", projectId:"PJ-A01-2605", demandDate:"2025-12-20", promiseDate:"2025-12-22", qty:4200, delivered:4200, available:0, completable:0, overdue:120, risk:"yellow", node:"5.6 交付达成与客户签收", status:"已关闭" },
+
+  // ── C07 组件拉动项目（红风险）── 进行中
+  { no:"SO-C07-0518", projectId:"PJ-C07-2605", demandDate:"2026-05-20", promiseDate:"2026-05-22", qty:3600, delivered:2200, available:430, completable:270, overdue:420, risk:"red", node:"3.5 检验入库", status:"进行中" },
+  { no:"SO-C07-0526", projectId:"PJ-C07-2605", demandDate:"2026-05-29", promiseDate:"2026-05-29", qty:3300, delivered:2000, available:480, completable:250, overdue:0, risk:"yellow", node:"2.5 物料齐套", status:"进行中" },
+  // C07 已关闭
+  { no:"SO-C07-0420", projectId:"PJ-C07-2605", demandDate:"2026-04-05", promiseDate:"2026-04-05", qty:2800, delivered:2800, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-C07-0328", projectId:"PJ-C07-2605", demandDate:"2026-03-15", promiseDate:"2026-03-15", qty:3100, delivered:3100, available:0, completable:0, overdue:60, risk:"yellow", node:"5.6 交付达成", status:"已关闭" },
+  { no:"SO-C07-0305", projectId:"PJ-C07-2605", demandDate:"2026-02-22", promiseDate:"2026-02-22", qty:3500, delivered:3500, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-C07-0218", projectId:"PJ-C07-2605", demandDate:"2026-01-25", promiseDate:"2026-01-26", qty:2600, delivered:2600, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-C07-0110", projectId:"PJ-C07-2605", demandDate:"2025-12-15", promiseDate:"2025-12-15", qty:3000, delivered:3000, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+
+  // ── E15 声学模组项目（黄风险）── 进行中
+  { no:"SO-E15-0527", projectId:"PJ-E15-2605", demandDate:"2026-06-03", promiseDate:"2026-06-05", qty:4200, delivered:1300, available:1210, completable:1260, overdue:0, risk:"yellow", node:"2.5 物料齐套", status:"进行中" },
+  // E15 已关闭
+  { no:"SO-E15-0412", projectId:"PJ-E15-2605", demandDate:"2026-04-20", promiseDate:"2026-04-20", qty:3600, delivered:3600, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-E15-0318", projectId:"PJ-E15-2605", demandDate:"2026-03-05", promiseDate:"2026-03-06", qty:2800, delivered:2800, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-E15-0220", projectId:"PJ-E15-2605", demandDate:"2026-01-28", promiseDate:"2026-01-30", qty:3200, delivered:3200, available:0, completable:0, overdue:90, risk:"yellow", node:"5.6 交付达成", status:"已关闭" },
+  { no:"SO-E15-0105", projectId:"PJ-E15-2605", demandDate:"2025-12-18", promiseDate:"2025-12-18", qty:2400, delivered:2400, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+
+  // ── B18 可穿戴项目（黄风险）── 进行中
+  { no:"SO-B18-0605", projectId:"PJ-B18-2606", demandDate:"2026-06-08", promiseDate:"2026-06-10", qty:5200, delivered:1200, available:2380, completable:1460, overdue:0, risk:"yellow", node:"5.2 出货拣配", status:"进行中" },
+  // B18 已关闭
+  { no:"SO-B18-0425", projectId:"PJ-B18-2606", demandDate:"2026-04-28", promiseDate:"2026-04-28", qty:4800, delivered:4800, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-B18-0401", projectId:"PJ-B18-2606", demandDate:"2026-03-20", promiseDate:"2026-03-22", qty:3600, delivered:3600, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-B18-0228", projectId:"PJ-B18-2606", demandDate:"2026-02-05", promiseDate:"2026-02-05", qty:4200, delivered:4200, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-B18-0115", projectId:"PJ-B18-2606", demandDate:"2025-12-22", promiseDate:"2025-12-24", qty:3800, delivered:3800, available:0, completable:0, overdue:70, risk:"yellow", node:"5.6 交付达成", status:"已关闭" },
+
+  // ── D22 精密件项目（绿风险）── 进行中
+  { no:"SO-D22-0603", projectId:"PJ-D22-2606", demandDate:"2026-06-12", promiseDate:"2026-06-12", qty:8600, delivered:4600, available:2190, completable:1810, overdue:0, risk:"green", node:"5.1 发货指令", status:"进行中" },
+  // D22 已关闭
+  { no:"SO-D22-0420", projectId:"PJ-D22-2606", demandDate:"2026-04-15", promiseDate:"2026-04-15", qty:7800, delivered:7800, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-D22-0325", projectId:"PJ-D22-2606", demandDate:"2026-03-08", promiseDate:"2026-03-08", qty:8200, delivered:8200, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-D22-0218", projectId:"PJ-D22-2606", demandDate:"2026-01-22", promiseDate:"2026-01-22", qty:7500, delivered:7500, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-D22-0108", projectId:"PJ-D22-2606", demandDate:"2025-12-10", promiseDate:"2025-12-10", qty:6800, delivered:6800, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+
+  // ── F09 车载模组项目（绿风险）── 进行中
+  { no:"SO-F09-0610", projectId:"PJ-F09-2606", demandDate:"2026-06-18", promiseDate:"2026-06-19", qty:2900, delivered:900, available:1120, completable:880, overdue:0, risk:"green", node:"4.5 成品入库", status:"进行中" },
+  // F09 已关闭
+  { no:"SO-F09-0428", projectId:"PJ-F09-2606", demandDate:"2026-04-25", promiseDate:"2026-04-25", qty:3200, delivered:3200, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-F09-0320", projectId:"PJ-F09-2606", demandDate:"2026-03-12", promiseDate:"2026-03-12", qty:2800, delivered:2800, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" },
+  { no:"SO-F09-0225", projectId:"PJ-F09-2606", demandDate:"2026-02-08", promiseDate:"2026-02-08", qty:2600, delivered:2600, available:0, completable:0, overdue:50, risk:"yellow", node:"5.6 交付达成", status:"已关闭" },
+  { no:"SO-F09-0118", projectId:"PJ-F09-2606", demandDate:"2025-12-20", promiseDate:"2025-12-20", qty:2400, delivered:2400, available:0, completable:0, overdue:0, risk:"green", node:"5.5 客户签收", status:"已关闭" }
 ];
 
 var riskLabel = { red:"红风险", yellow:"黄风险", green:"绿风险", gray:"待统一" };
@@ -42,6 +88,7 @@ function toneBadge(tone){ return '<span class="prg-badge '+tone+'" style="backgr
 
 // ═══════════════ 状态 ═══════════════
 var currentRiskFilter = 'all';
+var currentStatusFilter = '进行中'; // 进行中 | 已关闭 | 全部
 
 // ═══════════════ 入口 ═══════════════
 function renderProgressPage(){
@@ -74,6 +121,11 @@ function loadOrders(){
 
   // 按选中项目过滤订单
   var filtered = pid ? ORDERS.filter(function(o){return o.projectId===pid;}) : ORDERS.slice();
+
+  // 按订单状态过滤
+  if(currentStatusFilter!=='全部'){
+    filtered = filtered.filter(function(o){return o.status===currentStatusFilter;});
+  }
 
   // 按风险过滤
   if(currentRiskFilter!=='all'){
@@ -116,14 +168,28 @@ function renderOrderKpi(os){
 }
 
 // ── 风险标签栏 ──
-function renderRiskTags(os){
+function renderRiskTags(allOrders){
   var el=document.getElementById('prgOrderRiskTags');
   if(!el) return;
-  var red=os.filter(function(o){return o.risk==='red';}).length;
-  var yellow=os.filter(function(o){return o.risk==='yellow';}).length;
-  var green=os.filter(function(o){return o.risk==='green';}).length;
-  el.innerHTML='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'
-    +'<span class="prg-risk-pill '+(currentRiskFilter==='all'?'active':'')+'" onclick="window._prgFilterRisk(\'all\')" style="cursor:pointer">全部 ('+os.length+')</span>'
+  // 先统计项目下全部订单的状态分布（不受风险筛选影响）
+  var pid=document.getElementById('progressProjectSelect').value;
+  var projOrders = pid ? ORDERS.filter(function(o){return o.projectId===pid;}) : ORDERS.slice();
+  var inProgress = projOrders.filter(function(o){return o.status==='进行中';}).length;
+  var closed = projOrders.filter(function(o){return o.status==='已关闭';}).length;
+  // 当前筛选后的风险分布
+  var red=allOrders.filter(function(o){return o.risk==='red';}).length;
+  var yellow=allOrders.filter(function(o){return o.risk==='yellow';}).length;
+  var green=allOrders.filter(function(o){return o.risk==='green';}).length;
+
+  el.innerHTML='<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">'
+    +'<span style="font-size:12px;font-weight:600;color:var(--text-sec);margin-right:4px">订单状态：</span>'
+    +'<span class="prg-risk-pill '+(currentStatusFilter==='进行中'?'active':'')+'" onclick="window._prgFilterStatus(\'进行中\')" style="cursor:pointer;background:'+(currentStatusFilter==='进行中'?'var(--primary)':'var(--primary-bg)')+';color:'+(currentStatusFilter==='进行中'?'#fff':'var(--primary)')+';border:1px solid var(--primary)">进行中 ('+inProgress+')</span>'
+    +'<span class="prg-risk-pill '+(currentStatusFilter==='已关闭'?'active':'')+'" onclick="window._prgFilterStatus(\'已关闭\')" style="cursor:pointer;background:'+(currentStatusFilter==='已关闭'?'var(--text-muted)':'var(--border-light)')+';color:'+(currentStatusFilter==='已关闭'?'#fff':'var(--text-sec)')+';border:1px solid var(--border)">已关闭 ('+closed+')</span>'
+    +'<span class="prg-risk-pill '+(currentStatusFilter==='全部'?'active':'')+'" onclick="window._prgFilterStatus(\'全部\')" style="cursor:pointer;background:'+(currentStatusFilter==='全部'?'var(--text)':'var(--bg)')+';color:'+(currentStatusFilter==='全部'?'#fff':'var(--text-sec)')+';border:1px solid var(--border)">全部 ('+projOrders.length+')</span>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<span style="font-size:12px;font-weight:600;color:var(--text-sec);margin-right:4px">风险筛选：</span>'
+    +'<span class="prg-risk-pill '+(currentRiskFilter==='all'?'active':'')+'" onclick="window._prgFilterRisk(\'all\')" style="cursor:pointer">全部 ('+allOrders.length+')</span>'
     +'<span class="prg-risk-pill danger '+(currentRiskFilter==='red'?'active':'')+'" onclick="window._prgFilterRisk(\'red\')" style="cursor:pointer;background:'+riskBg.red+';color:'+riskColor.red+';border:1px solid '+riskColor.red+'">🔴 红风险 ('+red+')</span>'
     +'<span class="prg-risk-pill '+(currentRiskFilter==='yellow'?'active':'')+'" onclick="window._prgFilterRisk(\'yellow\')" style="cursor:pointer;background:'+riskBg.yellow+';color:'+riskColor.yellow+';border:1px solid '+riskColor.yellow+'">🟡 黄风险 ('+yellow+')</span>'
     +'<span class="prg-risk-pill '+(currentRiskFilter==='green'?'active':'')+'" onclick="window._prgFilterRisk(\'green\')" style="cursor:pointer;background:'+riskBg.green+';color:'+riskColor.green+';border:1px solid '+riskColor.green+'">🟢 绿风险 ('+green+')</span>'
@@ -132,6 +198,11 @@ function renderRiskTags(os){
 
 window._prgFilterRisk = function(risk){
   currentRiskFilter = currentRiskFilter===risk?'all':risk;
+  loadOrders();
+};
+
+window._prgFilterStatus = function(status){
+  currentStatusFilter = status;
   loadOrders();
 };
 
@@ -163,6 +234,7 @@ function renderOrderTable(os){
       +'<td class="number" style="color:'+(hold>0?'var(--warning)':'var(--text-muted)')+'">'+fmt(hold)+'</td>'
       +'<td class="number" style="color:'+(gap>0?'var(--danger)':'var(--success)')+';font-weight:700">'+fmt(gap)+'</td>'
       +'<td class="number" style="color:'+(o.overdue>0?'var(--danger)':'var(--success)')+';font-weight:'+(o.overdue>0?'700':'400')+'">'+fmt(o.overdue)+'</td>'
+      +'<td><span class="cl-pill" style="background:'+(o.status==='进行中'?'var(--primary-bg)':'var(--border-light)')+';color:'+(o.status==='进行中'?'var(--primary)':'var(--text-muted)')+'">'+o.status+'</span></td>'
       +'<td><span style="font-size:10px;color:var(--text-muted)">'+o.node+'</span></td>'
       +'</tr>';
   }).join('');
@@ -176,9 +248,9 @@ function renderOrderTable(os){
     +'<th>风险状态</th><th>订单号</th><th>所属项目</th><th>BG</th><th>客户</th><th>产品型号 / 成品料号</th>'
     +'<th>需求交期</th><th>承诺交期</th><th class="number">订单数量</th><th class="number">已交付量</th>'
     +'<th class="number">未交付量</th><th class="number">可用库存量</th><th class="number">库存可满足量</th><th class="number">Hold冻结</th>'
-    +'<th class="number">承诺缺口量</th><th class="number">超期量</th><th>风险节点</th>'
+    +'<th class="number">承诺缺口量</th><th class="number">超期量</th><th>订单状态</th><th>风险节点</th>'
     +'</tr></thead><tbody>'
-    + (rows || '<tr><td colspan="17" style="text-align:center;padding:30px;color:var(--text-muted)">当前筛选范围内无订单数据</td></tr>')
+    + (rows || '<tr><td colspan="18" style="text-align:center;padding:30px;color:var(--text-muted)">当前筛选范围内无订单数据</td></tr>')
     +'</tbody></table>'
     +'</div></div>';
 }
