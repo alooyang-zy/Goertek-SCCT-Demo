@@ -191,27 +191,23 @@
 
     <!-- ====== 2.项目进度跟踪 ====== -->
     <section class="page" id="page-progress">
+      <!-- 项目选择器（最顶层） -->
+      <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="progressProjectSelect" onchange="renderProgressPage()"></select></div><span id="prgHeroInfo" style="font-size:11px;color:var(--text-muted);margin-left:12px;"></span></div>
+
       <!-- Tab 页签 -->
       <div style="display:flex;gap:4px;margin-bottom:0;border-bottom:2px solid var(--border);padding-bottom:0">
-        <button class="prg-tab active" data-prgtab="scor" type="button" style="padding:8px 20px;font-size:13px;font-weight:700;border:0;background:transparent;color:var(--primary);cursor:pointer;border-bottom:3px solid var(--primary);margin-bottom:-2px;border-radius:6px 6px 0 0" onclick="window._prgSwitchTab('scor')">SCOR履约跟踪</button>
-        <button class="prg-tab" data-prgtab="npi" type="button" style="padding:8px 20px;font-size:13px;font-weight:700;border:0;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:6px 6px 0 0" onclick="window._prgSwitchTab('npi')">NPI物料导入</button>
+        <button class="prg-tab active" data-prgtab="scor" type="button" style="padding:8px 20px;font-size:13px;font-weight:700;border:0;background:transparent;color:var(--primary);cursor:pointer;border-bottom:3px solid var(--primary);margin-bottom:-2px;border-radius:6px 6px 0 0" onclick="window._prgSwitchTab('scor')">订单履约跟踪</button>
+        <button class="prg-tab" data-prgtab="npi" type="button" style="padding:8px 20px;font-size:13px;font-weight:700;border:0;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:6px 6px 0 0" onclick="window._prgSwitchTab('npi')">NPI物料跟踪</button>
       </div>
 
-      <!-- SCOR履约跟踪 Tab -->
+      <!-- 订单履约跟踪 Tab -->
       <div id="prg-tab-scor" class="prg-tab-panel" style="display:block">
-        <div class="filter-bar"><div class="filter-group"><label>项目:</label><select id="progressProjectSelect" onchange="renderProgressPage()"></select></div><span style="font-size:11px;color:var(--text-muted);margin-left:12px;">5大阶段 · 30个核心节点 · SCOR模型加权评估</span></div>
-        <div class="sc-hero" id="prgHero"><span class="sc-hero-name" id="prgHeroName">--</span><div class="sc-hero-pills" id="prgHeroPills"></div></div>
-        <div class="prg-overview-grid" id="prgOverview"></div>
-        <div class="prg-dashboard-layout" id="prgDashboard">
-          <div class="prg-phases-col" id="prgPhasesCol"></div>
-          <div class="prg-right-sidebar">
-            <div class="prg-score-ring-card"><div class="prg-ring-wrap"><canvas id="prgScoreRing" width="120" height="120"></canvas><div class="prg-ring-center"><div class="prg-ring-score" id="prgRingScore">--</div><div class="prg-ring-label">综合评分</div></div></div><div class="prg-score-grid"><div class="prg-score-item"><div class="prg-sdi-label">正常节点</div><div class="prg-sdi-value g" id="prgRingG">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">预警节点</div><div class="prg-sdi-value y" id="prgRingY">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">异常节点</div><div class="prg-sdi-value r" id="prgRingR">--</div></div><div class="prg-score-item"><div class="prg-sdi-label">待处理</div><div class="prg-sdi-value b" id="prgRingAlerts">--</div></div></div></div>
-            <div class="prg-alert-card"><div class="prg-alert-title">异常事项汇总 <span id="prgAlertCount" class="prg-alert-badge">0</span></div><div class="prg-alert-list" id="prgAlertList"></div></div>
-          </div>
-        </div>
+        <div id="prgOrderKpi"></div>
+        <div id="prgOrderRiskTags"></div>
+        <div id="prgOrderDetail"></div>
       </div>
 
-      <!-- NPI物料导入 Tab -->
+      <!-- NPI物料跟踪 Tab -->
       <div id="prg-tab-npi" class="prg-tab-panel" style="display:none">
         <div id="prg-npi-container"></div>
       </div>
